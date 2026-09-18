@@ -1,0 +1,2933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Action Register</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F4F7; --surface:#FFFFFF; --surface-2:#EDEFF3; --ink:#1E2230; --ink-dim:#6B7280; --border:#E1E4EA;
+  --accent:#4C5FD5; --accent-ink:#FFFFFF; --accent-soft:#E7E9FC;
+  --good:#1F9254; --good-soft:#E1F5EA; --good-strong:#166B3D;
+  --warn:#B7791F; --warn-soft:#FDF3D8;
+  --hold:#C2570B; --hold-soft:#FBE7D6;
+  --bad:#D64545; --bad-soft:#FCE8E8;
+  --info:#2F6FE0; --info-soft:#E4EDFC;
+  --shadow: 0 1px 2px rgba(20,20,30,.04), 0 8px 24px rgba(20,20,30,.06);
+  --radius: 12px; --header-h: 54px; --tabs-h: 46px; --row-h: 74px;
+}
+html[data-theme="dark"]{
+  --bg:#12151B; --surface:#1A1F27; --surface-2:#222833; --ink:#EDEEF2; --ink-dim:#9399A6; --border:#2C333F;
+  --accent:#7C8CF0; --accent-ink:#0E1020; --accent-soft:#262C4A;
+  --good:#4ADE80; --good-soft:#153524; --good-strong:#7EE8A8;
+  --warn:#F2C14E; --warn-soft:#3A2E10;
+  --hold:#F0924A; --hold-soft:#3A2612;
+  --bad:#F87171; --bad-soft:#3A1717;
+  --info:#6FA8F5; --info-soft:#182A44;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box;}
+[hidden]{ display:none !important; }
+html,body{height:100%;margin:0;}
+body{ background:var(--bg); color:var(--ink); font-family:'IBM Plex Sans',system-ui,sans-serif; -webkit-font-smoothing:antialiased; display:flex; flex-direction:column; overflow:hidden; font-size:15px; }
+.mono{ font-family:'IBM Plex Mono',ui-monospace,monospace; }
+button{font-family:inherit;} input,select,textarea{font-family:inherit;}
+::-webkit-scrollbar{height:10px;width:10px;} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:8px;} ::-webkit-scrollbar-track{background:transparent;}
+
+/* HEADER */
+.topbar{ height:var(--header-h); min-height:var(--header-h); display:flex; align-items:center; justify-content:space-between; padding:0 16px; background:var(--surface); border-bottom:1px solid var(--border); }
+.brand{display:flex; align-items:center; gap:10px; min-width:0;}
+.logo{ width:32px;height:32px;border-radius:8px;background:var(--accent);color:var(--accent-ink); display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono'; font-weight:700; font-size:13px; letter-spacing:.5px; flex:none; border:none; cursor:pointer; padding:0; transition:transform .15s ease, filter .15s ease; }
+.logo:hover{ filter:brightness(1.08); }
+.logo:active{ transform:scale(0.92); }
+.logo.is-refreshing{ animation:logo-spin .7s linear infinite; }
+@keyframes logo-spin{ to{ transform:rotate(360deg); } }
+.titles{display:flex; align-items:baseline; gap:10px; min-width:0;}
+.titles h1{font-size:17px; font-weight:700; margin:0; white-space:nowrap;}
+.titles .tagline{font-size:12px; color:var(--ink-dim); margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.topbar-controls{display:flex; align-items:center; gap:8px; flex:none; flex-wrap:wrap;}
+
+/* BUTTONS */
+.btn{ border:1px solid var(--border); background:var(--surface); color:var(--ink); padding:7px 13px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; transition:.12s ease; }
+.btn:hover{ background:var(--surface-2); } .btn:active{ transform:translateY(1px); }
+.btn-ghost{ background:transparent; }
+.btn-primary{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+.btn-primary:hover{ filter:brightness(1.05); }
+.btn-accent{ background:var(--ink); border-color:var(--ink); color:var(--bg); }
+.btn-sm{ padding:6px 10px; font-size:13px; border-radius:7px; }
+.btn-danger{ color:var(--bad); border-color:var(--bad-soft); }
+.btn-danger:hover{ background:var(--bad-soft); }
+.theme-toggle{ width:36px;height:36px;border-radius:8px;border:1px solid var(--border);background:var(--surface); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:16px; }
+.theme-toggle:hover{ background:var(--surface-2); }
+
+/* TOOLBAR */
+.toolbar{ min-height:52px; display:flex; align-items:center; gap:10px; padding:8px 16px; background:var(--surface); border-bottom:1px solid var(--border); flex-wrap:wrap; }
+.search-wrap{ flex:1 1 200px; min-width:160px; max-width:420px; position:relative; }
+.search-wrap input{ width:100%; padding:7px 10px 7px 30px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--ink); font-size:14px; }
+.search-wrap::before{ content:"⌕"; position:absolute; left:9px; top:50%; transform:translateY(-50%); color:var(--ink-dim); font-size:16px; pointer-events:none; }
+.filter-bar{ display:flex; align-items:center; gap:6px; flex-wrap:nowrap; }
+.filter-expand{ display:flex; align-items:center; gap:8px; overflow:hidden; white-space:nowrap; max-width:0; opacity:0; transition:max-width .35s ease, opacity .28s ease; }
+.filter-expand.expanded{ opacity:1; }
+.filter-toggle-btn{ flex:none; }
+.stats-strip{ display:flex; align-items:center; gap:14px; margin-left:auto; flex:none; transition:opacity .2s ease; }
+.stats-strip.hidden-by-filter{ opacity:0; pointer-events:none; width:0; overflow:hidden; }
+.stat-chip{ display:flex; align-items:baseline; gap:5px; font-size:12.5px; color:var(--ink-dim); white-space:nowrap; }
+.stat-chip b{ font-size:14.5px; font-weight:800; color:var(--ink); }
+.stat-chip.stat-ontrack b{ color:var(--warn); }
+.stat-chip.stat-open b{ color:var(--info); }
+.stat-chip.stat-onhold b{ color:var(--hold); }
+.stat-chip.stat-overdue b{ color:var(--bad); }
+.stat-chip.stat-updated b{ color:var(--good); }
+.filter-toggle-btn.active{ border-color:var(--accent); color:var(--accent); }
+.filter-toggle-arrow{ display:inline-block; transition:transform .3s ease; }
+.filter-toggle-btn.active .filter-toggle-arrow{ transform:rotate(180deg); }
+.sort-wrap{ display:flex; align-items:center; gap:6px; }
+.sort-wrap label{ font-size:12.5px; color:var(--ink-dim); font-weight:600; white-space:nowrap; }
+.sort-wrap select{ border:1px solid var(--border); background:var(--surface); color:var(--ink); padding:6px 8px; border-radius:7px; font-size:13px; font-weight:600; }
+
+/* FILTER DROPDOWNS (generic) */
+.filter-wrap{ position:relative; }
+.filter-btn{ display:flex; align-items:center; gap:6px; }
+.filter-btn-right{ display:flex; align-items:center; gap:6px; margin-left:auto; }
+.filter-badge{ background:var(--accent); color:var(--accent-ink); font-size:10.5px; font-weight:800; border-radius:999px; min-width:17px; height:17px; padding:0 4px; display:flex; align-items:center; justify-content:center; }
+.filter-wrap.active .filter-btn{ border-color:var(--accent); color:var(--accent); }
+.filter-panel{ position:absolute; top:calc(100% + 6px); left:0; width:230px; max-height:320px; background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow); z-index:60; display:flex; flex-direction:column; overflow:hidden; }
+.filter-panel[hidden]{ display:none; }
+.filter-panel-actions{ display:flex; justify-content:space-between; padding:8px 10px; border-bottom:1px solid var(--border); flex:none; }
+.filter-panel-actions button{ border:none; background:none; color:var(--info); font-size:12px; font-weight:700; cursor:pointer; padding:2px 4px; }
+.filter-list{ overflow-y:auto; padding:4px; }
+.filter-row{ display:flex; align-items:center; gap:8px; padding:7px 8px; border-radius:7px; font-size:13.5px; cursor:pointer; }
+.filter-row:hover{ background:var(--surface-2); }
+.filter-row input{ width:auto; margin:0; flex:none; }
+.filter-row span:first-of-type{ flex:1; }
+.filter-count{ color:var(--ink-dim); font-family:'IBM Plex Mono'; font-size:11.5px; flex:none; }
+.filter-empty{ padding:16px; text-align:center; color:var(--ink-dim); font-size:13px; }
+
+/* TABS */
+.tabs{ min-height:var(--tabs-h); display:flex; align-items:center; flex-wrap:nowrap; gap:9px; padding:12px 16px; background:var(--surface); border-bottom:1px solid var(--border); overflow-x:auto; overflow-y:hidden; }
+.tab{ flex:none; padding:8px 15px; border-radius:999px; font-size:13.5px; font-weight:600; color:var(--ink-dim); background:transparent; border:1px solid transparent; cursor:pointer; white-space:nowrap; transition:background .15s ease, border-color .15s ease, color .15s ease; }
+.tab:hover{ background:var(--surface-2); color:var(--ink); }
+.tab.active{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+.tab .count{ opacity:.6; font-weight:500; margin-left:3px; }
+.tab.dept-tab{ background:color-mix(in srgb, var(--tab-dept-color) 14%, var(--surface)); border-color:color-mix(in srgb, var(--tab-dept-color) 45%, var(--border)); color:var(--ink); }
+.tab.dept-tab:hover{ background:color-mix(in srgb, var(--tab-dept-color) 26%, var(--surface)); }
+.tab.dept-tab.active{ background:var(--tab-dept-color); color:var(--tab-dept-ink); border-color:var(--tab-dept-color); }
+
+/* Holographic foil texture for "iridescent" departments — a lined, lightly textured pastel
+   rainbow sheen instead of a single flat gradient color. */
+.tab.dept-tab.iridescent-fill{
+  background:
+    repeating-linear-gradient(115deg, rgba(255,255,255,.55) 0px, rgba(255,255,255,.55) 2px, rgba(255,255,255,0) 2px, rgba(255,255,255,0) 7px),
+    linear-gradient(120deg, #ffd6e8, #d6e4ff, #d6fff5, #fff6d6, #e8d6ff, #ffd6e8);
+  background-size: 240% 240%, 160% 160%;
+  border-color: rgba(150,130,200,.5);
+  color: #3a3350;
+}
+.tab.dept-tab.iridescent-fill:hover{
+  background:
+    repeating-linear-gradient(115deg, rgba(255,255,255,.65) 0px, rgba(255,255,255,.65) 2px, rgba(255,255,255,0) 2px, rgba(255,255,255,0) 7px),
+    linear-gradient(120deg, #ffc2dd, #c2d8ff, #c2ffec, #fff0c2, #ddc2ff, #ffc2dd);
+  background-size: 240% 240%, 160% 160%;
+}
+.tab.dept-tab.iridescent-fill.active{
+  background:
+    repeating-linear-gradient(115deg, rgba(255,255,255,.7) 0px, rgba(255,255,255,.7) 2px, rgba(255,255,255,0) 2px, rgba(255,255,255,0) 7px),
+    linear-gradient(120deg, #ffa8cf, #a8c8ff, #a8ffe3, #ffedA8, #d1a8ff, #ffa8cf);
+  background-size: 240% 240%, 160% 160%;
+  border-color: rgba(120,100,180,.6);
+  color: #2a2440;
+}
+
+.dept-pill-group{ display:inline-flex; flex-wrap:wrap; gap:5px; align-items:center; justify-content:center; }
+.dept-pill{ cursor:default; white-space:normal !important; text-align:center; line-height:1.15; max-width:100%; word-break:break-word; }
+
+/* TABLE */
+.table-wrap{ flex:1; overflow-y:auto; padding:0 16px 16px; background:var(--bg); }
+table{ width:100%; table-layout:fixed; border-collapse:separate; border-spacing:0; background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow); margin-top:12px;}
+thead th:nth-child(1){ width:4%; }
+thead th:nth-child(2){ width:6%; }
+thead th:nth-child(3){ width:8%; }
+thead th:nth-child(4){ width:9%; }
+thead th:nth-child(5){ width:12%; }
+thead th:nth-child(6){ width:9%; }
+thead th:nth-child(7){ width:8%; }
+thead th:nth-child(8){ width:7%; }
+thead th:nth-child(9){ width:6%; }
+thead th:nth-child(10){ width:9%; }
+thead th:nth-child(11){ width:8%; }
+thead th:nth-child(12){ width:7%; }
+thead th:nth-child(13){ width:7%; }
+thead th:first-child{ border-top-left-radius:var(--radius); }
+thead th:last-child{ border-top-right-radius:var(--radius); }
+tbody tr:last-child td:first-child{ border-bottom-left-radius:var(--radius); }
+tbody tr:last-child td:last-child{ border-bottom-right-radius:var(--radius); }
+thead th{ position:sticky; top:0; z-index:2; background:var(--surface-2); color:var(--ink-dim); text-transform:uppercase; letter-spacing:.3px; font-size:11px; font-weight:700; padding:11px 8px; text-align:center; border-bottom:1px solid var(--border); white-space:normal; line-height:1.3; vertical-align:middle; }
+tbody td{ height:var(--row-h); max-height:var(--row-h); padding:10px 12px; border-bottom:1px solid var(--border); font-size:14.5px; vertical-align:middle; overflow:hidden; }
+tbody td:last-child, thead th:last-child{ padding-right:18px; }
+tbody tr{ transition:background .1s; cursor:pointer; }
+tbody tr:hover{ background:var(--surface-2); }
+tbody tr:last-child td{ border-bottom:none; }
+.ellipsis{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; }
+
+td.id-cell{ font-family:'IBM Plex Mono'; font-weight:700; color:var(--ink-dim); font-size:14px; }
+td.wrap{ white-space:normal; overflow-wrap:break-word; }
+td.nowrap{ white-space:nowrap; }
+.muted{ color:var(--ink-dim); }
+
+
+.badge{ display:inline-flex; align-items:center; padding:4px 11px; border-radius:6px; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.3px; white-space:nowrap; }
+.badge-open{ background:var(--info-soft); color:var(--info); }
+.badge-progress{ background:var(--warn-soft); color:var(--warn); }
+.badge-hold{ background:var(--hold-soft); color:var(--hold); }
+.badge-closed{ position:relative; background:transparent; color:var(--good); border:2px solid var(--good); border-radius:4px; font-weight:800; letter-spacing:1.1px; transform:rotate(-4deg); padding:3px 10px; }
+.badge-closed::before{ content:''; position:absolute; inset:2px; border:1px solid var(--good); border-radius:2px; opacity:.55; pointer-events:none; }
+.badge-ontrack{ background:var(--warn-soft); color:var(--warn); }
+.badge-overdue{ background:var(--bad-soft); color:var(--bad); font-weight:800; }
+.badge-2line{ flex-direction:column; align-items:center; justify-content:center; white-space:nowrap; text-align:center; gap:1px; padding:5px 9px; line-height:1.25; }
+.badge-2line span{ display:block; }
+.badge-2line .line1{ font-size:11px; }
+.badge-2line .line2{ font-size:9.5px; font-weight:600; opacity:.9; letter-spacing:.1px; }
+.badge-3line{ flex-direction:column; align-items:center; justify-content:center; white-space:nowrap; text-align:center; gap:0; padding:4px 9px; line-height:1.2; }
+.badge-3line span{ display:block; }
+.badge-3line .line1{ font-size:10px; }
+.badge-3line .line2{ font-size:10.5px; font-weight:800; }
+.badge-3line .line3{ font-size:8px; font-weight:600; opacity:.85; letter-spacing:.2px; }
+
+.upd-btn{ border:1px solid var(--border); background:var(--surface); color:var(--ink-dim); padding:6px 10px; border-radius:7px; font-size:12.5px; font-weight:700; cursor:pointer; text-align:center; width:100%; overflow:hidden; max-height:56px; }
+.upd-btn:hover{ background:var(--surface-2); }
+.upd-label{ display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.upd-ok{ background:var(--good-soft); color:var(--good); border-color:var(--good); }
+.upd-warn{ background:var(--bad-soft); color:var(--bad); border-color:var(--bad); }
+.upd-sub{ display:block; font-size:11px; color:var(--ink-dim); margin-top:3px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.upd-by{ display:block; font-size:11px; margin-top:1px; font-weight:700; opacity:.85; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+.due-date-cell{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:4px; }
+.due-date-main{ font-weight:700; font-size:14.5px; }
+
+.aging-num{ font-family:'IBM Plex Mono'; font-weight:700; font-size:13px; white-space:nowrap; }
+
+.mediabin{ display:flex; gap:8px; }
+.mediabin-col{ display:flex; flex-direction:column; align-items:center; gap:3px; }
+.mediabin-tag{ font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.3px; color:var(--ink-dim); }
+.mediabin-thumb{ width:38px; height:38px; border-radius:7px; object-fit:cover; border:1px solid var(--border); cursor:pointer; display:block; background:var(--surface-2); }
+.mediabin-thumb:hover{ outline:2px solid var(--accent); outline-offset:1px; }
+.mediabin-video{ width:38px; height:38px; border-radius:7px; border:1px solid var(--border); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:16px; background:var(--surface-2); }
+.mediabin-video:hover{ outline:2px solid var(--accent); outline-offset:1px; }
+.mediabin-empty{ width:38px; height:38px; border-radius:7px; border:1px dashed var(--border); display:flex; align-items:center; justify-content:center; font-size:15px; color:var(--ink-dim); cursor:pointer; background:var(--bg); }
+.mediabin-count{ position:relative; }
+.mediabin-count::after{ content:attr(data-count); position:absolute; top:-5px; right:-5px; background:var(--ink); color:var(--bg); font-size:9.5px; font-weight:700; border-radius:999px; width:16px; height:16px; display:flex; align-items:center; justify-content:center; }
+
+.empty-state{ text-align:center; padding:60px 20px; color:var(--ink-dim); }
+.empty-state h3{ color:var(--ink); margin:0 0 6px; }
+
+/* MODAL */
+.overlay{ position:fixed; inset:0; background:rgba(10,9,4,.45); display:flex; align-items:center; justify-content:center; z-index:50; padding:20px; }
+.overlay[hidden]{ display:none; }
+#actionOverlay{ z-index:150; }
+#previewOverlay{ z-index:140; }
+.modal{ background:var(--surface); border-radius:14px; width:100%; max-width:700px; max-height:90vh; overflow-y:auto; box-shadow:var(--shadow); border:1px solid var(--border); border-top:5px solid var(--border); }
+.modal.theme-new{ border-top-color:var(--accent); }
+.modal.theme-update{ border-top-color:var(--good); }
+.modal.theme-preview{ border-top-color:var(--info); }
+.modal.theme-edit{ border-top-color:var(--hold); }
+.modal.theme-new .modal-head{ background:var(--accent-soft); }
+.modal.theme-update .modal-head{ background:var(--good-soft); }
+.modal.theme-preview .modal-head{ background:var(--info-soft); }
+.modal.theme-edit .modal-head{ background:var(--hold-soft); }
+.modal.theme-new #saveBtn{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+.modal.theme-update #saveBtn{ background:var(--good); border-color:var(--good); color:#fff; }
+.modal.theme-edit #saveBtn{ background:var(--hold); border-color:var(--hold); color:#fff; }
+.modal.theme-new .modal-head h2{ color:var(--accent); }
+.modal.theme-update .modal-head h2{ color:var(--good-strong); }
+.modal.theme-preview .modal-head h2{ color:var(--info); }
+.modal.theme-edit .modal-head h2{ color:var(--hold); }
+.modal-head{ display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:1; gap:10px; }
+.modal-head h2{ font-size:17px; margin:0; }
+.modal-head-actions{ display:flex; align-items:center; gap:8px; margin-left:auto; }
+.modal-body{ padding:18px 20px; display:grid; gap:14px; }
+.close-x{ background:none; border:none; font-size:19px; cursor:pointer; color:var(--ink-dim); line-height:1; }
+.field{ display:grid; gap:6px; position:relative; }
+.field label{ font-size:12.5px; font-weight:700; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.3px; }
+.field label .req{ color:var(--bad); }
+.field input[type=text], .field input[type=date], .field textarea, .field select, .field input[type=file]{ border:1px solid var(--border); background:var(--bg); color:var(--ink); padding:10px 11px; border-radius:8px; font-size:14.5px; width:100%; }
+.field textarea{ min-height:66px; resize:vertical; }
+.field.field-error input[type=text], .field.field-error input[type=date], .field.field-error textarea, .field.field-error select{ border-color:var(--bad); background:var(--bad-soft); }
+.field-error-msg{ font-size:12px; color:var(--bad); font-weight:600; display:none; }
+.field.field-error .field-error-msg{ display:block; }
+.row2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; align-items:start; }
+.nodate-row{ display:flex; align-items:center; gap:8px; margin-top:4px; }
+.nodate-row input{ width:auto; }
+.nodate-row label{ font-size:13px; font-weight:600; color:var(--ink-dim); text-transform:none; letter-spacing:0; }
+.update-by-box{ border:2px solid var(--good); background:var(--good-soft); border-radius:10px; padding:12px; }
+.update-by-box label{ color:var(--good-strong); }
+.update-by-box .field{ position:relative; }
+
+.name-autocomplete{ position:absolute; top:100%; left:0; right:0; margin-top:4px; background:var(--surface); border:1px solid var(--border); border-radius:8px; box-shadow:var(--shadow); z-index:80; max-height:220px; overflow-y:auto; }
+.name-autocomplete[hidden]{ display:none; }
+.name-autocomplete .name-opt{ padding:8px 12px; font-size:14px; cursor:pointer; }
+.name-autocomplete .name-opt:hover, .name-autocomplete .name-opt.highlighted{ background:var(--surface-2); }
+.name-autocomplete .name-opt-empty{ padding:8px 12px; font-size:13px; color:var(--ink-dim); }
+
+.owner-select-btn{ width:100%; justify-content:flex-start; text-align:left; font-weight:500; color:var(--ink); background:var(--bg); }
+.owner-select-btn.placeholder{ color:var(--ink-dim); font-weight:400; }
+.owner-select-panel{ position:absolute; top:100%; left:0; right:0; margin-top:4px; background:var(--surface); border:1px solid var(--border); border-radius:8px; box-shadow:var(--shadow); z-index:80; display:flex; flex-direction:column; max-height:280px; overflow:hidden; }
+.owner-select-panel[hidden]{ display:none; }
+.owner-select-search{ border:none; border-bottom:1px solid var(--border); background:var(--bg); color:var(--ink); padding:9px 12px; font-size:13.5px; flex:none; border-radius:8px 8px 0 0; }
+.owner-select-list{ overflow-y:auto; padding:4px; }
+.owner-opt{ display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:7px; font-size:13.5px; cursor:pointer; }
+.owner-opt:hover{ background:var(--surface-2); }
+.owner-opt input{ width:auto; margin:0; flex:none; }
+.owner-opt-all{ font-weight:700; border-bottom:1px solid var(--border); border-radius:0; margin-bottom:2px; padding-bottom:9px; }
+.modal-foot{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 20px; border-top:1px solid var(--border); position:sticky; bottom:0; background:var(--surface); }
+.folder-link{ font-size:13px; color:var(--info); text-decoration:none; font-weight:600; }
+.folder-link:hover{ text-decoration:underline; }
+
+.photo-bin-box{ border:1px solid var(--border); border-radius:10px; padding:10px; background:var(--bg); }
+.photo-grid{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
+.photo-grid .media-item{ position:relative; width:58px; height:58px; flex:none; }
+.photo-grid .media-item img{ width:58px; height:58px; object-fit:cover; border-radius:7px; border:1px solid var(--border); cursor:pointer; display:block; }
+.photo-grid .media-item img:hover{ outline:2px solid var(--accent); outline-offset:1px; }
+.photo-grid .video-box{ width:58px; height:58px; border-radius:7px; border:1px solid var(--border); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:20px; background:var(--surface-2); }
+.photo-grid .video-box:hover{ outline:2px solid var(--accent); outline-offset:1px; }
+.photo-grid .media-remove{ position:absolute; top:-6px; right:-6px; width:19px; height:19px; border-radius:50%; background:var(--bad); color:#fff; border:2px solid var(--surface); font-size:11px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; }
+.photo-grid .media-remove:hover{ filter:brightness(1.1); }
+.photo-grid .empty-hint{ font-size:12.5px; color:var(--ink-dim); }
+
+.history-list{ display:grid; gap:10px; }
+.history-entry{ border:1px solid var(--border); border-radius:10px; padding:12px; background:var(--bg); }
+.history-entry-top{ display:flex; justify-content:space-between; gap:10px; margin-bottom:6px; flex-wrap:wrap; }
+.history-who{ font-weight:700; font-size:14px; }
+.history-email{ font-size:12px; color:var(--ink-dim); }
+.history-time{ font-size:12px; color:var(--ink-dim); font-family:'IBM Plex Mono'; }
+.history-remarks{ font-size:14px; }
+.history-changed{ margin-top:8px; display:flex; flex-wrap:wrap; align-items:center; gap:6px; font-size:12.5px; }
+.history-changed-label{ color:var(--ink-dim); font-weight:700; }
+.history-changed-tag{ background:var(--accent-soft); color:var(--accent); border-radius:6px; padding:3px 9px; font-weight:600; }
+.history-detail{ margin-top:8px; display:grid; gap:8px; }
+.history-field-change{ background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:8px 10px; }
+.history-field-label{ font-size:11px; text-transform:uppercase; letter-spacing:.3px; color:var(--ink-dim); font-weight:700; margin-bottom:3px; }
+.history-field-value{ font-size:13.5px; white-space:pre-wrap; overflow-wrap:break-word; }
+.history-empty{ text-align:center; padding:30px; color:var(--ink-dim); }
+
+/* PREVIEW MODAL */
+.preview-meta-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+.preview-meta-left, .preview-meta-right{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.id-pill{ display:inline-flex; align-items:center; font-family:'IBM Plex Mono'; font-weight:700; font-size:12.5px; color:var(--ink-dim); background:var(--surface-2); border:1px solid var(--border); padding:5px 12px; border-radius:999px; white-space:nowrap; }
+.preview-title{ font-size:20px; font-weight:700; margin:2px 0 0; line-height:1.3; }
+.preview-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start; }
+.preview-block{ display:grid; gap:4px; }
+.preview-label{ font-size:11.5px; text-transform:uppercase; letter-spacing:.3px; color:var(--ink-dim); font-weight:700; }
+.preview-value{ font-size:14.5px; white-space:pre-wrap; overflow-wrap:break-word; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:9px 11px; min-height:1.4em; }
+.preview-photos{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.preview-photo-box{ border:1px solid var(--border); border-radius:10px; overflow:hidden; background:var(--bg); }
+.preview-photo-box .tag{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.3px; color:var(--ink-dim); padding:8px 10px 0; display:block; }
+.preview-photo-box img{ width:100%; height:140px; object-fit:cover; cursor:pointer; display:block; margin-top:6px; }
+.preview-photo-box .none{ height:140px; display:flex; align-items:center; justify-content:center; color:var(--ink-dim); font-size:13px; }
+.preview-photo-box .video-placeholder{ height:140px; margin-top:6px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; color:var(--ink); font-size:13px; font-weight:600; background:var(--surface-2); cursor:pointer; }
+.preview-photo-box .video-placeholder .icon{ font-size:28px; }
+
+/* LIGHTBOX */
+.lightbox-overlay{ position:fixed; inset:0; background:rgba(6,5,2,.92); z-index:250; display:flex; align-items:center; justify-content:center; }
+.lightbox-overlay[hidden]{ display:none; }
+.lightbox-overlay img, .lightbox-overlay video{ max-width:90vw; max-height:80vh; object-fit:contain; border-radius:8px; box-shadow:0 10px 40px rgba(0,0,0,.5); }
+.lightbox-overlay iframe{ width:min(90vw, 960px); height:70vh; border:none; border-radius:8px; background:#000; box-shadow:0 10px 40px rgba(0,0,0,.5); }
+#lightboxStage{ display:flex; align-items:center; justify-content:center; }
+.lightbox-close{ position:absolute; top:18px; right:22px; font-size:22px; color:#fff; background:rgba(255,255,255,.1); border:none; width:38px; height:38px; border-radius:50%; cursor:pointer; }
+.lightbox-close:hover{ background:rgba(255,255,255,.2); }
+.lightbox-nav{ position:absolute; top:50%; transform:translateY(-50%); width:46px; height:46px; border-radius:50%; background:rgba(255,255,255,.12); border:none; color:#fff; font-size:20px; cursor:pointer; }
+.lightbox-nav:hover{ background:rgba(255,255,255,.22); }
+.lightbox-prev{ left:20px; } .lightbox-next{ right:20px; }
+.lightbox-caption{ position:absolute; bottom:22px; left:0; right:0; text-align:center; color:#fff; font-size:14px; font-weight:600; letter-spacing:.3px; opacity:.85; }
+
+/* PRESENT MODE — full screen, side-by-side photos */
+.present-overlay{ position:fixed; inset:0; background:var(--bg); z-index:100; display:flex; flex-direction:column; }
+.present-overlay[hidden]{ display:none; }
+.present-count{ font-family:'IBM Plex Mono'; font-size:15px; color:var(--ink-dim); font-weight:600; }
+.present-body{ flex:1; display:flex; align-items:stretch; justify-content:stretch; min-height:0; }
+.present-card{ width:100%; height:100%; background:var(--bg); display:flex; gap:0; overflow:hidden; }
+.present-card.single-col{ max-width:none; }
+.present-text-col{ flex:1 1 50%; min-width:0; padding:56px 64px; overflow-y:auto; display:flex; flex-direction:column; }
+.present-card.single-col .present-text-col{ flex:1 1 100%; align-items:center; text-align:center; }
+.present-card.single-col .present-grid{ text-align:left; width:100%; max-width:1100px; }
+.present-photos-col{ flex:1 1 50%; min-width:0; display:flex; flex-direction:column; gap:0; border-left:1px solid var(--border); }
+.present-photo-half{ flex:1; display:flex; flex-direction:column; min-height:0; position:relative; }
+.present-photo-half:first-child{ border-bottom:1px solid var(--border); }
+.present-photo-tag{ position:absolute; top:18px; left:18px; z-index:2; background:rgba(20,18,10,.65); color:#fff; font-size:15px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; padding:6px 15px; border-radius:999px; }
+.present-photo-half img{ width:100%; height:100%; object-fit:cover; cursor:pointer; display:block; }
+.present-photo-half .present-photo-empty{ flex:1; display:flex; align-items:center; justify-content:center; color:var(--ink-dim); font-size:18px; background:var(--surface-2); }
+.present-photo-half .video-placeholder{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:var(--ink); font-size:20px; font-weight:600; background:var(--surface-2); cursor:pointer; }
+.present-photo-half .video-placeholder .icon{ font-size:52px; }
+.present-photo-count{ position:absolute; bottom:18px; right:18px; z-index:2; background:rgba(20,18,10,.65); color:#fff; font-size:14px; font-weight:700; padding:5px 13px; border-radius:999px; }
+
+.present-meta{ display:flex; gap:16px; align-items:center; justify-content:space-between; margin-bottom:28px; flex-wrap:nowrap; }
+.present-meta-left, .present-meta-right{ display:flex; align-items:center; gap:12px; flex-wrap:nowrap; flex:none; }
+.present-card.single-col .present-meta{ justify-content:center; }
+.present-meta .badge{ font-size:15px; padding:7px 14px; }
+.present-meta .badge-2line .line1, .present-meta .badge-3line .line1{ font-size:14px; }
+.present-meta .badge-2line .line2, .present-meta .badge-3line .line2{ font-size:13px; }
+.present-meta .badge-3line .line3{ font-size:11px; }
+.present-meta .tab.dept-pill{ font-size:15px; padding:7px 16px; }
+.present-meta .upd-btn{ font-size:15px; padding:9px 15px; }
+.present-meta .id-cell{ font-size:17px; }
+.present-title{ font-size:56px; font-weight:700; margin:0 0 26px; line-height:1.18; }
+.present-grid{ display:grid; grid-template-columns:1fr 1fr; gap:28px; margin:26px 0; align-items:start; }
+.present-label{ font-size:15px; text-transform:uppercase; letter-spacing:.4px; color:var(--ink-dim); font-weight:700; margin-bottom:7px; }
+.present-value{ font-size:22px; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:14px 16px; line-height:1.4; }
+.present-status-row{ margin-top:24px; }
+.present-bottom{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:20px 28px; border-top:1px solid var(--border); flex:none; }
+.present-bottom-left{ display:flex; align-items:center; gap:14px; }
+.present-bottom-center{ display:flex; align-items:center; gap:16px; justify-content:center; }
+.present-bottom-right{ display:flex; align-items:center; justify-content:flex-end; }
+.nav-btn{ width:52px; height:52px; border-radius:50%; border:1px solid var(--border); background:var(--surface); font-size:22px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.nav-btn:hover{ background:var(--surface-2); }
+
+@media (max-width:900px){
+  .present-card{ flex-direction:column; height:auto; max-height:100%; overflow-y:auto; }
+  .present-photos-col{ border-left:none; border-top:1px solid var(--border); flex-direction:row; }
+  .present-photo-half:first-child{ border-bottom:none; border-right:1px solid var(--border); }
+  .present-photo-half{ min-height:220px; }
+}
+
+/* DASHBOARD */
+.dash-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+.dash-card{ background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:14px; }
+.dash-num{ font-family:'IBM Plex Mono'; font-size:25px; font-weight:700; }
+.dash-lbl{ font-size:11.5px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.3px; margin-top:2px; }
+.dept-bar-row{ display:grid; grid-template-columns:150px 1fr 30px; align-items:center; gap:10px; font-size:13.5px; margin-bottom:8px;}
+.dept-bar-track{ background:var(--surface-2); border-radius:6px; height:11px; overflow:hidden; }
+.dept-bar-fill{ height:100%; border-radius:6px; }
+
+@media (max-width:720px){
+  .row2{ grid-template-columns:1fr; }
+  .present-grid{ grid-template-columns:1fr; }
+  .preview-grid{ grid-template-columns:1fr; }
+  .preview-photos{ grid-template-columns:1fr; }
+  .dash-grid{ grid-template-columns:repeat(2,1fr); }
+  .titles .tagline{ display:none; }
+}
+
+/* ============================================================
+   MOBILE MODE — manually toggled card view (independent of actual
+   viewport width), for a phone-friendly reading experience.
+   ============================================================ */
+.mobile-card-list{ display:none; flex-direction:column; gap:10px; padding-bottom:8px; }
+body.mobile-mode .table-wrap{ padding:0 10px 10px; }
+body.mobile-mode table{ display:none; }
+body.mobile-mode .mobile-card-list{ display:flex; }
+
+.mcard{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; box-shadow:var(--shadow); cursor:pointer; display:flex; flex-direction:column; gap:10px; }
+.mcard:active{ background:var(--surface-2); }
+.mcard-top{ display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+.mcard-top-left{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0; }
+.mcard-issues{ font-size:15.5px; font-weight:700; line-height:1.35; }
+.mcard-row{ display:flex; flex-wrap:wrap; gap:6px 16px; font-size:12.5px; color:var(--ink-dim); }
+.mcard-row b{ color:var(--ink); font-weight:600; }
+.mcard-field{ display:flex; flex-direction:column; gap:2px; }
+.mcard-field .mcard-label{ font-size:10px; text-transform:uppercase; letter-spacing:.3px; color:var(--ink-dim); font-weight:700; }
+.mcard-detail{ font-size:13.5px; color:var(--ink-dim); overflow:hidden; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; }
+.mcard-media{ display:flex; gap:8px; }
+.mcard-bottom{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+
+/* Header simplified to a single row in mobile mode: branding + hamburger only.
+   The toolbar/topbar-controls are emptied out via JS (their contents get moved into the
+   sidebar), so hiding what's left over (Present Mode, empty wrappers) is just a formality. */
+body.mobile-mode .topbar{ height:auto; padding:10px 14px; }
+body.mobile-mode .titles .tagline{ display:none; }
+body.mobile-mode #presentModeBtn{ display:none; }
+body.mobile-mode .toolbar{ display:none; }
+body.mobile-mode #mobileSidebarBtn{ display:flex; }
+body.mobile-mode .tabs{ padding:10px 14px; }
+
+.mobile-sidebar-overlay{ position:fixed; inset:0; background:rgba(10,9,4,.5); z-index:300; display:flex; justify-content:flex-end; }
+.mobile-sidebar-overlay[hidden]{ display:none; }
+.mobile-sidebar{ width:min(86vw, 340px); height:100%; background:var(--surface); box-shadow:var(--shadow); display:flex; flex-direction:column; animation:mobile-sidebar-in .22s ease; }
+@keyframes mobile-sidebar-in{ from{ transform:translateX(100%); } to{ transform:translateX(0); } }
+.mobile-sidebar-head{ display:flex; align-items:center; justify-content:space-between; padding:16px; border-bottom:1px solid var(--border); flex:none; }
+.mobile-sidebar-head h3{ margin:0; font-size:16px; }
+.mobile-sidebar-body{ flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:16px; }
+.mobile-sidebar-body > *{ width:100%; margin:0 !important; max-width:none !important; }
+.mobile-sidebar-body .search-wrap{ flex:none; }
+.mobile-sidebar-body .search-wrap input{ width:100%; }
+.mobile-sidebar-body .sort-wrap{ flex-direction:column; align-items:flex-start; gap:4px; }
+.mobile-sidebar-body .sort-wrap select{ width:100%; }
+.mobile-sidebar-body .stats-strip{ flex-direction:column; align-items:flex-start; gap:10px; }
+.mobile-sidebar-body .stats-strip.hidden-by-filter{ opacity:1 !important; width:100% !important; pointer-events:auto !important; }
+.mobile-sidebar-body .filter-toggle-btn{ width:100%; justify-content:center; }
+.mobile-sidebar-body .filter-expand{ display:none; max-width:none !important; opacity:1 !important; overflow:visible !important; flex-direction:column; align-items:stretch; gap:8px; }
+.mobile-sidebar-body .filter-expand.expanded{ display:flex; }
+.mobile-sidebar-body .filter-bar{ flex-direction:column; align-items:stretch; flex-wrap:wrap; gap:8px; }
+.mobile-sidebar-body .filter-bar .filter-wrap{ width:100%; }
+.mobile-sidebar-body .filter-bar .filter-btn{ width:100%; justify-content:space-between; }
+.mobile-sidebar-body .filter-panel{ position:static; box-shadow:none; width:100%; margin-top:6px; }
+body.mobile-mode #folderLinkWrap, body.mobile-mode #previewFolderWrap{ display:none !important; }
+
+/* Modals/present mode always stack on mobile, regardless of actual window width */
+body.mobile-mode .present-card{ flex-direction:column; height:auto; max-height:100%; overflow-y:auto; }
+body.mobile-mode .present-photos-col{ border-left:none; border-top:1px solid var(--border); flex-direction:row; }
+body.mobile-mode .present-photo-half:first-child{ border-bottom:none; border-right:1px solid var(--border); }
+body.mobile-mode .present-photo-half{ min-height:200px; }
+body.mobile-mode .present-text-col{ padding:22px 20px; }
+body.mobile-mode .present-title{ font-size:26px; }
+body.mobile-mode .row2{ grid-template-columns:1fr; }
+body.mobile-mode .present-grid, body.mobile-mode .preview-grid, body.mobile-mode .preview-photos, body.mobile-mode .dash-grid{ grid-template-columns:1fr; }
+body.mobile-mode .modal{ max-width:96vw; }
+</style>
+</head>
+<body>
+
+<div id="loadErrorBanner" hidden style="background:var(--bad-soft); color:var(--bad); padding:9px 16px; font-size:13px; font-weight:600; border-bottom:1px solid var(--border);"></div>
+
+<header class="topbar">
+  <div class="brand">
+    <button class="logo" id="logoRefreshBtn" title="Refresh data">AR</button>
+    <div class="titles">
+      <h1>Action Register</h1>
+      <p class="tagline">Track • Update • Monitor • Close Actions</p>
+    </div>
+  </div>
+  <div class="topbar-controls">
+    <div class="sort-wrap" id="sortWrap">
+      <label for="sortOrderSelect">Order</label>
+      <select id="sortOrderSelect">
+        <option value="item_asc">Item # (Low→High)</option>
+        <option value="item_desc">Item # (High→Low)</option>
+        <option value="due_asc">Due Date (Soonest)</option>
+        <option value="due_desc">Due Date (Latest)</option>
+        <option value="discussed_desc">Date Discussed (Newest)</option>
+        <option value="discussed_asc">Date Discussed (Oldest)</option>
+        <option value="aging_desc">Aging (Most days)</option>
+        <option value="aging_asc">Aging (Fewest days)</option>
+      </select>
+    </div>
+    <button class="btn btn-accent" id="presentModeBtn">▶ Present Mode</button>
+    <button class="btn btn-ghost" id="dashboardBtn">📊 Dashboard</button>
+    <button class="theme-toggle" id="themeToggle" title="Toggle light/dark">🌙</button>
+    <button class="theme-toggle" id="mobileToggle" title="Toggle mobile view">📱</button>
+    <button class="theme-toggle" id="mobileSidebarBtn" title="Menu" hidden>☰</button>
+  </div>
+</header>
+
+<div class="toolbar">
+  <button class="btn btn-primary" id="newActionBtn">+ New Action</button>
+  <div class="search-wrap" id="searchWrap">
+    <input type="search" id="searchInput" placeholder="Search item, issues, owner, meeting…">
+  </div>
+  <div class="filter-expand" id="filterExpandPanel">
+    <div class="filter-bar" id="filterBar"></div>
+    <button class="btn btn-sm btn-ghost" id="clearFiltersBtn" hidden>✕ Clear filters</button>
+  </div>
+  <button class="btn filter-toggle-btn" id="filterToggleBtn">
+    <span class="filter-toggle-arrow" id="filterToggleArrow">▸</span> Filter
+    <span class="filter-badge" id="filterToggleBadge" hidden>0</span>
+  </button>
+  <div class="stats-strip" id="statsStrip"></div>
+</div>
+
+<!-- Mobile sidebar drawer: holds Search / New Action / Filter / Order / theme toggle / stats
+     when in mobile mode, via reparenting the existing controls (JS moves them in and out). -->
+<div class="mobile-sidebar-overlay" id="mobileSidebarOverlay" hidden>
+  <div class="mobile-sidebar">
+    <div class="mobile-sidebar-head">
+      <h3>Menu</h3>
+      <button class="close-x" id="closeMobileSidebarBtn">✕</button>
+    </div>
+    <div class="mobile-sidebar-body" id="mobileSidebarBody"></div>
+  </div>
+</div>
+
+<nav class="tabs" id="tabs"></nav>
+
+<main class="table-wrap">
+  <table id="actionTable">
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Date</th>
+        <th>Meeting</th>
+        <th>Updated Today</th>
+        <th>Issues/Concerns</th>
+        <th>Details</th>
+        <th>Remarks/Update</th>
+        <th>Media Bin</th>
+        <th>Owner</th>
+        <th>Department</th>
+        <th>Due Date</th>
+        <th>Status</th>
+        <th>Aging</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+  <div class="mobile-card-list" id="mobileCardList"></div>
+  <div class="empty-state" id="emptyState" hidden>
+    <h3>No action items here</h3>
+    <p>Try a different tab, clear filters, or add a new action.</p>
+  </div>
+</main>
+
+<!-- Preview Modal (read-only) -->
+<div class="overlay" id="previewOverlay" hidden style="z-index:140;">
+  <div class="modal theme-preview" id="previewModal">
+    <div class="modal-head">
+      <h2>Item Preview</h2>
+      <div class="modal-head-actions">
+        <button class="close-x" id="closePreviewBtn">✕</button>
+      </div>
+    </div>
+    <div class="modal-body" id="previewBody"></div>
+    <div class="modal-foot">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <button class="btn" id="previewHistoryBtn">🕒 History</button>
+        <div style="font-size:12.5px; color:var(--ink-dim);" id="previewFolderWrap"></div>
+      </div>
+      <div style="margin-left:auto; display:flex; gap:8px;">
+        <button class="btn" id="previewEditBtn">✏️ Edit</button>
+        <button class="btn btn-primary" id="previewUpdateBtn">✓ Update</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- New / Edit / Update Action Modal -->
+<div class="overlay" id="actionOverlay" hidden>
+  <div class="modal" id="actionModal">
+    <div class="modal-head">
+      <h2 id="modalTitle">New Action</h2>
+      <div class="modal-head-actions">
+        <button class="close-x" id="closeModalBtn">✕</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="row2">
+        <div class="field" data-field="dateDiscussed">
+          <label>Date Discussed <span class="req">*</span></label>
+          <input type="date" id="f_dateDiscussed">
+          <span class="field-error-msg">Please select a date.</span>
+        </div>
+        <div class="field" data-field="meeting">
+          <label>Meeting <span class="req">*</span></label>
+          <input type="text" id="f_meeting" list="meetingOptions" placeholder="e.g. MBU 1.5">
+          <datalist id="meetingOptions"></datalist>
+          <span class="field-error-msg">Meeting is required.</span>
+        </div>
+      </div>
+      <div class="field" data-field="issues">
+        <label>Issues/Concerns <span class="req">*</span></label>
+        <input type="text" id="f_issues" placeholder="What needs to happen">
+        <span class="field-error-msg">Issues/Concerns is required.</span>
+      </div>
+      <div class="field" data-field="details">
+        <label>Details <span class="req">*</span></label>
+        <textarea id="f_details" placeholder="Context, scope, background"></textarea>
+        <span class="field-error-msg">Details are required.</span>
+      </div>
+      <div class="field">
+        <label>Remarks / Update</label>
+        <textarea id="f_remarks" placeholder="Latest progress notes"></textarea>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>Before Media</label>
+          <div class="photo-bin-box">
+            <div class="photo-grid" id="beforePhotoGrid"><span class="empty-hint">No before media yet</span></div>
+            <input type="file" id="f_beforePhotos" accept="image/*,video/*" multiple>
+          </div>
+        </div>
+        <div class="field">
+          <label>Currently Media</label>
+          <div class="photo-bin-box">
+            <div class="photo-grid" id="currentPhotoGrid"><span class="empty-hint">No current media yet</span></div>
+            <input type="file" id="f_currentPhotos" accept="image/*,video/*" multiple>
+          </div>
+        </div>
+      </div>
+      <div id="folderLinkWrap"></div>
+
+      <div class="row2">
+        <div class="field" data-field="owner">
+          <label>Owner(s) <span class="req">*</span></label>
+          <button type="button" class="btn owner-select-btn" id="ownerSelectBtn">Select owner(s)</button>
+          <input type="hidden" id="f_owner">
+          <div class="owner-select-panel" id="ownerSelectPanel" hidden>
+            <input type="text" id="ownerSelectSearch" class="owner-select-search" placeholder="Search names…" autocomplete="off">
+            <div class="owner-select-list" id="ownerSelectList"></div>
+          </div>
+          <span class="field-error-msg">Select at least one owner (or "All").</span>
+        </div>
+        <div class="field" data-field="department">
+          <label>Department(s) <span class="req">*</span></label>
+          <button type="button" class="btn owner-select-btn" id="deptSelectBtn">Select department(s)</button>
+          <input type="hidden" id="f_department">
+          <div class="owner-select-panel" id="deptSelectPanel" hidden>
+            <input type="text" id="deptSelectSearch" class="owner-select-search" placeholder="Search departments…" autocomplete="off">
+            <div class="owner-select-list" id="deptSelectList"></div>
+          </div>
+          <span class="field-error-msg">Select at least one department (or "All").</span>
+        </div>
+      </div>
+      <div class="field" data-field="inputBy">
+        <label>Input By <span class="req">*</span></label>
+        <input type="text" id="f_inputBy" placeholder="Who is logging this action" autocomplete="off">
+        <div class="name-autocomplete" id="f_inputBy_ac" hidden></div>
+        <span class="field-error-msg">Input By is required and must match the roster (or "All").</span>
+      </div>
+      <div class="row2">
+        <div class="field" data-field="dueDate">
+          <label>Due Date <span class="req">*</span></label>
+          <input type="date" id="f_dueDate">
+          <div class="nodate-row">
+            <input type="checkbox" id="f_noDateYet">
+            <label for="f_noDateYet">No date yet — can't determine deadline</label>
+          </div>
+          <span class="field-error-msg">Pick a due date, or check "No date yet".</span>
+        </div>
+        <div class="field" data-field="status">
+          <label>Status <span class="req">*</span></label>
+          <select id="f_status"></select>
+          <span class="field-error-msg">Status is required.</span>
+        </div>
+      </div>
+
+      <div class="update-by-box field" id="updatedByWrap" data-field="updatedBy" hidden>
+        <label>Updated By <span class="req">*</span></label>
+        <input type="text" id="f_updatedBy" placeholder="Who is making this update" autocomplete="off">
+        <div class="name-autocomplete" id="f_updatedBy_ac" hidden></div>
+        <span class="field-error-msg">Updated By is required and must match the roster (or "All").</span>
+      </div>
+
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger" id="deleteBtn" hidden>Delete</button>
+      <div style="margin-left:auto; display:flex; gap:8px;">
+        <button class="btn" id="cancelBtn">Cancel</button>
+        <button class="btn btn-primary" id="saveBtn">Save Action</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- History Overlay -->
+<div class="overlay" id="historyOverlay" hidden style="z-index:160;">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-head">
+      <h2 id="historyTitle">Update History</h2>
+      <button class="close-x" id="closeHistoryBtn">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="history-list" id="historyList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Dashboard Modal -->
+<div class="overlay" id="dashOverlay" hidden>
+  <div class="modal" style="max-width:760px;">
+    <div class="modal-head">
+      <h2>Dashboard</h2>
+      <button class="close-x" id="closeDashBtn">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="dash-grid" id="dashCards"></div>
+      <div>
+        <div class="present-label" style="margin-bottom:10px;">Open items by department</div>
+        <div id="dashDeptBars"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Present Mode -->
+<div class="present-overlay" id="presentOverlay" hidden>
+  <div class="present-body" id="presentBody"></div>
+  <div class="present-bottom">
+    <div class="present-bottom-left">
+      <button class="btn" id="presentHistoryBtn">🕒 History</button>
+      <span class="present-count" id="presentCount">0 of 0 pending</span>
+    </div>
+    <div class="present-bottom-center">
+      <button class="nav-btn" id="presentPrev">‹</button>
+      <button class="btn" id="presentMarkUpdated">✓ Update This Action</button>
+      <button class="nav-btn" id="presentNext">›</button>
+    </div>
+    <div class="present-bottom-right">
+      <button class="btn" id="exitPresentBtn">Exit Present Mode ✕</button>
+    </div>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox-overlay" id="lightboxOverlay" hidden>
+  <button class="lightbox-close" id="lightboxClose">✕</button>
+  <button class="lightbox-nav lightbox-prev" id="lightboxPrev">‹</button>
+  <div id="lightboxStage"></div>
+  <button class="lightbox-nav lightbox-next" id="lightboxNext">›</button>
+  <div class="lightbox-caption" id="lightboxCaption"></div>
+</div>
+
+<script>
+/* ============================================================
+   CONFIG / CONSTANTS
+   ============================================================ */
+const CUTOFF_HOUR_DEFAULT = 12, CUTOFF_MIN_DEFAULT = 10;
+let CFG = {
+  departments: [], statuses: [], ownersByDept: {}, allOwners: [], allNameAliases: [],
+  nameToDisp: {}, nameToDept: {}, deptColors: {}, meetingSuggestions: [],
+  cutoffHour: CUTOFF_HOUR_DEFAULT, cutoffMin: CUTOFF_MIN_DEFAULT
+};
+
+let state = {
+  items: [],
+  activeTab: 'All',
+  search: '',
+  sortOrder: 'item_asc',
+  filters: { dateDiscussed:new Set(), meeting:new Set(), updatedToday:new Set(), owner:new Set(), department:new Set(), dueDate:new Set(), status:new Set() },
+  editingId: null,
+  previewId: null,
+  modalMode: 'new',
+  pendingBefore: [],
+  pendingCurrent: [],
+  ownerSelection: new Set(),
+  deptSelection: new Set(),
+  presentQueue: [],
+  presentIndex: 0,
+  lightbox: { images: [], index: 0, label: '' }
+};
+
+// An item's Department (and Owner) field may hold several comma-separated values now that
+// items can have multiple owners across multiple departments. "All" expands to every real
+// value so such an item matches every tab/filter/dashboard bucket, same as a literal wildcard.
+function itemDeptList(it){
+  const list = (it.department||'').split(',').map(s=>s.trim()).filter(Boolean);
+  if (list.some(d=>d.toLowerCase()==='all')) return CFG.departments.slice();
+  return list;
+}
+function itemOwnerList(it){
+  const list = (it.owner||'').split(',').map(s=>s.trim()).filter(Boolean);
+  if (list.some(o=>o.toLowerCase()==='all')) return CFG.allOwners.slice();
+  return list;
+}
+const CROSS_DEPT_LABEL = 'Cross Dept';
+
+// An item counts as "cross-department" only if it actually spans 2+ distinct departments (or
+// its department is "All") — multiple owners who all happen to share one department still
+// belong to that single department tab, not Cross Dept.
+function isCrossDeptItem(it){
+  const raw = (it.department||'').trim();
+  if (!raw) return false;
+  if (raw.toLowerCase() === 'all') return true;
+  const parts = raw.split(',').map(s=>s.trim().toLowerCase()).filter(Boolean);
+  const uniq = new Set(parts);
+  return uniq.size > 1;
+}
+
+function itemMatchesDeptTab(it, tab){
+  if (tab === 'All') return true;
+  if (tab === CROSS_DEPT_LABEL) return isCrossDeptItem(it);
+  if (isCrossDeptItem(it)) return false; // cross-dept items live only under All / Cross Dept
+  const raw = (it.department||'').split(',').map(s=>s.trim());
+  return raw.some(d=>d.toLowerCase()==='all') || raw.indexOf(tab) !== -1;
+}
+
+const FILTER_DEFS = [
+  { key:'dateDiscussed', label:'Date Discussed', kind:'value', dateLike:true, sortDesc:true, getValue: it=> it.dateDiscussed || null },
+  { key:'meeting', label:'Meeting', kind:'value', sortDesc:false, getValue: it=> it.meeting || null },
+  { key:'updatedToday', label:'Updated Today', kind:'fixed', optionsFn: ()=>['Updated','Needs Update','Closed Today'],
+    getValue: it => getStatusBucket(it)==='Closed' ? (it.updatedToday ? 'Closed Today' : null) : (it.updatedToday?'Updated':'Needs Update') },
+  { key:'owner', label:'Owner', kind:'value', multi:true, sortDesc:false, getValue: itemOwnerList },
+  { key:'department', label:'Department', kind:'value', multi:true, sortDesc:false, getValue: itemDeptList,
+    customSort: (a,b)=> CFG.departments.indexOf(a) - CFG.departments.indexOf(b) },
+  { key:'dueDate', label:'Due Date', kind:'value', dateLike:true, sortDesc:true, getValue: it=> (it.dueDate && it.dueDate!=='TBD') ? it.dueDate : null },
+  { key:'status', label:'Status', kind:'fixed', optionsFn: ()=> ['Open','On Hold','On Track','Overdue','Closed'], getValue: it=> getStatusBucket(it) || null }
+];
+
+/* ============================================================
+   COLOR RESOLUTION — turns the free-text "Department color"
+   value from the roster file into real CSS (solid color or a
+   multi-color gradient), independent of how it was written.
+   ============================================================ */
+const COLOR_SPECIAL = { 'emerald':'#50C878', 'gunmetal black':'#2A3439', 'mustard':'#FFDB58' };
+const IRIDESCENT_STOPS = ['#A78BFA','#60A5FA','#34D399','#FBBF24','#F472B6'];
+
+function resolveColorToken_(tok){
+  const t = (tok||'').trim().toLowerCase();
+  if (!t) return null;
+  if (t.startsWith('#')) return tok.trim();
+  if (t === 'iridescent') return null; // signals "expand to gradient stops"
+  if (COLOR_SPECIAL[t]) return COLOR_SPECIAL[t];
+  return t.replace(/\s+/g,''); // "light blue" -> "lightblue", "dark blue" -> "darkblue" (valid CSS names)
+}
+
+function conicFrom_(colors){
+  const n = colors.length;
+  const stops = colors.map((c,i)=> `${c} ${Math.round(i/n*100)}% ${Math.round((i+1)/n*100)}%`);
+  return `conic-gradient(${stops.join(', ')})`;
+}
+
+function departmentColorCss(raw){
+  if (!raw) return '#6B7280';
+  const tokens = raw.toString().split(',').map(s=>s.trim()).filter(Boolean);
+  let colors = [];
+  tokens.forEach(tok=>{
+    const r = resolveColorToken_(tok);
+    if (r === null) colors = colors.concat(IRIDESCENT_STOPS);
+    else colors.push(r);
+  });
+  if (!colors.length) return '#6B7280';
+  if (colors.length === 1) return colors[0];
+  return conicFrom_(colors);
+}
+function deptColor(name){ return departmentColorCss(CFG.deptColors[name]); }
+
+// True if this department's color includes "iridescent" — those get a special holographic
+// foil texture (see .iridescent-fill) instead of a flat solid color, since a gradient can't
+// be represented as a single CSS custom-property color for the usual tab/pill treatment.
+function isIridescentDept(name){
+  const raw = CFG.deptColors[name];
+  if (!raw) return false;
+  return raw.toString().split(',').some(tok => tok.trim().toLowerCase() === 'iridescent');
+}
+
+// A single solid color representing a department (used for theming/tab fills, where a
+// gradient like the dept "chip" dot uses isn't valid — e.g. as a button background).
+function departmentFlatColor(name){
+  const raw = CFG.deptColors[name];
+  if (!raw) return '#6B7280';
+  const tokens = raw.toString().split(',').map(s=>s.trim()).filter(Boolean);
+  for (const tok of tokens){
+    const r = resolveColorToken_(tok);
+    if (r === null) return IRIDESCENT_STOPS[0]; // "iridescent" -> use its first stop as the flat color
+    return r;
+  }
+  return '#6B7280';
+}
+
+function singleDeptPillHtml(dept){
+  if (!dept) return '';
+  if (dept.toLowerCase() === 'all'){
+    return `<span class="tab dept-tab dept-pill" style="--tab-dept-color:var(--ink-dim); --tab-dept-ink:var(--bg);">All</span>`;
+  }
+  if (isIridescentDept(dept)){
+    return `<span class="tab dept-tab dept-pill iridescent-fill">${escapeHtml(dept)}</span>`;
+  }
+  const flat = departmentFlatColor(dept);
+  const ink = pickInkColor(flat);
+  return `<span class="tab dept-tab dept-pill" style="--tab-dept-color:${flat}; --tab-dept-ink:${ink};">${escapeHtml(dept)}</span>`;
+}
+
+// Renders a department field (which may hold several comma-separated departments, since an
+// item can now have multiple owners spanning multiple departments) as the same colored pill
+// style used by the department tabs — just without the item count.
+function departmentPillHtml(deptField){
+  const depts = (deptField||'').split(',').map(s=>s.trim()).filter(Boolean);
+  if (!depts.length) return '';
+  return `<span class="dept-pill-group">${depts.map(singleDeptPillHtml).join('')}</span>`;
+}
+
+let _inkCanvasCtx = null;
+let _inkCanvasUnavailable = false;
+function cssColorToRgb_(colorStr){
+  if (_inkCanvasUnavailable) return null;
+  try {
+    if (!_inkCanvasCtx){
+      const c = document.createElement('canvas'); c.width = c.height = 1;
+      _inkCanvasCtx = c.getContext && c.getContext('2d');
+      if (!_inkCanvasCtx) { _inkCanvasUnavailable = true; return null; }
+    }
+    _inkCanvasCtx.fillStyle = '#000'; // reset so an unparsable value falls back to black, not stale
+    _inkCanvasCtx.fillStyle = colorStr;
+    _inkCanvasCtx.fillRect(0, 0, 1, 1);
+    const d = _inkCanvasCtx.getImageData(0, 0, 1, 1).data;
+    return { r: d[0], g: d[1], b: d[2] };
+  } catch (e) {
+    _inkCanvasUnavailable = true;
+    return null;
+  }
+}
+function pickInkColor(colorStr){
+  const rgb = cssColorToRgb_(colorStr);
+  if (!rgb) return '#FFFFFF'; // safe default if canvas isn't available for some reason
+  const lum = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
+  return lum > 0.6 ? '#1E2230' : '#FFFFFF';
+}
+
+// Re-themes the whole app to a department's color when its tab is selected — this drives the
+// accent color used by the primary button, active tab, filter badges, logo, etc. "All" resets
+// back to the app's default accent.
+function applyDepartmentTheme(deptName){
+  const root = document.documentElement;
+  if (!deptName || deptName === 'All'){
+    root.style.removeProperty('--accent');
+    root.style.removeProperty('--accent-soft');
+    root.style.removeProperty('--accent-ink');
+    return;
+  }
+  const flat = departmentFlatColor(deptName);
+  const ink = pickInkColor(flat);
+  root.style.setProperty('--accent', flat);
+  root.style.setProperty('--accent-soft', `color-mix(in srgb, ${flat} 16%, var(--surface))`);
+  root.style.setProperty('--accent-ink', ink);
+}
+
+/* ============================================================
+   SERVER BRIDGE (Apps Script) with local demo fallback
+   ============================================================ */
+// ============================================================
+// PASTE THIS IN PLACE OF THE OLD isAppsScript / run() BLOCK
+// ============================================================
+
+// 👇 PASTE YOUR APPS SCRIPT WEB APP URL HERE (the one ending in /exec)
+const API_URL = "https://script.google.com/macros/s/AKfycbxd8uCBpLiTTz5zRHFjLbZp3rR61h18mV6jZPjc1Ywb9QwEk5xxGWfYyMO9VfkMyPa9qg/exec";
+
+const isAppsScript = false; // no longer used — kept so nothing else in the file breaks
+
+async function fetchWithRetry(url, options, retries = 3, delay = 800) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const res = await fetch(url, options);
+      if (!res.ok) throw new Error('Bad response: ' + res.status);
+      return res;
+    } catch (err) {
+      if (i === retries - 1) throw err;
+      await new Promise(r => setTimeout(r, delay * (i + 1)));
+    }
+  }
+}
+
+function run(fnName, ...args){
+  return new Promise(async (resolve, reject) => {
+    // If you haven't pasted your real Apps Script URL yet, fall back to the local demo data
+    // so the page still works while you're setting things up.
+    if (!API_URL || API_URL.indexOf('PASTE_YOUR') === 0) {
+      demoBackend[fnName](...args).then(resolve).catch(reject);
+      return;
+    }
+    try {
+      const res = await fetchWithRetry(API_URL, {
+        method: 'POST',
+        body: JSON.stringify({ fn: fnName, args: args })
+      });
+      const data = await res.json();
+      if (data.ok) resolve(data.result);
+      else reject(new Error(data.error || 'Server error'));
+    } catch (err) {
+      reject(err);
+    }
+  });
+};
+
+function run(fnName, ...args){
+  return new Promise((resolve, reject) => {
+    if (isAppsScript) {
+      google.script.run.withSuccessHandler(resolve).withFailureHandler(err => reject(err))[fnName](...args);
+    } else {
+      demoBackend[fnName](...args).then(resolve).catch(reject);
+    }
+  });
+}
+
+/* ---- Demo/local fallback backend (mirrors Code.gs roster) ---- */
+const DEMO_KEY = 'AR_DEMO_DATA_V5';
+const DEMO_HISTORY_KEY = 'AR_DEMO_HISTORY_V5';
+const DEMO_ROSTER = [
+  { full: 'Merlwin Ren Pugay', disp: 'M. Pugay', dept: 'ACCTG', color: 'Gold' },
+  { full: 'Minerva Carrascal', disp: 'M. Carrascal', dept: 'ACCTG', color: 'Gold' },
+  { full: 'Shaira Marie Gatdula', disp: 'S. Gatdula', dept: 'ACCTG', color: 'Gold' },
+  { full: 'Cathalene Dominique Lim', disp: 'C. Lim', dept: 'CI', color: 'iridescent' },
+  { full: 'Glen Tagotong', disp: 'G. Tagotong', dept: 'CI', color: 'iridescent' },
+  { full: 'Alyssa Vicente', disp: 'A. Vicente', dept: 'EHS', color: 'green' },
+  { full: 'Maricar Antonette Alegado', disp: 'M. Alegado', dept: 'EHS', color: 'green' },
+  { full: 'Romy Jane Aque', disp: 'R. Aque', dept: 'EHS', color: 'green' },
+  { full: 'Charles Darwin Victoriano', disp: 'C. Victoriano', dept: 'EMD', color: 'Red' },
+  { full: 'Jaen Dereck Anthony Arabia', disp: 'J. Arabia', dept: 'EMD', color: 'Red' },
+  { full: 'Rey Neypes', disp: 'R. Neypes', dept: 'EMD', color: 'Red' },
+  { full: 'Richard Sunico', disp: 'R. Sunico', dept: 'EMD', color: 'Red' },
+  { full: 'Rowena Rabang', disp: 'R. Rabang', dept: 'EMD', color: 'Red' },
+  { full: 'Sherwin Angat', disp: 'S. Angat', dept: 'EMD', color: 'Red' },
+  { full: 'Anna Coleen Petate', disp: 'A. Petate', dept: 'HRAD', color: '#F77E2D' },
+  { full: 'Maria Nenuka Anthea Gonzales', disp: 'Thea G.', dept: 'HRAD', color: '#F77E2D' },
+  { full: 'Richard Pescador', disp: 'R. Pescador', dept: 'HRAD', color: '#F77E2D' },
+  { full: 'Kristine Deomampo', disp: 'K. Deomampo', dept: 'IMPEX', color: 'maroon' },
+  { full: 'Maria Teena Campo', disp: 'M. Campo', dept: 'IMPEX', color: 'maroon' },
+  { full: 'Michael John Monteza', disp: 'M. Monteza', dept: 'FLEET', color: '' },
+  { full: 'Reina Catherina Romero', disp: 'R. Romero', dept: 'MS', color: 'dark blue' },
+  { full: 'Nestor Bonifacio Jr', disp: 'N. Bonifacio', dept: 'PPIC', color: 'pink' },
+  { full: 'Shekinah Shannon  Daduya', disp: 'S. Daduya', dept: 'PPIC', color: 'pink' },
+  { full: 'Ej Diaz', disp: 'E. Diaz', dept: 'PROD - NP', color: 'yellow, light blue, brown, purple' },
+  { full: 'Gilbert Odi', disp: 'G. Odi', dept: 'PROD - NP', color: 'yellow, light blue, brown, purple' },
+  { full: 'Jocelyn Barnachea', disp: 'J. Barnachea', dept: 'PROD - NP', color: 'yellow, light blue, brown, purple' },
+  { full: 'Maria Carmina De Guzman', disp: 'M. Guzman', dept: 'PROD - NP', color: 'yellow, light blue, brown, purple' },
+  { full: 'Marianne Del Rosario', disp: 'M. Rosario', dept: 'PROD - NP', color: 'yellow, light blue, brown, purple' },
+  { full: 'Neressa Buenaflor', disp: 'N. Buenaflor', dept: 'PROD - NP', color: 'yellow, light blue, brown, purple' },
+  { full: 'Reniel Badanoy', disp: 'R. Badanoy', dept: 'PROD - NP', color: 'yellow, light blue, brown, purple' },
+  { full: 'Jenesis Carlo Sy', disp: 'J. Sy', dept: 'PROD - Puree', color: 'mustard' },
+  { full: 'Ryan Avelino', disp: 'R. Avelino', dept: 'PROD - Puree', color: 'mustard' },
+  { full: 'Benedict Ella', disp: 'B. Ella', dept: 'PURCH - Fruits', color: 'emerald' },
+  { full: 'Diana Shane Agdeppa', disp: 'D. Agdeppa', dept: 'PURCH - Fruits', color: 'emerald' },
+  { full: 'Jerome Magadia', disp: 'J. Magadia', dept: 'PURCH - Fruits', color: 'emerald' },
+  { full: 'Cindy Jalayahay', disp: 'C. Jalayahay', dept: 'PURCH - NF', color: 'gunmetal black' },
+  { full: 'Mark Junald David Diamante', disp: 'M. Diamante', dept: 'PURCH - NF', color: 'gunmetal black' },
+  { full: 'Wilma Escaros', disp: 'W. Escaros', dept: 'PURCH - NF', color: 'gunmetal black' },
+  { full: 'Joanna Marie Torregosa', disp: 'J. Torregosa', dept: 'QA/QC', color: 'blue' },
+  { full: 'Juvillan Casabuena', disp: 'J. Casabuena', dept: 'QA/QC', color: 'blue' },
+  { full: 'Marina Benipayo', disp: 'M. Benipayo', dept: 'QA/QC', color: 'blue' },
+  { full: 'Pia Rose Arellano', disp: 'P. Arellano', dept: 'QA/QC', color: 'blue' },
+  { full: 'Czar Augusto Miguel Sabido', disp: 'C. Sabido', dept: 'R&D', color: 'violet' },
+  { full: 'Pamela Samantha Mallari', disp: 'P. Mallari', dept: 'R&D', color: 'violet' },
+  { full: 'Sherwin Teves', disp: 'S. Teves', dept: 'R&D', color: 'violet' },
+  { full: 'Edelyn Eleccion', disp: 'E. Eleccion', dept: 'RF', color: 'brown' },
+  { full: 'Emelia Guerrero', disp: 'E. Guerrero', dept: 'RF', color: 'brown' },
+  { full: 'Luis Jance Que', disp: 'L. Que', dept: 'RF', color: 'brown' },
+  { full: 'Jennifer Potante', disp: 'J. Potante', dept: 'SLT', color: 'Silver' },
+  { full: 'Jojo Villanueva', disp: 'J. Villanueva', dept: 'SLT', color: 'Silver' },
+  { full: 'Wilson Dichaves', disp: 'W. Dichaves', dept: 'SLT', color: 'Silver' },
+  { full: 'JM Martillano', disp: 'JM. Martillano', dept: 'WHSE', color: 'Gray' }
+];
+const DEMO_DEPARTMENT_ORDER = [
+  'ACCTG', 'CI', 'EHS', 'EMD', 'HRAD', 'IMPEX', 'FLEET', 'MS', 'PPIC',
+  'PROD - NP', 'PROD - Puree', 'PURCH - Fruits', 'PURCH - NF', 'QA/QC',
+  'R&D', 'RF', 'SLT', 'WHSE'
+];
+function demoDeriveConfig(){
+  const rosterDepts = new Set(DEMO_ROSTER.map(r=>r.dept));
+  const ordered = DEMO_DEPARTMENT_ORDER.filter(d=>rosterDepts.has(d));
+  const extra = Array.from(rosterDepts).filter(d=>DEMO_DEPARTMENT_ORDER.indexOf(d)===-1).sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
+  const departments = ordered.concat(extra);
+  const ownersByDept = {};
+  const colorSeen = {}; // dept -> { lowercasedToken: originalToken } — aggregated across every member
+  const nameToDisp = {};
+  const nameToDept = {};
+  const allOwnersSet = new Set();
+  const aliasSet = new Set();
+  DEMO_ROSTER.forEach(r=>{
+    if (!ownersByDept[r.dept]) ownersByDept[r.dept] = [];
+    if (ownersByDept[r.dept].indexOf(r.disp)===-1) ownersByDept[r.dept].push(r.disp);
+    if (!colorSeen[r.dept]) colorSeen[r.dept] = {};
+    (r.color||'').split(',').map(s=>s.trim()).filter(Boolean).forEach(tok=>{
+      const key = tok.toLowerCase();
+      if (!(key in colorSeen[r.dept])) colorSeen[r.dept][key] = tok;
+    });
+    nameToDisp[r.full.toLowerCase()] = r.disp;
+    nameToDisp[r.disp.toLowerCase()] = r.disp;
+    nameToDept[r.full.toLowerCase()] = r.dept;
+    nameToDept[r.disp.toLowerCase()] = r.dept;
+    allOwnersSet.add(r.disp); aliasSet.add(r.full); aliasSet.add(r.disp);
+  });
+  const deptColors = {};
+  Object.keys(colorSeen).forEach(dept=>{ deptColors[dept] = Object.values(colorSeen[dept]).join(', '); });
+  return {
+    departments, statuses: ['Open','On Track','On Hold','Closed'],
+    ownersByDept, allOwners: Array.from(allOwnersSet).sort(), allNameAliases: Array.from(aliasSet).sort(),
+    nameToDisp, nameToDept, deptColors,
+    ownerRecords: DEMO_ROSTER.map(r=>({ full:r.full, disp:r.disp })),
+    meetingSuggestions: ['MBU 1.5','MBU 2'],
+    cutoffHour: CUTOFF_HOUR_DEFAULT, cutoffMin: CUTOFF_MIN_DEFAULT, serverNow: new Date().toISOString()
+  };
+}
+function genLocalMediaId_(){ return 'local-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8); }
+function fileToMedia(f){
+  const url = `data:${f.mimeType};base64,${f.data}`;
+  return { id: genLocalMediaId_(), url, viewUrl: url, mimeType: f.mimeType || '', isVideo: (f.mimeType||'').indexOf('video/') === 0 };
+}
+const demoBackend = {
+  async getConfig(){ return demoDeriveConfig(); },
+  async getActions(){
+    let data = JSON.parse(localStorage.getItem(DEMO_KEY) || 'null');
+    if (!data) { data = seedDemoData(); localStorage.setItem(DEMO_KEY, JSON.stringify(data)); }
+    return data.map(computeDerivedDemo);
+  },
+  async addAction(payload){
+    const data = JSON.parse(localStorage.getItem(DEMO_KEY) || '[]');
+    const nextNum = data.length ? Math.max(...data.map(d=>parseInt(d.id||'0',10))) + 1 : 1;
+    const id = String(nextNum);
+    const now = new Date().toISOString();
+    const rec = {
+      id, dateDiscussed: payload.dateDiscussed || todayISO(), meeting: payload.meeting||'',
+      lastUpdated: now, lastUpdatedBy: payload.inputBy||'',
+      issues: payload.issues||'', details: payload.details||'',
+      remarks: payload.remarks||'', owner: payload.owner||'', inputBy: payload.inputBy||'',
+      department: payload.department||'',
+      dueDate: payload.noDateYet ? 'TBD' : (payload.dueDate||'TBD'), status: payload.status||'Open',
+      beforePhotos: (payload.beforePhotos||[]).map(fileToMedia),
+      currentPhotos: (payload.currentPhotos||[]).map(fileToMedia),
+      photoFolder: ''
+    };
+    data.push(rec);
+    localStorage.setItem(DEMO_KEY, JSON.stringify(data));
+    return computeDerivedDemo(rec);
+  },
+  async updateAction(id, payload){
+    const data = JSON.parse(localStorage.getItem(DEMO_KEY) || '[]');
+    const rec = data.find(d=>d.id===id);
+    if(!rec) throw new Error('not found');
+    Object.assign(rec, payload);
+    if (payload.hasOwnProperty('noDateYet') || payload.hasOwnProperty('dueDate')) {
+      rec.dueDate = payload.noDateYet ? 'TBD' : (payload.dueDate || 'TBD');
+    }
+    localStorage.setItem(DEMO_KEY, JSON.stringify(data));
+    return computeDerivedDemo(rec);
+  },
+  async submitUpdate(id, payload){
+    const data = JSON.parse(localStorage.getItem(DEMO_KEY) || '[]');
+    const rec = data.find(d=>d.id===id);
+    if(!rec) throw new Error('not found');
+    Object.assign(rec, payload);
+    if (payload.hasOwnProperty('noDateYet') || payload.hasOwnProperty('dueDate')) {
+      rec.dueDate = payload.noDateYet ? 'TBD' : (payload.dueDate || 'TBD');
+    }
+    rec.lastUpdated = new Date().toISOString();
+    rec.lastUpdatedBy = payload.updatedBy || '';
+    localStorage.setItem(DEMO_KEY, JSON.stringify(data));
+    const hist = JSON.parse(localStorage.getItem(DEMO_HISTORY_KEY) || '[]');
+    hist.push({
+      id, timestamp: rec.lastUpdated, updatedBy: payload.updatedBy||'', email:'(demo mode — no login)',
+      status: rec.status, remarks: rec.remarks, changedFields: payload.changedFields||'',
+      issues: rec.issues, department: rec.department, dateDiscussed: rec.dateDiscussed,
+      meeting: rec.meeting, details: rec.details, owner: rec.owner, dueDate: rec.dueDate
+    });
+    localStorage.setItem(DEMO_HISTORY_KEY, JSON.stringify(hist));
+    return computeDerivedDemo(rec);
+  },
+  async getHistory(id){
+    const hist = JSON.parse(localStorage.getItem(DEMO_HISTORY_KEY) || '[]');
+    return hist.filter(h=>h.id===id).sort((a,b)=> new Date(b.timestamp)-new Date(a.timestamp));
+  },
+  async uploadBinMedia(id, bin, files){
+    const data = JSON.parse(localStorage.getItem(DEMO_KEY) || '[]');
+    const rec = data.find(d=>d.id===id);
+    if(!rec) throw new Error('not found');
+    const key = bin === 'before' ? 'beforePhotos' : 'currentPhotos';
+    rec[key] = (rec[key]||[]).concat((files||[]).map(fileToMedia));
+    localStorage.setItem(DEMO_KEY, JSON.stringify(data));
+    return computeDerivedDemo(rec);
+  },
+  async deleteMedia(id, bin, mediaId){
+    const data = JSON.parse(localStorage.getItem(DEMO_KEY) || '[]');
+    const rec = data.find(d=>d.id===id);
+    if(!rec) throw new Error('not found');
+    const key = bin === 'before' ? 'beforePhotos' : 'currentPhotos';
+    rec[key] = (rec[key]||[]).filter(m=>m.id!==mediaId);
+    localStorage.setItem(DEMO_KEY, JSON.stringify(data));
+    return computeDerivedDemo(rec);
+  },
+  async deleteAction(id){
+    let data = JSON.parse(localStorage.getItem(DEMO_KEY) || '[]');
+    data = data.filter(d=>d.id!==id);
+    localStorage.setItem(DEMO_KEY, JSON.stringify(data));
+    return { deleted: id };
+  }
+};
+function localDateISO(d){
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function todayISO(){ return localDateISO(new Date()); }
+function addDaysISO(days){ const d = new Date(); d.setDate(d.getDate()+days); return localDateISO(d); }
+function seedImg_(url){ return { id: genLocalMediaId_(), url, viewUrl: url, mimeType: 'image/jpeg', isVideo: false }; }
+function seedDemoData(){
+  const now = Date.now();
+  const mk = (id,dept,issues,owner,inputBy,status,daysAgo,due,lastUpdHoursAgo,remarks,meeting,before,current) => ({
+    id, dateDiscussed: localDateISO(new Date(now-daysAgo*86400000)), meeting,
+    lastUpdated: lastUpdHoursAgo==null ? '' : new Date(now-lastUpdHoursAgo*3600000).toISOString(),
+    lastUpdatedBy: lastUpdHoursAgo==null ? '' : owner,
+    issues, details:'Details for '+issues, remarks, owner, inputBy, department:dept, dueDate:due, status, photoFolder:'',
+    beforePhotos: (before||[]).map(seedImg_), currentPhotos: (current||[]).map(seedImg_)
+  });
+  return [
+    mk('1','QA/QC','Recalibrate line 2 metal detector','P. Arellano','M. Benipayo','Open',6,addDaysISO(2),3,'Vendor scheduled for Thursday.','MBU 1.5',
+      ['https://picsum.photos/seed/before1/700/700'], ['https://picsum.photos/seed/current1/700/700']),
+    mk('2','PROD - Puree','Reduce changeover downtime on Line 4','R. Avelino','G. Odi','On Track',12,'TBD',30,'Timing study in progress.','MBU 2'),
+    mk('3','EHS','Replace worn fire extinguisher signage','M. Alegado','M. Alegado','Open',20,addDaysISO(-4),50,'Waiting on signage supplier quote.','MBU 1.5',
+      ['https://picsum.photos/seed/before3/700/700']),
+    mk('4','IMPEX','Re-layout pallet racks in Bay 3','M. Campo','M. Monteza','On Hold',15,'TBD',80,'On hold pending space study.','MBU 2'),
+    mk('5','PURCH - Fruits','Renegotiate mango supplier contract','J. Magadia','J. Magadia','Closed',40,addDaysISO(-30),90,'Signed new contract.','MBU 1.5'),
+    mk('6','HRAD','Update onboarding checklist','R. Pescador','R. Pescador','Open',3,addDaysISO(5),1,'Draft shared for review.','MBU 2'),
+    mk('7','R&D','Trial new packaging film supplier','C. Sabido','S. Teves','On Track',8,'TBD',20,'Sample batch under evaluation.','MBU 1.5',
+      ['https://picsum.photos/seed/before7/700/700'], ['https://picsum.photos/seed/current7a/700/700']),
+    mk('8','CI','Optimize delivery route for North region','C. Lim','G. Tagotong','Open',10,addDaysISO(1),null,'No updates logged yet.','MBU 2')
+  ];
+}
+function computeDerivedDemo(rec){
+  const now = new Date();
+  const cutoff = new Date(now); cutoff.setHours(CFG.cutoffHour||12, CFG.cutoffMin||10,0,0);
+  const periodStart = now < cutoff ? new Date(cutoff.getTime()-86400000) : cutoff;
+  const last = rec.lastUpdated ? new Date(rec.lastUpdated) : null;
+  const updatedToday = !!(last && last >= periodStart);
+  let daysToDue = '';
+  if (rec.dueDate && rec.dueDate !== 'TBD'){
+    const due = new Date(rec.dueDate); due.setHours(0,0,0,0);
+    const today = new Date(); today.setHours(0,0,0,0);
+    daysToDue = Math.round((due-today)/86400000);
+  }
+  return { ...rec, updatedToday, daysToDue };
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+const CFG_DEFAULTS = {
+  departments: [], statuses: ['Open','On Track','On Hold','Closed'], ownersByDept: {},
+  allOwners: [], allNameAliases: [], nameToDisp: {}, nameToDept: {}, deptColors: {}, ownerRecords: [],
+  meetingSuggestions: [], cutoffHour: CUTOFF_HOUR_DEFAULT, cutoffMin: CUTOFF_MIN_DEFAULT
+};
+
+function showLoadError(msg){
+  const banner = document.getElementById('loadErrorBanner');
+  const line = '⚠ ' + msg;
+  banner.textContent = banner.hidden ? line : (banner.textContent + '  •  ' + line);
+  banner.hidden = false;
+  console.error(msg);
+}
+
+async function init(){
+  applyStoredTheme();
+  applyStoredMobileMode();
+  // Bind every static button/control FIRST so the app stays interactive even if
+  // loading config or data below fails — a data error should never leave the UI dead.
+  bindEvents();
+
+  try {
+    const cfg = await run('getConfig');
+    CFG = Object.assign({}, CFG_DEFAULTS, cfg || {});
+  } catch (err) {
+    CFG = Object.assign({}, CFG_DEFAULTS);
+    showLoadError('Could not load configuration (departments/owners). ' + errMsg(err));
+  }
+
+  try {
+    buildTabs();
+    buildStaticOptions();
+    buildFilterBar();
+  } catch (err) {
+    showLoadError('Could not build page controls. ' + errMsg(err));
+  }
+
+  try {
+    await loadItems();
+  } catch (err) {
+    showLoadError('Could not load action items from the sheet. ' + errMsg(err));
+    document.getElementById('emptyState').hidden = false;
+  }
+}
+
+function errMsg(err){
+  if (!err) return '';
+  if (typeof err === 'string') return err;
+  return err.message || String(err);
+}
+
+window.addEventListener('error', (e)=>{
+  showLoadError('Unexpected error: ' + (e.error && e.error.message ? e.error.message : e.message));
+});
+
+async function loadItems(){
+  state.items = await run('getActions');
+  render();
+}
+
+async function refreshData(){
+  const logo = document.getElementById('logoRefreshBtn');
+  logo.classList.add('is-refreshing');
+  try{
+    await loadItems();
+  } finally {
+    logo.classList.remove('is-refreshing');
+  }
+}
+
+function buildTabs(){
+  const tabsEl = document.getElementById('tabs');
+  const all = ['All', CROSS_DEPT_LABEL, ...CFG.departments];
+  tabsEl.innerHTML = all.map(d => {
+    if (d === 'All') return `<button class="tab active" data-tab="All">All</button>`;
+    if (d === CROSS_DEPT_LABEL) return `<button class="tab" data-tab="${CROSS_DEPT_LABEL}">🔀 Cross Dept</button>`;
+    if (isIridescentDept(d)) return `<button class="tab dept-tab iridescent-fill" data-tab="${escapeHtml(d)}">${escapeHtml(d)}</button>`;
+    const flat = departmentFlatColor(d);
+    const ink = pickInkColor(flat);
+    return `<button class="tab dept-tab" data-tab="${escapeHtml(d)}" style="--tab-dept-color:${flat}; --tab-dept-ink:${ink};">${escapeHtml(d)}</button>`;
+  }).join('');
+  tabsEl.querySelectorAll('.tab').forEach(btn=>{
+    if (btn.dataset.tab === state.activeTab) btn.classList.add('active');
+    btn.addEventListener('click', ()=>{
+      state.activeTab = btn.dataset.tab;
+      tabsEl.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      applyDepartmentTheme(state.activeTab);
+      render();
+    });
+  });
+}
+
+function buildStaticOptions(){
+  document.getElementById('f_status').innerHTML = CFG.statuses.map(s=>`<option value="${s}">${s}</option>`).join('');
+  document.getElementById('meetingOptions').innerHTML = CFG.meetingSuggestions.map(m=>`<option value="${escapeHtml(m)}">`).join('');
+}
+
+/* ============================================================
+   THEME
+   ============================================================ */
+function applyStoredTheme(){
+  const saved = localStorage.getItem('AR_THEME') || 'light';
+  document.documentElement.setAttribute('data-theme', saved);
+  document.getElementById('themeToggle').textContent = saved==='dark' ? '☀️' : '🌙';
+}
+function toggleTheme(){
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('AR_THEME', next);
+  document.getElementById('themeToggle').textContent = next==='dark' ? '☀️' : '🌙';
+}
+
+// Controls that get physically moved into the mobile sidebar (and back) — reparenting like
+// this (rather than duplicating markup/ids) means every existing event listener just keeps
+// working no matter which container the element currently lives in.
+const MOBILE_SIDEBAR_MOVE_IDS = [
+  'newActionBtn', 'searchWrap', 'filterExpandPanel', 'filterToggleBtn',
+  'sortWrap', 'dashboardBtn', 'themeToggle', 'mobileToggle', 'statsStrip'
+];
+let _mobileOriginalPositions = null;
+
+function captureMobileOriginalPositions(){
+  _mobileOriginalPositions = MOBILE_SIDEBAR_MOVE_IDS.map(id=>{
+    const el = document.getElementById(id);
+    return { id, parent: el.parentNode, nextSibling: el.nextSibling };
+  });
+}
+
+function moveControlsIntoSidebar(){
+  const body = document.getElementById('mobileSidebarBody');
+  MOBILE_SIDEBAR_MOVE_IDS.forEach(id=> body.appendChild(document.getElementById(id)));
+}
+
+function restoreControlsFromSidebar(){
+  if (!_mobileOriginalPositions) return;
+  _mobileOriginalPositions.forEach(({id, parent, nextSibling})=>{
+    const el = document.getElementById(id);
+    if (nextSibling && nextSibling.parentNode === parent) parent.insertBefore(el, nextSibling);
+    else parent.appendChild(el);
+  });
+}
+
+function detectShouldAutoEnableMobile(){
+  return window.innerWidth <= 720 || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+function setMobileMode(on){
+  document.body.classList.toggle('mobile-mode', on);
+  if (on) moveControlsIntoSidebar(); else restoreControlsFromSidebar();
+  document.getElementById('mobileToggle').textContent = on ? '💻' : '📱';
+  document.getElementById('mobileToggle').title = on ? 'Switch to desktop view' : 'Switch to mobile view';
+  document.getElementById('mobileSidebarBtn').hidden = !on;
+  if (!on) closeMobileSidebar();
+}
+
+function applyStoredMobileMode(){
+  captureMobileOriginalPositions();
+  let saved = localStorage.getItem('AR_MOBILE_MODE');
+  if (saved === null){
+    // No explicit preference yet on this device — auto-switch based on screen/device.
+    saved = detectShouldAutoEnableMobile() ? 'on' : 'off';
+    localStorage.setItem('AR_MOBILE_MODE', saved);
+  }
+  setMobileMode(saved === 'on');
+}
+function toggleMobileMode(){
+  const next = !document.body.classList.contains('mobile-mode');
+  localStorage.setItem('AR_MOBILE_MODE', next ? 'on' : 'off');
+  setMobileMode(next);
+}
+
+function openMobileSidebar(){ document.getElementById('mobileSidebarOverlay').hidden = false; }
+function closeMobileSidebar(){ document.getElementById('mobileSidebarOverlay').hidden = true; }
+
+
+/* ============================================================
+   GENERIC COLUMN FILTER DROPDOWNS
+   ============================================================ */
+function buildFilterBar(){
+  const bar = document.getElementById('filterBar');
+  bar.innerHTML = FILTER_DEFS.map(def => `
+    <div class="filter-wrap" data-filter-key="${def.key}">
+      <button class="btn btn-sm filter-btn" data-action="toggle-filter" data-key="${def.key}"><span class="filter-btn-label">${def.label}</span><span class="filter-btn-right"><span class="filter-badge" data-badge="${def.key}" hidden>0</span> ▾</span></button>
+      <div class="filter-panel" data-panel="${def.key}" hidden>
+        <div class="filter-panel-actions">
+          <button type="button" data-action="filter-select-all" data-key="${def.key}">Select all</button>
+          ${def.key === 'dueDate' ? `<button type="button" data-action="filter-asof-today" data-key="dueDate">As of Today</button>` : ''}
+          ${def.key === 'updatedToday' ? `<button type="button" data-action="filter-closed-today" data-key="updatedToday">Closed Today</button>` : ''}
+          <button type="button" data-action="filter-clear" data-key="${def.key}">Clear</button>
+        </div>
+        <div class="filter-list" data-list="${def.key}"></div>
+      </div>
+    </div>
+  `).join('');
+
+  bar.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    const toggleBtn = e.target.closest('[data-action="toggle-filter"]');
+    if (toggleBtn){
+      const key = toggleBtn.dataset.key;
+      bar.querySelectorAll('.filter-panel').forEach(p=>{ if(p.dataset.panel!==key) p.hidden = true; });
+      const panel = bar.querySelector(`[data-panel="${key}"]`);
+      const willOpen = panel.hidden;
+      panel.hidden = !willOpen;
+      if (willOpen) renderFilterPanel(key);
+      return;
+    }
+    const selAll = e.target.closest('[data-action="filter-select-all"]');
+    if (selAll){
+      const key = selAll.dataset.key;
+      getFilterOptions(key).forEach(o=> state.filters[key].add(o.value));
+      renderFilterPanel(key); updateFilterBadge(key); render();
+      return;
+    }
+    const closedToday = e.target.closest('[data-action="filter-closed-today"]');
+    if (closedToday){
+      const key = closedToday.dataset.key;
+      state.filters[key] = new Set(['Closed Today']);
+      renderFilterPanel(key); updateFilterBadge(key); render();
+      return;
+    }
+    const asOfToday = e.target.closest('[data-action="filter-asof-today"]');
+    if (asOfToday){
+      const key = asOfToday.dataset.key;
+      const todayStr = todayISO();
+      state.filters[key].clear();
+      getFilterOptions(key).forEach(o=>{ if (o.value <= todayStr) state.filters[key].add(o.value); });
+      renderFilterPanel(key); updateFilterBadge(key); render();
+      return;
+    }
+    const clearBtn = e.target.closest('[data-action="filter-clear"]');
+    if (clearBtn){
+      const key = clearBtn.dataset.key;
+      state.filters[key].clear();
+      renderFilterPanel(key); updateFilterBadge(key); render();
+      return;
+    }
+  });
+  document.addEventListener('click', ()=>{ bar.querySelectorAll('.filter-panel').forEach(p=>p.hidden=true); });
+}
+
+function defMatchesValue(def, it, v){
+  if (def.multi) return def.getValue(it).indexOf(v) !== -1;
+  return def.getValue(it) === v;
+}
+
+function getFilterOptions(key){
+  const def = FILTER_DEFS.find(d=>d.key===key);
+  if (def.kind === 'fixed'){
+    return def.optionsFn().map(v=>({ value:v, count: state.items.filter(it=>def.getValue(it)===v).length }));
+  }
+  let vals;
+  if (def.multi){
+    const set = new Set();
+    state.items.forEach(it=> def.getValue(it).forEach(v=>{ if (v) set.add(v); }));
+    vals = Array.from(set);
+  } else {
+    vals = Array.from(new Set(state.items.map(def.getValue).filter(v=>v!==null && v!==undefined && v!=='')));
+  }
+  vals.sort((a,b)=> def.customSort ? def.customSort(a,b) : (def.sortDesc ? String(b).localeCompare(String(a)) : String(a).localeCompare(String(b))));
+  return vals.map(v=>({ value:v, count: state.items.filter(it=>defMatchesValue(def,it,v)).length }));
+}
+
+function formatFilterLabel(def, value){
+  if (def.dateLike){
+    const dt = new Date(value);
+    if (!isNaN(dt)) return dt.toLocaleDateString(undefined,{weekday:'short', month:'short', day:'numeric', year:'numeric'});
+  }
+  return value;
+}
+
+function renderFilterPanel(key){
+  const def = FILTER_DEFS.find(d=>d.key===key);
+  const options = getFilterOptions(key);
+  const list = document.querySelector(`[data-list="${key}"]`);
+  if (!options.length){
+    list.innerHTML = '<div class="filter-empty">No values yet</div>';
+    return;
+  }
+  list.innerHTML = options.map(o=>{
+    const checked = state.filters[key].has(o.value) ? 'checked' : '';
+    return `<label class="filter-row">
+      <input type="checkbox" value="${escapeHtml(o.value)}" ${checked}>
+      <span>${escapeHtml(formatFilterLabel(def, o.value))}</span>
+      <span class="filter-count">${o.count}</span>
+    </label>`;
+  }).join('');
+  list.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    cb.addEventListener('change', ()=>{
+      if (cb.checked) state.filters[key].add(cb.value);
+      else state.filters[key].delete(cb.value);
+      updateFilterBadge(key);
+      render();
+    });
+  });
+}
+
+function updateFilterBadge(key){
+  const badge = document.querySelector(`[data-badge="${key}"]`);
+  const n = state.filters[key].size;
+  badge.hidden = n === 0;
+  badge.textContent = n;
+  document.querySelector(`[data-filter-key="${key}"]`).classList.toggle('active', n > 0);
+  updateClearFiltersButton();
+}
+
+function updateClearFiltersButton(){
+  const totalActive = Object.values(state.filters).reduce((sum, s) => sum + s.size, 0);
+  document.getElementById('clearFiltersBtn').hidden = totalActive === 0;
+  const toggleBadge = document.getElementById('filterToggleBadge');
+  toggleBadge.hidden = totalActive === 0;
+  toggleBadge.textContent = totalActive;
+  // Keep the expanded panel's width in sync if filters change while it's open (max-width was
+  // pinned to a fixed px during the open transition — refresh it so nothing gets clipped).
+  const panel = document.getElementById('filterExpandPanel');
+  if (panel.classList.contains('expanded')) panel.style.maxWidth = 'none';
+}
+
+function clearAllFilters(){
+  Object.keys(state.filters).forEach(k => state.filters[k].clear());
+  FILTER_DEFS.forEach(def => updateFilterBadge(def.key));
+  document.querySelectorAll('.filter-panel').forEach(p => p.hidden = true);
+  render();
+}
+
+function toggleFilterExpand(){
+  const panel = document.getElementById('filterExpandPanel');
+  const btn = document.getElementById('filterToggleBtn');
+  const strip = document.getElementById('statsStrip');
+  const expanding = !panel.classList.contains('expanded');
+  if (expanding){
+    panel.classList.add('expanded');
+    btn.classList.add('active');
+    strip.classList.add('hidden-by-filter');
+    panel.style.maxWidth = panel.scrollWidth + 'px';
+    panel.addEventListener('transitionend', function onEnd(e){
+      if (e.propertyName !== 'max-width') return;
+      panel.removeEventListener('transitionend', onEnd);
+      if (panel.classList.contains('expanded')){
+        panel.style.maxWidth = 'none';
+        panel.style.overflow = 'visible'; // let per-column filter dropdowns show without clipping
+      }
+    });
+  } else {
+    panel.style.overflow = 'hidden'; // re-clip before collapsing so the reveal animates cleanly
+    // Pin to the current pixel width first so the collapse has something concrete to animate from.
+    panel.style.maxWidth = panel.scrollWidth + 'px';
+    panel.classList.remove('expanded');
+    btn.classList.remove('active');
+    strip.classList.remove('hidden-by-filter');
+    document.querySelectorAll('.filter-panel').forEach(p => p.hidden = true);
+    requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ panel.style.maxWidth = '0px'; }); });
+  }
+}
+
+/* ============================================================
+   FILTERING + SORTING + RENDER
+   ============================================================ */
+function getFiltered(){
+  const rows = state.items.filter(it=>{
+    if (!itemMatchesDeptTab(it, state.activeTab)) return false;
+    for (const def of FILTER_DEFS){
+      const set = state.filters[def.key];
+      if (set.size){
+        if (def.multi){
+          const vals = def.getValue(it);
+          if (!vals.some(v=>set.has(v))) return false;
+        } else {
+          const val = def.getValue(it);
+          if (val === null || !set.has(val)) return false;
+        }
+      }
+    }
+    if (state.search) {
+      const q = state.search.toLowerCase();
+      const hay = [it.id,it.issues,it.owner,it.meeting,it.details,it.remarks].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  return applySortOrder(rows);
+}
+
+function applySortOrder(rows){
+  const order = state.sortOrder || 'item_asc';
+  const withNum = v => parseInt(v,10);
+  const dateVal = (s) => (s && s!=='TBD') ? new Date(s).getTime() : null;
+  const sorted = rows.slice();
+  sorted.sort((a,b)=>{
+    switch(order){
+      case 'item_desc': return withNum(b.id) - withNum(a.id);
+      case 'due_asc': {
+        const da = dateVal(a.dueDate), db = dateVal(b.dueDate);
+        if (da===null && db===null) return 0;
+        if (da===null) return 1;
+        if (db===null) return -1;
+        return da - db;
+      }
+      case 'due_desc': {
+        const da = dateVal(a.dueDate), db = dateVal(b.dueDate);
+        if (da===null && db===null) return 0;
+        if (da===null) return 1;
+        if (db===null) return -1;
+        return db - da;
+      }
+      case 'discussed_desc': return (dateVal(b.dateDiscussed)||0) - (dateVal(a.dateDiscussed)||0);
+      case 'discussed_asc': return (dateVal(a.dateDiscussed)||0) - (dateVal(b.dateDiscussed)||0);
+      case 'aging_desc': {
+        const aa = computeAging(a), bb = computeAging(b);
+        return (bb?bb.days:-1) - (aa?aa.days:-1);
+      }
+      case 'aging_asc': {
+        const aa = computeAging(a), bb = computeAging(b);
+        return (aa?aa.days:Infinity) - (bb?bb.days:Infinity);
+      }
+      case 'item_asc':
+      default: return withNum(a.id) - withNum(b.id);
+    }
+  });
+  return sorted;
+}
+
+// Each status gets its own small icon "logo" alongside its color, so the four meanings
+// (Open / On Track / On Hold / Closed) are distinguishable at a glance, not just by color.
+const STATUS_ICON = { 'Open': '●', 'On Track': '➤', 'On Hold': '⏸', 'Closed': '✓' };
+
+// "In Progress" was renamed to "On Track" for uniformity with the due-date timeliness badge —
+// this normalizes any older sheet rows that still literally say "In Progress" so they render
+// (and re-save) as "On Track" without needing a one-time data migration.
+function normalizeStatus(s){
+  return s === 'In Progress' ? 'On Track' : s;
+}
+
+function statusBadgeClass(s){
+  s = normalizeStatus(s);
+  if(s==='Open') return 'badge-open';
+  if(s==='On Track') return 'badge-progress';
+  if(s==='On Hold') return 'badge-hold';
+  if(s==='Closed') return 'badge-closed';
+  return 'badge-open';
+}
+
+// Plain status badge — used where due-date urgency doesn't apply (history entries, etc).
+function statusBadgeHtml(s){
+  s = normalizeStatus(s);
+  const cls = statusBadgeClass(s);
+  const icon = STATUS_ICON[s] || '';
+  return `<span class="badge ${cls}">${icon?icon+' ':''}${escapeHtml(s)}</span>`;
+}
+
+// Status column now folds in due-date urgency: Closed items show "Closed"; anything else with
+// a real due date shows "On Track / Xd remaining" or "Overdue / Xd" instead of the raw status;
+// everything else (no due date yet) falls back to the plain status (Open / On Track / On Hold).
+function statusCellHtml(it){
+  const status = normalizeStatus(it.status);
+  if (status === 'Closed') return statusBadgeHtml('Closed');
+  // Timeliness (On Track Xd remaining / Overdue) only makes sense once someone is actually
+  // working the item — Open (untouched) and On Hold (paused) always show their plain badge.
+  if (status === 'On Track' && it.dueDate && it.dueDate !== 'TBD'){
+    if (it.daysToDue >= 0){
+      const days = it.daysToDue;
+      return `<span class="badge badge-ontrack badge-3line"><span class="line1">➤ On Track</span><span class="line2">${days} day${days===1?'':'s'}</span><span class="line3">Remaining</span></span>`;
+    }
+    const days = Math.abs(it.daysToDue);
+    return `<span class="badge badge-overdue badge-2line"><span class="line1">⚠ Overdue</span><span class="line2">${days} day${days===1?'':'s'}</span></span>`;
+  }
+  return statusBadgeHtml(it.status);
+}
+
+function dueDateCellHtml(it){
+  if (!it.dueDate || it.dueDate === 'TBD') return `<span class="muted" style="font-size:12.5px;">No date yet</span>`;
+  return `<span class="due-date-main">${formatShortDate(it.dueDate)}</span>`;
+}
+
+function computeAging(it){
+  if (!it.dateDiscussed) return null;
+  const start = new Date(it.dateDiscussed + 'T00:00:00');
+  if (isNaN(start.getTime())) return null;
+  const end = (it.status === 'Closed' && it.lastUpdated) ? new Date(it.lastUpdated) : new Date();
+  const days = Math.max(0, Math.round((end - start) / 86400000));
+  return { days, closed: it.status === 'Closed' };
+}
+
+function agingCellHtml(it){
+  const a = computeAging(it);
+  if (!a) return `<span class="muted" style="font-size:13px;">—</span>`;
+  return `<span class="aging-num">${a.days} day${a.days===1?'':'s'}</span>`;
+}
+
+function mediaBinCellHtml(it){
+  const before = it.beforePhotos || [];
+  const current = it.currentPhotos || [];
+  const col = (label, media, bin) => {
+    if (!media.length){
+      return `<div class="mediabin-col">
+        <span class="mediabin-tag">${label}</span>
+        <div class="mediabin-empty" data-action="open-edit-for-photo" data-id="${it.id}" title="Add ${label.toLowerCase()} media">+</div>
+      </div>`;
+    }
+    const last = media[media.length-1];
+    const countSuffix = media.length > 1 ? ` mediabin-count" data-count="${media.length}"` : '"';
+    const thumb = last.isVideo
+      ? `<div class="mediabin-video${countSuffix} data-action="open-lightbox" data-bin="${bin}" data-id="${it.id}" title="${label} video">🎬</div>`
+      : `<img class="mediabin-thumb${countSuffix} src="${last.url}" loading="lazy"
+          data-action="open-lightbox" data-bin="${bin}" data-id="${it.id}" alt="${label} photo">`;
+    return `<div class="mediabin-col">
+      <span class="mediabin-tag">${label}</span>
+      ${thumb}
+    </div>`;
+  };
+  return `<div class="mediabin">${col('Before', before, 'before')}${col('Now', current, 'current')}</div>`;
+}
+
+// Buckets an item into exactly one of Open / On Hold / On Track / Overdue / Closed — the same
+// partition shown by the Status column's badge — used by both the stats strip and the Status filter.
+function getStatusBucket(it){
+  const status = normalizeStatus(it.status);
+  if (status === 'On Track' && it.dueDate && it.dueDate !== 'TBD' && it.daysToDue < 0) return 'Overdue';
+  return status;
+}
+
+function computeToolbarStats(){
+  const items = state.items.filter(i=>getStatusBucket(i)!=='Closed');
+  const total = items.length;
+  if (!total) return null;
+  const pct = n => Math.round(n/total*100);
+  const updatedToday = items.filter(i=>i.updatedToday).length;
+  const onTrack = items.filter(i=>getStatusBucket(i)==='On Track').length;
+  const open = items.filter(i=>getStatusBucket(i)==='Open').length;
+  const overdue = items.filter(i=>getStatusBucket(i)==='Overdue').length;
+  return { updatedToday: pct(updatedToday), onTrack: pct(onTrack), open: pct(open), overdue: pct(overdue) };
+}
+
+function renderStatsStrip(){
+  const strip = document.getElementById('statsStrip');
+  const s = computeToolbarStats();
+  if (!s){ strip.innerHTML = ''; return; }
+  strip.innerHTML = `
+    <span class="stat-chip stat-updated"><b>${s.updatedToday}%</b> Updated Today</span>
+    <span class="stat-chip stat-ontrack"><b>${s.onTrack}%</b> On Track</span>
+    <span class="stat-chip stat-open"><b>${s.open}%</b> Open</span>
+    <span class="stat-chip stat-overdue"><b>${s.overdue}%</b> Overdue</span>
+  `;
+}
+
+function render(){
+  const rows = getFiltered();
+  const tbody = document.getElementById('tableBody');
+  const cardList = document.getElementById('mobileCardList');
+  const empty = document.getElementById('emptyState');
+  updateTabCounts();
+  renderStatsStrip();
+
+  if (!rows.length){
+    tbody.innerHTML = '';
+    cardList.innerHTML = '';
+    empty.hidden = false;
+    return;
+  }
+  empty.hidden = true;
+
+  const tableRows = [];
+  const cards = [];
+
+  rows.forEach(it=>{
+    const lastUpdStr = it.lastUpdated ? formatDateTime(it.lastUpdated) : 'No updates yet';
+    const byLine = it.lastUpdatedBy ? `<span class="upd-by">${escapeHtml(it.lastUpdatedBy)}</span>` : '';
+    const updCellHtml = it.status === 'Closed'
+      ? `<span class="muted" style="font-size:13px;">—</span>`
+      : it.updatedToday
+        ? `<button class="upd-btn upd-ok" data-action="open-update" data-id="${it.id}"><span class="upd-label">✓ Updated</span><span class="upd-sub">${formatTime(it.lastUpdated)}</span>${byLine}</button>`
+        : `<button class="upd-btn upd-warn" data-action="open-update" data-id="${it.id}"><span class="upd-label">Needs Update</span><span class="upd-sub">Last: ${lastUpdStr}</span>${byLine}</button>`;
+
+    tableRows.push(`
+    <tr data-id="${it.id}">
+      <td class="id-cell nowrap" style="text-align:center;">${it.id}</td>
+      <td class="nowrap" style="text-align:center;">${formatShortDate(it.dateDiscussed)}</td>
+      <td style="text-align:center;"><span class="ellipsis" title="${escapeHtml(it.meeting)}">${escapeHtml(it.meeting)}</span></td>
+      <td class="nowrap" data-noopen="1">${updCellHtml}</td>
+      <td><span class="ellipsis" title="${escapeHtml(it.issues)}"><strong>${escapeHtml(it.issues)}</strong></span></td>
+      <td><span class="ellipsis muted" title="${escapeHtml(it.details)}">${escapeHtml(it.details)}</span></td>
+      <td><span class="ellipsis muted" title="${escapeHtml(it.remarks)}">${escapeHtml(it.remarks)}</span></td>
+      <td class="nowrap" data-noopen="1">${mediaBinCellHtml(it)}</td>
+      <td><span class="ellipsis" title="${escapeHtml(it.owner)}">${escapeHtml(it.owner)}</span></td>
+      <td class="nowrap" style="text-align:center;">${departmentPillHtml(it.department)}</td>
+      <td class="nowrap" style="text-align:center;">${dueDateCellHtml(it)}</td>
+      <td class="nowrap" style="text-align:center;">${statusCellHtml(it)}</td>
+      <td class="nowrap" style="text-align:center;">${agingCellHtml(it)}</td>
+    </tr>`);
+
+    const hasMedia = (it.beforePhotos && it.beforePhotos.length) || (it.currentPhotos && it.currentPhotos.length);
+    cards.push(`
+    <div class="mcard" data-id="${it.id}">
+      <div class="mcard-top">
+        <div class="mcard-top-left">
+          <span class="id-pill">Item ${it.id}</span>
+          ${departmentPillHtml(it.department)}
+        </div>
+        ${statusCellHtml(it)}
+      </div>
+      <div class="mcard-issues">${escapeHtml(it.issues)}</div>
+      ${it.details ? `<div class="mcard-detail">${escapeHtml(it.details)}</div>` : ''}
+      <div class="mcard-row">
+        <span><b>Owner:</b> ${escapeHtml(it.owner)||'—'}</span>
+        <span><b>Due:</b> ${dueDateCellHtml(it)}</span>
+      </div>
+      ${hasMedia ? `<div class="mcard-media" data-noopen="1">${mediaBinCellHtml(it)}</div>` : ''}
+      <div class="mcard-bottom" data-noopen="1">${updCellHtml}</div>
+    </div>`);
+  });
+
+  tbody.innerHTML = tableRows.join('');
+  cardList.innerHTML = cards.join('');
+
+  tbody.querySelectorAll('[data-action="open-edit-row"]').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{ e.stopPropagation(); openActionModal(btn.dataset.id, 'edit'); });
+  });
+  [tbody, cardList].forEach(container=>{
+    container.querySelectorAll('[data-action="open-update"]').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{ e.stopPropagation(); openActionModal(btn.dataset.id, 'update'); });
+    });
+    container.querySelectorAll('[data-action="open-lightbox"]').forEach(img=>{
+      img.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        const id = img.dataset.id, bin = img.dataset.bin;
+        const it = state.items.find(i=>i.id===id);
+        const photos = bin==='before' ? it.beforePhotos : it.currentPhotos;
+        openLightbox(photos, photos.length-1, (bin==='before'?'Before':'Currently') + ' — ' + it.issues);
+      });
+    });
+    container.querySelectorAll('[data-action="open-edit-for-photo"]').forEach(el=>{
+      el.addEventListener('click', (e)=>{ e.stopPropagation(); openActionModal(el.dataset.id, 'edit'); });
+    });
+  });
+  // Row/card click (anywhere not already handled above) opens the read-only preview.
+  tbody.querySelectorAll('tr[data-id]').forEach(tr=>{
+    tr.addEventListener('click', (e)=>{
+      if (e.target.closest('[data-action]')) return;
+      openPreview(tr.dataset.id);
+    });
+  });
+  cardList.querySelectorAll('.mcard[data-id]').forEach(card=>{
+    card.addEventListener('click', (e)=>{
+      if (e.target.closest('[data-action]') || e.target.closest('[data-noopen]')) return;
+      openPreview(card.dataset.id);
+    });
+  });
+}
+
+function updateTabCounts(){
+  document.querySelectorAll('#tabs .tab').forEach(btn=>{
+    const tab = btn.dataset.tab;
+    const n = state.items.filter(i => getStatusBucket(i)!=='Closed' && itemMatchesDeptTab(i, tab)).length;
+    btn.innerHTML = `${escapeHtml(tab)}<span class="count">${n}</span>`;
+  });
+}
+
+function truncate(s,n){ s=s||''; return s.length>n ? s.slice(0,n-1)+'…' : s; }
+function escapeHtml(s){ return (s||'').toString().replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function formatDateTime(iso){ const d=new Date(iso); return d.toLocaleDateString(undefined,{month:'short',day:'numeric'}) + ' ' + formatTime(iso); }
+function formatTime(iso){ const d=new Date(iso); return d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'}); }
+function formatShortDate(dateStr){
+  if (!dateStr || dateStr === 'TBD') return dateStr || '';
+  const d = new Date(dateStr + 'T00:00:00');
+  if (isNaN(d)) return dateStr;
+  return d.toLocaleDateString(undefined, {month:'short', day:'numeric'});
+}
+function matchInList(value, list){
+  const v = (value||'').trim().toLowerCase();
+  return list.find(x=>x.toLowerCase()===v);
+}
+function isValidChoice(value, list){
+  const v = (value||'').trim().toLowerCase();
+  if (v === 'all') return true;
+  return list.some(x=>x.toLowerCase()===v);
+}
+// Resolves either a roster "full" name or a "disp" name to the canonical disp name to store.
+function resolveDisplayName(value){
+  const v = (value||'').trim();
+  if (!v) return '';
+  if (v.toLowerCase() === 'all') return 'All';
+  return CFG.nameToDisp[v.toLowerCase()] || v;
+}
+
+/* ============================================================
+   LIGHTBOX
+   ============================================================ */
+function openLightbox(media, index, label){
+  if (!media || !media.length) return;
+  state.lightbox = { images: media, index: Math.max(0,index), label };
+  renderLightbox();
+  document.getElementById('lightboxOverlay').hidden = false;
+}
+function renderLightbox(){
+  const { images, index, label } = state.lightbox;
+  const m = images[index];
+  const stage = document.getElementById('lightboxStage');
+  if (m && m.isVideo){
+    if (m.viewUrl && m.viewUrl.indexOf('drive.google.com') !== -1){
+      stage.innerHTML = `<iframe src="${m.viewUrl}" allow="autoplay" allowfullscreen></iframe>`;
+    } else {
+      stage.innerHTML = `<video src="${m.url}" controls autoplay></video>`;
+    }
+  } else {
+    stage.innerHTML = `<img src="${m ? m.url : ''}" alt="">`;
+  }
+  document.getElementById('lightboxCaption').textContent = `${label} · ${index+1} of ${images.length}`;
+  const multi = images.length > 1;
+  document.getElementById('lightboxPrev').style.display = multi ? 'flex' : 'none';
+  document.getElementById('lightboxNext').style.display = multi ? 'flex' : 'none';
+}
+function lightboxNav(dir){
+  const L = state.lightbox;
+  L.index = (L.index + dir + L.images.length) % L.images.length;
+  renderLightbox();
+}
+function closeLightbox(){
+  document.getElementById('lightboxOverlay').hidden = true;
+  document.getElementById('lightboxStage').innerHTML = ''; // stop any playing video/iframe
+}
+
+/* ============================================================
+   PREVIEW MODAL (read-only)
+   ============================================================ */
+function openPreview(id){
+  const it = state.items.find(i=>i.id===id);
+  if (!it) return;
+  state.previewId = id;
+  const lastUpdStr = it.lastUpdated ? formatDateTime(it.lastUpdated) : 'No updates yet';
+
+  const photoBox = (label, media, bin) => {
+    if (!media.length) return `<div class="preview-photo-box"><span class="tag">${label}</span><div class="none">No ${label.toLowerCase()} media</div></div>`;
+    const m = media[media.length-1];
+    const idx = media.length-1;
+    const inner = m.isVideo
+      ? `<div class="video-placeholder" data-bin="${bin}" data-idx="${idx}"><span class="icon">🎬</span><span>Play video</span></div>`
+      : `<img src="${m.url}" data-bin="${bin}" data-idx="${idx}">`;
+    return `<div class="preview-photo-box"><span class="tag">${label}</span>${inner}</div>`;
+  };
+
+  document.getElementById('previewBody').innerHTML = `
+    <div class="preview-meta-row">
+      <div class="preview-meta-left">
+        <span class="id-pill">Item ${it.id}</span>
+        ${departmentPillHtml(it.department)}
+      </div>
+      <div class="preview-meta-right">
+        ${it.status!=='Closed' ? (it.updatedToday ? `<span class="upd-btn upd-ok" style="cursor:default; width:auto;">✓ Updated Today${it.lastUpdatedBy?' · '+escapeHtml(it.lastUpdatedBy):''}</span>` : `<span class="upd-btn upd-warn" style="cursor:default; width:auto;">Needs Update · Last: ${lastUpdStr}</span>`) : ''}
+        ${statusCellHtml(it)}
+      </div>
+    </div>
+    <h2 class="preview-title">${escapeHtml(it.issues)}</h2>
+    <div class="preview-grid">
+      <div class="preview-block"><span class="preview-label">Details</span><span class="preview-value">${escapeHtml(it.details)||'—'}</span></div>
+      <div class="preview-block"><span class="preview-label">Remarks / Update</span><span class="preview-value">${escapeHtml(it.remarks)||'—'}</span></div>
+      <div class="preview-block"><span class="preview-label">Owner</span><span class="preview-value">${escapeHtml(it.owner)||'—'}</span></div>
+      <div class="preview-block"><span class="preview-label">Input By</span><span class="preview-value">${escapeHtml(it.inputBy)||'—'}</span></div>
+      <div class="preview-block"><span class="preview-label">Updated By</span><span class="preview-value">${escapeHtml(it.lastUpdatedBy)||'—'}</span></div>
+      <div class="preview-block"><span class="preview-label">Meeting</span><span class="preview-value">${escapeHtml(it.meeting)||'—'}</span></div>
+      <div class="preview-block"><span class="preview-label">Date Discussed</span><span class="preview-value">${it.dateDiscussed||'—'}</span></div>
+      <div class="preview-block"><span class="preview-label">Due Date</span><span class="preview-value">${it.dueDate==='TBD'?'No date yet':it.dueDate}</span></div>
+      <div class="preview-block"><span class="preview-label">Aging</span><span class="preview-value">${(()=>{ const a=computeAging(it); return a ? (a.days+' day'+(a.days===1?'':'s')) : '—'; })()}</span></div>
+    </div>
+    <div class="preview-photos">
+      ${photoBox('Before', it.beforePhotos||[], 'before')}
+      ${photoBox('Currently', it.currentPhotos||[], 'current')}
+    </div>
+  `;
+  document.getElementById('previewBody').querySelectorAll('.preview-photo-box img, .preview-photo-box .video-placeholder').forEach(node=>{
+    node.addEventListener('click', ()=>{
+      const bin = node.dataset.bin;
+      const media = bin==='before' ? it.beforePhotos : it.currentPhotos;
+      openLightbox(media, parseInt(node.dataset.idx,10), (bin==='before'?'Before':'Currently') + ' — ' + it.issues);
+    });
+  });
+  document.getElementById('previewFolderWrap').innerHTML = it.photoFolder
+    ? `<a class="folder-link" href="${it.photoFolder}" target="_blank">📁 Open full photo folder in Drive →</a>` : '';
+  document.getElementById('previewOverlay').hidden = false;
+  document.getElementById('previewModal').scrollTop = 0;
+}
+function closePreview(){ document.getElementById('previewOverlay').hidden = true; }
+
+/* ============================================================
+   MODAL: NEW / EDIT / UPDATE ACTION
+   ============================================================ */
+function pendingFileToMedia(f){
+  const url = `data:${f.mimeType};base64,${f.data}`;
+  return { url, viewUrl: url, mimeType: f.mimeType || '', isVideo: (f.mimeType||'').indexOf('video/') === 0 };
+}
+
+function renderPhotoGrid(containerId, mediaList, opts){
+  const el = document.getElementById(containerId);
+  if (!mediaList.length){ el.innerHTML = `<span class="empty-hint">${opts.emptyText}</span>`; return; }
+  el.innerHTML = mediaList.map((m,i)=>{
+    const thumb = m.isVideo
+      ? `<div class="video-box" data-idx="${i}">🎬</div>`
+      : `<img src="${m.url}" data-idx="${i}">`;
+    return `<div class="media-item">${thumb}<button type="button" class="media-remove" data-idx="${i}" title="Remove">✕</button></div>`;
+  }).join('');
+  el.querySelectorAll('.media-item > img, .media-item > .video-box').forEach(node=>{
+    node.addEventListener('click', ()=> openLightbox(mediaList, parseInt(node.dataset.idx,10), opts.label));
+  });
+  el.querySelectorAll('.media-remove').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      if (opts.onRemove) opts.onRemove(parseInt(btn.dataset.idx,10));
+    });
+  });
+}
+
+// NEW-item flow: media isn't uploaded yet, so removal is just a local array splice.
+function renderPendingGrid(bin){
+  const arr = bin==='before' ? state.pendingBefore : state.pendingCurrent;
+  const media = arr.map(pendingFileToMedia);
+  renderPhotoGrid(bin==='before' ? 'beforePhotoGrid' : 'currentPhotoGrid', media, {
+    emptyText: bin==='before' ? 'No before media yet' : 'No current media yet',
+    label: bin==='before' ? 'Before' : 'Currently',
+    onRemove: (idx)=>{ arr.splice(idx,1); renderPendingGrid(bin); }
+  });
+}
+
+// EDIT/UPDATE flow: media is already saved to Drive, so removal calls the server and updates state.
+function renderExistingGrid(bin, it){
+  const media = bin==='before' ? (it.beforePhotos||[]) : (it.currentPhotos||[]);
+  renderPhotoGrid(bin==='before' ? 'beforePhotoGrid' : 'currentPhotoGrid', media, {
+    emptyText: bin==='before' ? 'No before media yet' : 'No current media yet',
+    label: (bin==='before' ? 'Before' : 'Currently') + ' — ' + it.issues,
+    onRemove: (idx)=>{
+      const item = media[idx];
+      if (item && item.id) removeSavedMedia(bin, item.id);
+    }
+  });
+}
+
+async function removeSavedMedia(bin, mediaId){
+  if (!confirm('Remove this media item? This cannot be undone.')) return;
+  try{
+    const updated = await run('deleteMedia', state.editingId, bin, mediaId);
+    const idx = state.items.findIndex(i=>i.id===state.editingId);
+    if (idx>-1) state.items[idx] = updated;
+    renderExistingGrid(bin, updated);
+    document.getElementById('folderLinkWrap').innerHTML = updated.photoFolder
+      ? `<a class="folder-link" href="${updated.photoFolder}" target="_blank">📁 Open full photo folder in Drive →</a>` : '';
+    render();
+  } catch(err){
+    alert('Could not remove that media item. ' + (err && err.message ? err.message : ''));
+  }
+}
+
+function clearFieldErrors(){ document.querySelectorAll('#actionOverlay .field').forEach(f=>f.classList.remove('field-error')); }
+
+function applyModalTheme(mode){
+  const modalEl = document.getElementById('actionModal');
+  modalEl.classList.remove('theme-new','theme-edit','theme-update');
+  modalEl.classList.add('theme-' + mode);
+}
+
+// ---- Multi-owner / multi-department checkbox selectors ----
+// state.ownerSelection / state.deptSelection are Sets: either {'All'} alone, or a set of
+// individual disp names / department names. Picking owners auto-fills their department(s);
+// picking department(s) auto-adds everyone in them as owners — each direction is guarded with
+// a skip flag so the two don't ping-pong off each other.
+function ownerSelectionSummary(){
+  if (state.ownerSelection.has('All')) return 'All';
+  return Array.from(state.ownerSelection).join(', ');
+}
+function deptSelectionSummary(){
+  if (state.deptSelection.has('All')) return 'All';
+  return Array.from(state.deptSelection).join(', ');
+}
+
+function parseOwnerFieldToSelection(value){
+  const set = new Set();
+  const v = (value||'').trim();
+  if (!v) return set;
+  if (v.toLowerCase() === 'all'){ set.add('All'); return set; }
+  v.split(',').map(s=>s.trim()).filter(Boolean).forEach(name=>{
+    set.add(CFG.nameToDisp[name.toLowerCase()] || name);
+  });
+  return set;
+}
+function parseDeptFieldToSelection(value){
+  const set = new Set();
+  const v = (value||'').trim();
+  if (!v) return set;
+  if (v.toLowerCase() === 'all'){ set.add('All'); return set; }
+  v.split(',').map(s=>s.trim()).filter(Boolean).forEach(name=>{
+    set.add(matchInList(name, CFG.departments) || name);
+  });
+  return set;
+}
+
+// Union of departments across every selected owner.
+function autofillDeptSelectionFromOwners(){
+  if (state.ownerSelection.has('All')){
+    state.deptSelection = new Set(['All']);
+  } else {
+    const depts = new Set();
+    state.ownerSelection.forEach(disp=>{
+      const dept = CFG.nameToDept[disp.toLowerCase()];
+      if (dept) depts.add(dept);
+    });
+    if (depts.size) state.deptSelection = depts;
+  }
+  syncDeptSelectUI({ skipOwnerAutofill: true });
+}
+
+// Adds everyone from the selected department(s) into the owner selection (union — doesn't
+// remove anyone already picked from a different department).
+function autofillOwnersFromDepartments(){
+  if (state.deptSelection.has('All')) return; // "All" departments doesn't imply a specific owner list
+  let added = false;
+  state.deptSelection.forEach(dept=>{
+    (CFG.ownersByDept[dept]||[]).forEach(disp=>{
+      if (!state.ownerSelection.has(disp) && !state.ownerSelection.has('All')){
+        state.ownerSelection.add(disp);
+        added = true;
+      }
+    });
+  });
+  if (added) syncOwnerSelectUI({ skipDeptAutofill: true });
+}
+
+function syncOwnerSelectUI(opts){
+  opts = opts || {};
+  const summary = ownerSelectionSummary();
+  document.getElementById('f_owner').value = summary;
+  const btn = document.getElementById('ownerSelectBtn');
+  btn.textContent = summary || 'Select owner(s)';
+  btn.classList.toggle('placeholder', !summary);
+  if (!opts.skipDeptAutofill) autofillDeptSelectionFromOwners();
+}
+
+function syncDeptSelectUI(opts){
+  opts = opts || {};
+  const summary = deptSelectionSummary();
+  document.getElementById('f_department').value = summary;
+  const btn = document.getElementById('deptSelectBtn');
+  btn.textContent = summary || 'Select department(s)';
+  btn.classList.toggle('placeholder', !summary);
+  if (!opts.skipOwnerAutofill) autofillOwnersFromDepartments();
+}
+
+function renderOwnerSelectList(query){
+  const list = document.getElementById('ownerSelectList');
+  const q = (query||'').trim().toLowerCase();
+  const seen = new Set();
+  const rows = [];
+  (CFG.ownerRecords||[]).forEach(r=>{
+    if (seen.has(r.disp)) return;
+    if (!q || r.full.toLowerCase().includes(q) || r.disp.toLowerCase().includes(q)){
+      seen.add(r.disp);
+      rows.push(r.disp);
+    }
+  });
+  const allChecked = state.ownerSelection.has('All');
+  let html = `<label class="owner-opt owner-opt-all"><input type="checkbox" value="All" ${allChecked?'checked':''}><span>All (everyone)</span></label>`;
+  if (!rows.length){
+    html += `<div class="filter-empty">No matching names</div>`;
+  } else {
+    html += rows.map(disp=>{
+      const checked = !allChecked && state.ownerSelection.has(disp);
+      return `<label class="owner-opt"><input type="checkbox" value="${escapeHtml(disp)}" ${checked?'checked':''} ${allChecked?'disabled':''}><span>${escapeHtml(disp)}</span></label>`;
+    }).join('');
+  }
+  list.innerHTML = html;
+  list.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    cb.addEventListener('change', ()=>{
+      const val = cb.value;
+      if (val === 'All'){
+        if (cb.checked) state.ownerSelection = new Set(['All']);
+        else state.ownerSelection.delete('All');
+      } else {
+        state.ownerSelection.delete('All');
+        if (cb.checked) state.ownerSelection.add(val);
+        else state.ownerSelection.delete(val);
+      }
+      syncOwnerSelectUI();
+      renderOwnerSelectList(document.getElementById('ownerSelectSearch').value);
+    });
+  });
+}
+
+function renderDeptSelectList(query){
+  const list = document.getElementById('deptSelectList');
+  const q = (query||'').trim().toLowerCase();
+  const rows = (CFG.departments||[]).filter(d => !q || d.toLowerCase().includes(q));
+  const allChecked = state.deptSelection.has('All');
+  let html = `<label class="owner-opt owner-opt-all"><input type="checkbox" value="All" ${allChecked?'checked':''}><span>All departments</span></label>`;
+  if (!rows.length){
+    html += `<div class="filter-empty">No matching departments</div>`;
+  } else {
+    html += rows.map(d=>{
+      const checked = !allChecked && state.deptSelection.has(d);
+      return `<label class="owner-opt"><input type="checkbox" value="${escapeHtml(d)}" ${checked?'checked':''} ${allChecked?'disabled':''}><span>${escapeHtml(d)}</span></label>`;
+    }).join('');
+  }
+  list.innerHTML = html;
+  list.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    cb.addEventListener('change', ()=>{
+      const val = cb.value;
+      if (val === 'All'){
+        if (cb.checked) state.deptSelection = new Set(['All']);
+        else state.deptSelection.delete('All');
+      } else {
+        state.deptSelection.delete('All');
+        if (cb.checked) state.deptSelection.add(val);
+        else state.deptSelection.delete(val);
+      }
+      syncDeptSelectUI();
+      renderDeptSelectList(document.getElementById('deptSelectSearch').value);
+    });
+  });
+}
+
+function openOwnerSelectPanel(){
+  document.getElementById('ownerSelectPanel').hidden = false;
+  renderOwnerSelectList(document.getElementById('ownerSelectSearch').value);
+}
+function closeOwnerSelectPanel(){ document.getElementById('ownerSelectPanel').hidden = true; }
+function toggleOwnerSelectPanel(){
+  const panel = document.getElementById('ownerSelectPanel');
+  if (panel.hidden) openOwnerSelectPanel(); else closeOwnerSelectPanel();
+}
+
+function openDeptSelectPanel(){
+  document.getElementById('deptSelectPanel').hidden = false;
+  renderDeptSelectList(document.getElementById('deptSelectSearch').value);
+}
+function closeDeptSelectPanel(){ document.getElementById('deptSelectPanel').hidden = true; }
+function toggleDeptSelectPanel(){
+  const panel = document.getElementById('deptSelectPanel');
+  if (panel.hidden) openDeptSelectPanel(); else closeDeptSelectPanel();
+}
+
+// Matches the typed text against BOTH the roster's full "Searchable Name" and the short
+// "Suggested" (disp) name, but only ever returns/display the disp name — so typing part of
+// someone's full name (e.g. "Merlwin Re") surfaces their short name (e.g. "M. Pugay").
+function ownerMatches(query){
+  const q = (query||'').trim().toLowerCase();
+  const seen = new Set();
+  const out = [];
+  (CFG.ownerRecords||[]).forEach(r=>{
+    if (seen.has(r.disp)) return;
+    if (!q || r.full.toLowerCase().includes(q) || r.disp.toLowerCase().includes(q)){
+      seen.add(r.disp);
+      out.push(r.disp);
+    }
+  });
+  return out;
+}
+
+function attachNameAutocomplete(inputId, listId, opts){
+  opts = opts || {};
+  const input = document.getElementById(inputId);
+  const list = document.getElementById(listId);
+  if (!input || !list) return;
+  let items = [];
+  let highlighted = -1;
+
+  function updateHighlight(){
+    list.querySelectorAll('.name-opt').forEach((el,i)=> el.classList.toggle('highlighted', i===highlighted));
+  }
+
+  function selectValue(v){
+    input.value = v;
+    list.hidden = true;
+    if (opts.onSelect) opts.onSelect(v);
+  }
+
+  function renderList(){
+    const q = input.value;
+    let matches = ownerMatches(q).slice(0, 8);
+    if (!q.trim() || 'all'.indexOf(q.trim().toLowerCase()) === 0){
+      if (matches.indexOf('All') === -1) matches.push('All');
+    }
+    items = matches;
+    highlighted = -1;
+    if (!items.length){
+      list.innerHTML = `<div class="name-opt-empty">No matching names</div>`;
+    } else {
+      list.innerHTML = items.map((v,i)=>`<div class="name-opt" data-idx="${i}">${escapeHtml(v)}</div>`).join('');
+      list.querySelectorAll('.name-opt').forEach(el=>{
+        // mousedown (not click) fires before the input's blur handler hides the list.
+        el.addEventListener('mousedown', (e)=>{
+          e.preventDefault();
+          selectValue(items[parseInt(el.dataset.idx,10)]);
+        });
+      });
+    }
+    list.hidden = false;
+  }
+
+  input.addEventListener('input', renderList);
+  input.addEventListener('focus', renderList);
+  input.addEventListener('keydown', (e)=>{
+    if (list.hidden) return;
+    if (e.key === 'ArrowDown'){ e.preventDefault(); highlighted = Math.min(highlighted+1, items.length-1); updateHighlight(); }
+    else if (e.key === 'ArrowUp'){ e.preventDefault(); highlighted = Math.max(highlighted-1, 0); updateHighlight(); }
+    else if (e.key === 'Enter'){ if (highlighted>=0 && items.length){ e.preventDefault(); selectValue(items[highlighted]); } }
+    else if (e.key === 'Escape'){ list.hidden = true; }
+  });
+  input.addEventListener('blur', ()=>{ setTimeout(()=>{ list.hidden = true; }, 120); });
+}
+
+function openActionModal(id, mode){
+  state.editingId = id || null;
+  state.modalMode = mode;
+  state.pendingBefore = [];
+  state.pendingCurrent = [];
+  clearFieldErrors();
+  applyModalTheme(mode);
+
+  const it = id ? state.items.find(i=>i.id===id) : null;
+
+  document.getElementById('deleteBtn').hidden = (mode !== 'edit');
+  document.getElementById('updatedByWrap').hidden = (mode !== 'update');
+  document.getElementById('f_updatedBy').value = '';
+  document.getElementById('saveBtn').textContent = mode === 'update' ? 'Save Update' : 'Save Action';
+
+  if (mode === 'new'){
+    document.getElementById('modalTitle').textContent = 'New Action';
+    document.getElementById('folderLinkWrap').innerHTML = '';
+    document.getElementById('f_dateDiscussed').value = todayISO();
+    document.getElementById('f_meeting').value = '';
+    document.getElementById('f_issues').value = '';
+    document.getElementById('f_details').value = '';
+    document.getElementById('f_remarks').value = '';
+    document.getElementById('f_inputBy').value = '';
+    state.deptSelection = (state.activeTab !== 'All' && state.activeTab !== CROSS_DEPT_LABEL) ? new Set([state.activeTab]) : new Set();
+    document.getElementById('deptSelectSearch').value = '';
+    closeDeptSelectPanel();
+    syncDeptSelectUI({ skipOwnerAutofill: true });
+    state.ownerSelection = new Set();
+    document.getElementById('ownerSelectSearch').value = '';
+    closeOwnerSelectPanel();
+    syncOwnerSelectUI({ skipDeptAutofill: true });
+    document.getElementById('f_dueDate').value = '';
+    document.getElementById('f_dueDate').disabled = false;
+    document.getElementById('f_noDateYet').checked = false;
+    document.getElementById('f_status').value = 'Open';
+    document.getElementById('f_beforePhotos').value = '';
+    document.getElementById('f_currentPhotos').value = '';
+    renderPendingGrid('before');
+    renderPendingGrid('current');
+  } else {
+    document.getElementById('modalTitle').textContent = 'Item ' + id + (mode === 'update' ? ' — Update Action' : ' — Edit Action');
+    document.getElementById('f_dateDiscussed').value = it.dateDiscussed || '';
+    document.getElementById('f_meeting').value = it.meeting || '';
+    document.getElementById('f_issues').value = it.issues || '';
+    document.getElementById('f_details').value = it.details || '';
+    document.getElementById('f_remarks').value = it.remarks || '';
+    document.getElementById('f_inputBy').value = it.inputBy || '';
+    state.deptSelection = parseDeptFieldToSelection(it.department);
+    document.getElementById('deptSelectSearch').value = '';
+    closeDeptSelectPanel();
+    syncDeptSelectUI({ skipOwnerAutofill: true });
+    state.ownerSelection = parseOwnerFieldToSelection(it.owner);
+    document.getElementById('ownerSelectSearch').value = '';
+    closeOwnerSelectPanel();
+    syncOwnerSelectUI({ skipDeptAutofill: true });
+    const noDate = it.dueDate === 'TBD' || !it.dueDate;
+    document.getElementById('f_noDateYet').checked = noDate;
+    document.getElementById('f_dueDate').value = noDate ? '' : it.dueDate;
+    document.getElementById('f_dueDate').disabled = noDate;
+    document.getElementById('f_status').value = normalizeStatus(it.status) || 'Open';
+    document.getElementById('f_beforePhotos').value = '';
+    document.getElementById('f_currentPhotos').value = '';
+    renderExistingGrid('before', it);
+    renderExistingGrid('current', it);
+    document.getElementById('folderLinkWrap').innerHTML = it.photoFolder
+      ? `<a class="folder-link" href="${it.photoFolder}" target="_blank">📁 Open full photo folder in Drive →</a>`
+      : `<span class="muted" style="font-size:13px;">No Drive folder yet — uploading media will create one.</span>`;
+    state.updateSnapshot = {
+      dateDiscussed: it.dateDiscussed || '',
+      meeting: it.meeting || '',
+      issues: it.issues || '',
+      details: it.details || '',
+      remarks: it.remarks || '',
+      owner: it.owner || '',
+      department: it.department || '',
+      status: normalizeStatus(it.status) || 'Open',
+      dueDate: noDate ? '' : (it.dueDate || '')
+    };
+  }
+  document.getElementById('actionOverlay').hidden = false;
+  document.getElementById('actionModal').scrollTop = 0;
+}
+
+function closeActionModal(){ document.getElementById('actionOverlay').hidden = true; }
+
+function readFilesAsBase64(fileList){
+  const files = Array.from(fileList || []);
+  return Promise.all(files.map(file => new Promise((resolve,reject)=>{
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result.split(',')[1];
+      resolve({ name:file.name, mimeType:file.type||'image/jpeg', data:base64 });
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  })));
+}
+
+async function handleBinUpload(bin, inputEl){
+  const files = await readFilesAsBase64(inputEl.files);
+  if (!files.length) return;
+
+  if (state.editingId){
+    inputEl.disabled = true;
+    try{
+      const updated = await run('uploadBinMedia', state.editingId, bin, files);
+      const idx = state.items.findIndex(i=>i.id===state.editingId);
+      if (idx>-1) state.items[idx] = updated;
+      renderExistingGrid(bin, updated);
+      document.getElementById('folderLinkWrap').innerHTML = updated.photoFolder
+        ? `<a class="folder-link" href="${updated.photoFolder}" target="_blank">📁 Open full photo folder in Drive →</a>` : '';
+      render();
+    } catch(err){
+      alert('Could not upload that media. ' + (err && err.message ? err.message : ''));
+    } finally { inputEl.disabled = false; inputEl.value = ''; }
+  } else {
+    if (bin==='before') state.pendingBefore = state.pendingBefore.concat(files);
+    else state.pendingCurrent = state.pendingCurrent.concat(files);
+    renderPendingGrid(bin);
+    inputEl.value = '';
+  }
+}
+
+// Validates a comma-separated list of names against the roster (or "All"), returning the
+// resolved, deduped, comma-joined canonical (disp) value — or null if anything doesn't match.
+function resolveMultiNameField(value){
+  const v = (value||'').trim();
+  if (!v) return null;
+  if (v.toLowerCase() === 'all') return 'All';
+  const parts = v.split(',').map(s=>s.trim()).filter(Boolean);
+  if (!parts.length) return null;
+  const resolved = [];
+  for (const p of parts){
+    const disp = CFG.nameToDisp[p.toLowerCase()];
+    if (!disp) return null;
+    if (resolved.indexOf(disp) === -1) resolved.push(disp);
+  }
+  return resolved.join(', ');
+}
+
+// Same idea, but against the department list instead of the name roster.
+function resolveMultiDeptField(value){
+  const v = (value||'').trim();
+  if (!v) return null;
+  if (v.toLowerCase() === 'all') return 'All';
+  const parts = v.split(',').map(s=>s.trim()).filter(Boolean);
+  if (!parts.length) return null;
+  const resolved = [];
+  for (const p of parts){
+    const match = matchInList(p, CFG.departments);
+    if (!match) return null;
+    if (resolved.indexOf(match) === -1) resolved.push(match);
+  }
+  return resolved.join(', ');
+}
+
+function validateForm(mode){
+  clearFieldErrors();
+  const vals = {
+    dateDiscussed: document.getElementById('f_dateDiscussed').value,
+    meeting: document.getElementById('f_meeting').value.trim(),
+    issues: document.getElementById('f_issues').value.trim(),
+    details: document.getElementById('f_details').value.trim(),
+    owner: document.getElementById('f_owner').value.trim(),
+    department: document.getElementById('f_department').value.trim(),
+    inputBy: document.getElementById('f_inputBy').value.trim(),
+    status: document.getElementById('f_status').value,
+    noDateYet: document.getElementById('f_noDateYet').checked,
+    dueDate: document.getElementById('f_dueDate').value,
+    updatedBy: document.getElementById('f_updatedBy').value.trim()
+  };
+
+  const ownerResolved = resolveMultiNameField(vals.owner);
+  const deptResolved = resolveMultiDeptField(vals.department);
+  const inputByResolved = resolveDisplayName(vals.inputBy);
+  const updatedByResolved = mode === 'update' ? resolveDisplayName(vals.updatedBy) : null;
+
+  const missing = [];
+  if (!vals.dateDiscussed) missing.push('dateDiscussed');
+  if (!vals.meeting) missing.push('meeting');
+  if (!vals.issues) missing.push('issues');
+  if (!vals.details) missing.push('details');
+  if (!ownerResolved) missing.push('owner');
+  if (!deptResolved) missing.push('department');
+  if (!vals.inputBy || !isValidChoice(vals.inputBy, CFG.allNameAliases)) missing.push('inputBy');
+  if (!vals.status) missing.push('status');
+  if (!vals.noDateYet && !vals.dueDate) missing.push('dueDate');
+  if (mode === 'update' && (!vals.updatedBy || !isValidChoice(vals.updatedBy, CFG.allNameAliases))) missing.push('updatedBy');
+
+  missing.forEach(key=>{
+    const wrap = document.querySelector(`#actionOverlay [data-field="${key}"]`);
+    if (wrap) wrap.classList.add('field-error');
+  });
+
+  if (missing.length){
+    const first = document.querySelector(`#actionOverlay [data-field="${missing[0]}"]`);
+    if (first) first.scrollIntoView({behavior:'smooth', block:'center'});
+    return null;
+  }
+  vals.owner = ownerResolved;
+  vals.department = deptResolved;
+  vals.inputBy = inputByResolved;
+  if (mode === 'update') vals.updatedBy = updatedByResolved;
+  return vals;
+}
+
+const UPDATE_FIELD_LABELS = {
+  dateDiscussed: 'Date Discussed', meeting: 'Meeting', issues: 'Issues/Concerns',
+  details: 'Details', remarks: 'Remarks/Update', owner: 'Owner',
+  department: 'Department', status: 'Status', dueDate: 'Due Date'
+};
+
+// Compares the submitted payload against the snapshot taken when the Update modal opened,
+// returning the human-readable labels of whichever fields actually changed (for the history log).
+function computeChangedFieldLabels(payload){
+  const snap = state.updateSnapshot;
+  if (!snap) return [];
+  const dueDateNow = payload.noDateYet ? '' : (payload.dueDate || '');
+  const cmp = {
+    dateDiscussed: payload.dateDiscussed, meeting: payload.meeting, issues: payload.issues,
+    details: payload.details, remarks: payload.remarks, owner: payload.owner,
+    department: payload.department, status: payload.status, dueDate: dueDateNow
+  };
+  return Object.keys(UPDATE_FIELD_LABELS).filter(key => (cmp[key]||'') !== (snap[key]||'')).map(key => UPDATE_FIELD_LABELS[key]);
+}
+
+async function saveAction(){
+  const mode = state.modalMode;
+  const vals = validateForm(mode);
+  if (!vals) return;
+
+  const saveBtn = document.getElementById('saveBtn');
+  saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+  try{
+    const payload = {
+      dateDiscussed: vals.dateDiscussed, meeting: vals.meeting, issues: vals.issues, details: vals.details,
+      remarks: document.getElementById('f_remarks').value, owner: vals.owner, inputBy: vals.inputBy,
+      department: vals.department, noDateYet: vals.noDateYet, dueDate: vals.dueDate, status: vals.status
+    };
+
+    if (mode === 'new'){
+      payload.beforePhotos = state.pendingBefore;
+      payload.currentPhotos = state.pendingCurrent;
+      const created = await run('addAction', payload);
+      state.items.push(created);
+    } else if (mode === 'edit'){
+      const updated = await run('updateAction', state.editingId, payload);
+      const idx = state.items.findIndex(i=>i.id===state.editingId);
+      if (idx>-1) state.items[idx] = updated;
+    } else {
+      payload.updatedBy = vals.updatedBy;
+      payload.changedFields = computeChangedFieldLabels(payload).join(', ');
+      const updated = await run('submitUpdate', state.editingId, payload);
+      const idx = state.items.findIndex(i=>i.id===state.editingId);
+      if (idx>-1) state.items[idx] = updated;
+      const pIdx = state.presentQueue.findIndex(i=>i.id===state.editingId);
+      if (pIdx>-1) state.presentQueue[pIdx] = updated;
+    }
+    closeActionModal();
+    render();
+    if (!document.getElementById('presentOverlay').hidden) renderPresentCard();
+  } catch(err){
+    alert('Something went wrong saving this action. ' + (err && err.message ? err.message : ''));
+  } finally {
+    saveBtn.disabled = false; saveBtn.textContent = mode === 'update' ? 'Save Update' : 'Save Action';
+  }
+}
+
+async function deleteCurrentAction(){
+  if (!state.editingId) return;
+  if (!confirm('Delete this action item? This cannot be undone.')) return;
+  await run('deleteAction', state.editingId);
+  state.items = state.items.filter(i=>i.id!==state.editingId);
+  closeActionModal();
+  render();
+}
+
+/* ============================================================
+   UPDATE HISTORY
+   ============================================================ */
+const HISTORY_FIELD_VALUE_GETTERS = {
+  'Date Discussed': h => h.dateDiscussed,
+  'Meeting': h => h.meeting,
+  'Issues/Concerns': h => h.issues,
+  'Details': h => h.details,
+  'Remarks/Update': h => h.remarks,
+  'Owner': h => h.owner,
+  'Department': h => h.department,
+  'Status': h => h.status,
+  'Due Date': h => (!h.dueDate || h.dueDate === 'TBD') ? 'No date yet' : formatShortDate(h.dueDate)
+};
+
+function historyEntryDetailHtml(h){
+  const tags = (h.changedFields||'').split(',').map(s=>s.trim()).filter(Boolean);
+  if (!tags.length){
+    // Legacy entries logged before "Changed Fields" existed — fall back to just Remarks.
+    return `<div class="history-remarks">${escapeHtml(h.remarks) || '<span class="muted">No remarks entered.</span>'}</div>`;
+  }
+  return tags.map(label=>{
+    const getter = HISTORY_FIELD_VALUE_GETTERS[label];
+    const value = getter ? getter(h) : '';
+    return `<div class="history-field-change">
+      <div class="history-field-label">${escapeHtml(label)}</div>
+      <div class="history-field-value">${value ? escapeHtml(value) : '<span class="muted">—</span>'}</div>
+    </div>`;
+  }).join('');
+}
+
+async function openHistory(id){
+  const itemId = id || state.editingId;
+  if (!itemId) return;
+  document.getElementById('historyTitle').textContent = 'Item ' + itemId + ' — Update History';
+  document.getElementById('historyList').innerHTML = '<div class="history-empty">Loading…</div>';
+  document.getElementById('historyOverlay').hidden = false;
+  const entries = await run('getHistory', itemId);
+  if (!entries.length){
+    document.getElementById('historyList').innerHTML = '<div class="history-empty">No updates logged yet for this action.</div>';
+    return;
+  }
+  document.getElementById('historyList').innerHTML = entries.map(h=>{
+    const changedTags = (h.changedFields||'').split(',').map(s=>s.trim()).filter(Boolean);
+    return `
+    <div class="history-entry">
+      <div class="history-entry-top">
+        <div>
+          <div class="history-who">${escapeHtml(h.updatedBy || 'Unknown')}</div>
+          <div class="history-email">${escapeHtml(h.email || '—')}</div>
+        </div>
+        <div class="history-time">${h.timestamp ? formatDateTime(h.timestamp) : ''}</div>
+      </div>
+      ${statusBadgeHtml(h.status||'')}
+      ${changedTags.length ? `<div class="history-changed"><span class="history-changed-label">Changed:</span> ${changedTags.map(t=>`<span class="history-changed-tag">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+      <div class="history-detail">${historyEntryDetailHtml(h)}</div>
+    </div>
+  `;
+  }).join('');
+}
+function closeHistory(){ document.getElementById('historyOverlay').hidden = true; }
+
+/* ============================================================
+   DASHBOARD
+   ============================================================ */
+function openDashboard(){
+  const items = state.items;
+  const total = items.length;
+  const byStatus = s => items.filter(i=>normalizeStatus(i.status)===s).length;
+  const overdue = items.filter(i=> i.status!=='Closed' && typeof i.daysToDue==='number' && i.daysToDue < 0).length;
+  const updatedToday = items.filter(i=>i.status!=='Closed' && i.updatedToday).length;
+  const needsUpdate = items.filter(i=>i.status!=='Closed' && !i.updatedToday).length;
+
+  const cards = [
+    ['Total Items', total], ['Open', byStatus('Open')], ['On Track', byStatus('On Track')],
+    ['On Hold', byStatus('On Hold')], ['Closed', byStatus('Closed')], ['Overdue', overdue],
+    ['Updated Today', updatedToday], ['Needs Update', needsUpdate],
+  ];
+  document.getElementById('dashCards').innerHTML = cards.map(([lbl,num])=>`
+    <div class="dash-card"><div class="dash-num">${num}</div><div class="dash-lbl">${lbl}</div></div>
+  `).join('');
+
+  const maxCount = Math.max(1, ...CFG.departments.map(d=>items.filter(i=>itemMatchesDeptTab(i, d) && i.status!=='Closed').length));
+  document.getElementById('dashDeptBars').innerHTML = CFG.departments.map(d=>{
+    const n = items.filter(i=>itemMatchesDeptTab(i, d) && i.status!=='Closed').length;
+    const pct = Math.round((n/maxCount)*100);
+    return `<div class="dept-bar-row">
+      <span>${escapeHtml(d)}</span>
+      <div class="dept-bar-track"><div class="dept-bar-fill" style="width:${pct}%; background:${deptColor(d)};"></div></div>
+      <span class="mono">${n}</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('dashOverlay').hidden = false;
+}
+
+/* ============================================================
+   PRESENT MODE — full screen, side-by-side Before/Currently
+   Only presents items visible under the current tab/search/filters.
+   ============================================================ */
+function openPresentMode(){
+  state.presentQueue = getFiltered().filter(i=>i.status!=='Closed');
+  if (!state.presentQueue.length){
+    alert('No pending action items to present under the current filters.');
+    return;
+  }
+  state.presentIndex = 0;
+  document.getElementById('presentOverlay').hidden = false;
+  renderPresentCard();
+}
+function closePresentMode(){ document.getElementById('presentOverlay').hidden = true; }
+
+function presentPhotoHalfHtml(label, media, bin){
+  if (!media.length){
+    return `<div class="present-photo-half">
+      <span class="present-photo-tag">${label}</span>
+      <div class="present-photo-empty">No ${label.toLowerCase()} media yet</div>
+    </div>`;
+  }
+  const m = media[media.length-1];
+  const idx = media.length-1;
+  const countBadge = media.length > 1 ? `<span class="present-photo-count">${media.length} items</span>` : '';
+  const inner = m.isVideo
+    ? `<div class="video-placeholder" data-bin="${bin}" data-idx="${idx}"><span class="icon">🎬</span><span>Play video</span></div>`
+    : `<img src="${m.url}" data-bin="${bin}" data-idx="${idx}">`;
+  return `<div class="present-photo-half">
+    <span class="present-photo-tag">${label}</span>
+    ${inner}
+    ${countBadge}
+  </div>`;
+}
+
+function renderPresentCard(){
+  const it = state.presentQueue[state.presentIndex];
+  document.getElementById('presentCount').textContent = `${state.presentIndex+1} of ${state.presentQueue.length} pending`;
+  const lastUpdStr = it.lastUpdated ? formatDateTime(it.lastUpdated) : 'No updates yet';
+  const hasPhotos = (it.beforePhotos && it.beforePhotos.length) || (it.currentPhotos && it.currentPhotos.length);
+
+  document.getElementById('presentBody').innerHTML = `
+    <div class="present-card ${hasPhotos ? '' : 'single-col'}">
+      <div class="present-text-col">
+        <div class="present-meta">
+          <div class="present-meta-left">
+            <span class="id-cell mono">Item ${it.id}</span>
+            ${departmentPillHtml(it.department)}
+          </div>
+          <div class="present-meta-right">
+            <span class="${it.updatedToday?'upd-btn upd-ok':'upd-btn upd-warn'}" style="cursor:default;">${it.updatedToday? '✓ Updated Today'+(it.lastUpdatedBy?' · '+escapeHtml(it.lastUpdatedBy):'') : 'Needs Update · Last: '+lastUpdStr}</span>
+            ${statusCellHtml(it)}
+          </div>
+        </div>
+        <h1 class="present-title">${escapeHtml(it.issues)}</h1>
+        <div class="present-grid">
+          <div><div class="present-label">Details</div><div class="present-value">${escapeHtml(it.details)||'—'}</div></div>
+          <div><div class="present-label">Remarks / Update</div><div class="present-value">${escapeHtml(it.remarks)||'—'}</div></div>
+          <div><div class="present-label">Owner</div><div class="present-value">${escapeHtml(it.owner)||'—'}</div></div>
+          <div><div class="present-label">Updated By</div><div class="present-value">${escapeHtml(it.lastUpdatedBy)||'—'}</div></div>
+          <div><div class="present-label">Meeting</div><div class="present-value">${escapeHtml(it.meeting)||'—'}</div></div>
+          <div><div class="present-label">Date Discussed</div><div class="present-value">${it.dateDiscussed||'—'}</div></div>
+          <div><div class="present-label">Due Date</div><div class="present-value">${it.dueDate==='TBD'?'No date yet':formatShortDate(it.dueDate)}</div></div>
+          <div><div class="present-label">Aging</div><div class="present-value">${(()=>{ const a=computeAging(it); return a ? (a.days+' day'+(a.days===1?'':'s')) : '—'; })()}</div></div>
+        </div>
+      </div>
+      ${hasPhotos ? `<div class="present-photos-col">
+        ${presentPhotoHalfHtml('Before', it.beforePhotos||[], 'before')}
+        ${presentPhotoHalfHtml('Currently', it.currentPhotos||[], 'current')}
+      </div>` : ''}
+    </div>
+  `;
+  document.getElementById('presentBody').querySelectorAll('.present-photo-half img, .present-photo-half .video-placeholder').forEach(node=>{
+    node.addEventListener('click', ()=>{
+      const bin = node.dataset.bin;
+      const media = bin==='before' ? it.beforePhotos : it.currentPhotos;
+      openLightbox(media, parseInt(node.dataset.idx,10), (bin==='before'?'Before':'Currently') + ' — ' + it.issues);
+    });
+  });
+}
+
+function presentNav(dir){
+  state.presentIndex = (state.presentIndex + dir + state.presentQueue.length) % state.presentQueue.length;
+  renderPresentCard();
+}
+
+/* ============================================================
+   EVENTS
+   ============================================================ */
+function bindEvents(){
+  document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+  document.getElementById('mobileToggle').addEventListener('click', toggleMobileMode);
+  document.getElementById('mobileSidebarBtn').addEventListener('click', openMobileSidebar);
+  document.getElementById('closeMobileSidebarBtn').addEventListener('click', closeMobileSidebar);
+  document.getElementById('mobileSidebarOverlay').addEventListener('click', (e)=>{
+    if (e.target.id === 'mobileSidebarOverlay') closeMobileSidebar();
+  });
+  document.getElementById('logoRefreshBtn').addEventListener('click', refreshData);
+  document.getElementById('clearFiltersBtn').addEventListener('click', clearAllFilters);
+  document.getElementById('filterToggleBtn').addEventListener('click', (e)=>{ e.stopPropagation(); toggleFilterExpand(); });
+  document.getElementById('newActionBtn').addEventListener('click', ()=>{ closeMobileSidebar(); openActionModal(null, 'new'); });
+  document.getElementById('closeModalBtn').addEventListener('click', closeActionModal);
+  document.getElementById('cancelBtn').addEventListener('click', closeActionModal);
+  document.getElementById('saveBtn').addEventListener('click', saveAction);
+  document.getElementById('deleteBtn').addEventListener('click', deleteCurrentAction);
+  document.getElementById('previewHistoryBtn').addEventListener('click', ()=> openHistory(state.previewId));
+  document.getElementById('presentHistoryBtn').addEventListener('click', ()=>{
+    const it = state.presentQueue[state.presentIndex];
+    if (it) openHistory(it.id);
+  });
+  document.getElementById('closeHistoryBtn').addEventListener('click', closeHistory);
+  document.getElementById('f_noDateYet').addEventListener('change', (e)=>{
+    document.getElementById('f_dueDate').disabled = e.target.checked;
+    if (e.target.checked) document.getElementById('f_dueDate').value = '';
+  });
+  attachNameAutocomplete('f_inputBy', 'f_inputBy_ac', {});
+  attachNameAutocomplete('f_updatedBy', 'f_updatedBy_ac', {});
+  document.getElementById('ownerSelectBtn').addEventListener('click', (e)=>{ e.stopPropagation(); toggleOwnerSelectPanel(); });
+  document.getElementById('ownerSelectSearch').addEventListener('input', (e)=> renderOwnerSelectList(e.target.value));
+  document.getElementById('ownerSelectSearch').addEventListener('click', (e)=> e.stopPropagation());
+  document.getElementById('deptSelectBtn').addEventListener('click', (e)=>{ e.stopPropagation(); toggleDeptSelectPanel(); });
+  document.getElementById('deptSelectSearch').addEventListener('input', (e)=> renderDeptSelectList(e.target.value));
+  document.getElementById('deptSelectSearch').addEventListener('click', (e)=> e.stopPropagation());
+  document.addEventListener('click', (e)=>{
+    const ownerPanel = document.getElementById('ownerSelectPanel');
+    if (!ownerPanel.hidden && !e.target.closest('[data-field="owner"]')) closeOwnerSelectPanel();
+    const deptPanel = document.getElementById('deptSelectPanel');
+    if (!deptPanel.hidden && !e.target.closest('[data-field="department"]')) closeDeptSelectPanel();
+  });
+  document.getElementById('f_beforePhotos').addEventListener('change', (e)=> handleBinUpload('before', e.target));
+  document.getElementById('f_currentPhotos').addEventListener('change', (e)=> handleBinUpload('current', e.target));
+
+  document.getElementById('searchInput').addEventListener('input', (e)=>{ state.search = e.target.value; render(); });
+  document.getElementById('sortOrderSelect').addEventListener('change', (e)=>{ state.sortOrder = e.target.value; render(); });
+
+  document.getElementById('dashboardBtn').addEventListener('click', ()=>{ closeMobileSidebar(); openDashboard(); });
+  document.getElementById('closeDashBtn').addEventListener('click', ()=> document.getElementById('dashOverlay').hidden = true);
+
+  document.getElementById('presentModeBtn').addEventListener('click', openPresentMode);
+  document.getElementById('exitPresentBtn').addEventListener('click', closePresentMode);
+  document.getElementById('presentPrev').addEventListener('click', ()=>presentNav(-1));
+  document.getElementById('presentNext').addEventListener('click', ()=>presentNav(1));
+  document.getElementById('presentMarkUpdated').addEventListener('click', ()=>{
+    const it = state.presentQueue[state.presentIndex];
+    openActionModal(it.id, 'update');
+  });
+
+  document.getElementById('closePreviewBtn').addEventListener('click', closePreview);
+  document.getElementById('previewOverlay').addEventListener('click', (e)=>{ if (e.target.id === 'previewOverlay') closePreview(); });
+  document.getElementById('previewEditBtn').addEventListener('click', ()=>{ closePreview(); openActionModal(state.previewId, 'edit'); });
+  document.getElementById('previewUpdateBtn').addEventListener('click', ()=>{ closePreview(); openActionModal(state.previewId, 'update'); });
+
+  document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+  document.getElementById('lightboxPrev').addEventListener('click', ()=>lightboxNav(-1));
+  document.getElementById('lightboxNext').addEventListener('click', ()=>lightboxNav(1));
+  document.getElementById('lightboxOverlay').addEventListener('click', (e)=>{ if (e.target.id === 'lightboxOverlay') closeLightbox(); });
+
+  document.addEventListener('keydown', (e)=>{
+    if (!document.getElementById('lightboxOverlay').hidden){
+      if (e.key === 'ArrowLeft') lightboxNav(-1);
+      if (e.key === 'ArrowRight') lightboxNav(1);
+      if (e.key === 'Escape') closeLightbox();
+      return;
+    }
+    if (!document.getElementById('previewOverlay').hidden){ if (e.key === 'Escape') closePreview(); return; }
+    if (!document.getElementById('historyOverlay').hidden){ if (e.key === 'Escape') closeHistory(); return; }
+    if (!document.getElementById('actionOverlay').hidden) return;
+    if (document.getElementById('presentOverlay').hidden) return;
+    if (e.key === 'ArrowLeft') presentNav(-1);
+    if (e.key === 'ArrowRight') presentNav(1);
+    if (e.key === 'Escape') closePresentMode();
+  });
+
+  setInterval(async ()=>{ await loadItems(); }, 5 * 60 * 1000);
+}
+
+init();
+</script>
+</body>
+</html>
