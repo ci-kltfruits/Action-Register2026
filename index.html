@@ -741,7 +741,7 @@ body.mobile-mode .modal{ max-width:96vw; }
       <button class="close-x" id="closeNoUpdateBtn">✕</button>
     </div>
     <div class="modal-body">
-      <p class="muted" style="font-size:13px; margin:0 0 4px;">Single-owner, non-closed items that haven't been updated today — ranked by total accumulated no-update days across all of an owner's stale items.</p>
+      <p class="muted" style="font-size:13px; margin:0 0 4px;">Single-owner, non-closed MBU 1.5 / MBU 2 items that haven't been updated today — ranked by each owner's highest no-update days, with the count of their not-updated items.</p>
       <div id="noUpdateList"></div>
     </div>
   </div>
@@ -2691,6 +2691,7 @@ function computeNoUpdateReport(){
   const byOwner = {};
   state.items.forEach(it=>{
     if (getStatusBucket(it) === 'Closed') return;
+    if (!isMbuMeeting(it)) return; // only MBU 1.5 / MBU 2 items
     if (it.updatedToday) return;
     const raw = (it.owner||'').trim();
     if (!raw || raw.toLowerCase() === 'all') return;
@@ -2698,13 +2699,13 @@ function computeNoUpdateReport(){
     if (parts.length !== 1) return;
     const owner = parts[0];
     const days = daysWithoutUpdate(it);
-    if (!byOwner[owner]) byOwner[owner] = { totalDays: 0, items: [] };
-    byOwner[owner].totalDays += days;
+    if (!byOwner[owner]) byOwner[owner] = { maxDays: 0, items: [] };
+    byOwner[owner].maxDays = Math.max(byOwner[owner].maxDays, days);
     byOwner[owner].items.push({ id: it.id, issues: it.issues, days });
   });
   return Object.entries(byOwner)
-    .map(([owner, data]) => ({ owner, totalDays: data.totalDays, items: data.items.sort((a,b)=>b.days-a.days) }))
-    .sort((a,b) => b.totalDays - a.totalDays);
+    .map(([owner, data]) => ({ owner, maxDays: data.maxDays, count: data.items.length, items: data.items.sort((a,b)=>b.days-a.days) }))
+    .sort((a,b) => (b.maxDays - a.maxDays) || (b.count - a.count));
 }
 
 function openNoUpdateReport(){
@@ -2717,10 +2718,10 @@ function openNoUpdateReport(){
       <div class="noupdate-row">
         <div class="noupdate-rank">${i+1}</div>
         <div class="noupdate-owner">
-          <div class="noupdate-name">${escapeHtml(r.owner)}</div>
+          <div class="noupdate-name">${escapeHtml(r.owner)} <span class="muted" style="font-weight:600; font-size:12.5px;">· ${r.count} item${r.count===1?'':'s'} not updated</span></div>
           <div class="noupdate-items">${r.items.map(it=>`Item ${it.id} (${it.days}d)`).join(', ')}</div>
         </div>
-        <div class="noupdate-total">${r.totalDays}<span>day${r.totalDays===1?'':'s'}</span></div>
+        <div class="noupdate-total">${r.maxDays}<span>day${r.maxDays===1?'':'s'} max</span></div>
       </div>
     `).join('');
   }
