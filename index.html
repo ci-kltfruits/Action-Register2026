@@ -179,6 +179,9 @@ td.nowrap{ white-space:nowrap; }
 .badge-hold{ background:var(--hold-soft); color:var(--hold); }
 .badge-closed{ position:relative; background:transparent; color:var(--good); border:2px solid var(--good); border-radius:4px; font-weight:800; letter-spacing:1.1px; transform:rotate(-4deg); padding:3px 10px; }
 .badge-closed::before{ content:''; position:absolute; inset:2px; border:1px solid var(--good); border-radius:2px; opacity:.55; pointer-events:none; }
+.badge-closedlate{ position:relative; background:transparent; color:var(--bad); border:2px solid var(--bad); border-radius:4px; font-weight:800; letter-spacing:.8px; transform:rotate(-4deg); }
+.badge-closedlate::before{ content:''; position:absolute; inset:2px; border:1px solid var(--bad); border-radius:2px; opacity:.55; pointer-events:none; }
+.badge-closedlate .line2{ font-size:11px !important; font-weight:800 !important; opacity:1 !important; letter-spacing:1.4px; }
 .badge-ontrack{ background:var(--warn-soft); color:var(--warn); }
 .badge-overdue{ background:var(--bad-soft); color:var(--bad); font-weight:800; }
 .badge-2line{ flex-direction:column; align-items:center; justify-content:center; white-space:nowrap; text-align:center; gap:1px; padding:5px 9px; line-height:1.25; }
@@ -850,7 +853,7 @@ const FILTER_DEFS = [
   { key:'department', label:'Department', kind:'value', multi:true, sortDesc:false, getValue: itemDeptList,
     customSort: (a,b)=> CFG.departments.indexOf(a) - CFG.departments.indexOf(b) },
   { key:'dueDate', label:'Due Date', kind:'value', dateLike:true, sortDesc:true, getValue: it=> (it.dueDate && it.dueDate!=='TBD') ? it.dueDate : null },
-  { key:'status', label:'Status', kind:'fixed', optionsFn: ()=> ['Open','On Hold','On Track','Overdue','Closed'], getValue: it=> getStatusBucket(it) || null }
+  { key:'status', label:'Status', kind:'fixed', optionsFn: ()=> ['On Track','Overdue','Closed','Closed Late'], getValue: it=> getStatusFilterValue(it) || null }
 ];
 
 /* ============================================================
@@ -1118,7 +1121,7 @@ function demoDeriveConfig(){
   const deptColors = {};
   Object.keys(colorSeen).forEach(dept=>{ deptColors[dept] = Object.values(colorSeen[dept]).join(', '); });
   return {
-    departments, statuses: ['Open','On Track','On Hold','Closed'],
+    departments, statuses: ['On Track','Closed'],
     ownersByDept, allOwners: Array.from(allOwnersSet).sort(), allNameAliases: Array.from(aliasSet).sort(),
     nameToDisp, nameToDept, deptColors,
     ownerRecords: DEMO_ROSTER.map(r=>({ full:r.full, disp:r.disp })),
@@ -1149,7 +1152,7 @@ const demoBackend = {
       issues: payload.issues||'', details: payload.details||'',
       remarks: payload.remarks||'', owner: payload.owner||'', inputBy: payload.inputBy||'',
       department: payload.department||'',
-      dueDate: payload.noDateYet ? 'TBD' : (payload.dueDate||'TBD'), status: payload.status||'Open',
+      dueDate: payload.noDateYet ? 'TBD' : (payload.dueDate||'TBD'), status: payload.status||'On Track',
       beforePhotos: (payload.beforePhotos||[]).map(fileToMedia),
       currentPhotos: (payload.currentPhotos||[]).map(fileToMedia),
       photoFolder: ''
@@ -1162,7 +1165,9 @@ const demoBackend = {
     const data = JSON.parse(localStorage.getItem(DEMO_KEY) || '[]');
     const rec = data.find(d=>d.id===id);
     if(!rec) throw new Error('not found');
+    const wasClosed = rec.status === 'Closed';
     Object.assign(rec, payload);
+    if (payload.status === 'Closed' && !wasClosed) rec.lastUpdated = new Date().toISOString();
     if (payload.hasOwnProperty('noDateYet') || payload.hasOwnProperty('dueDate')) {
       rec.dueDate = payload.noDateYet ? 'TBD' : (payload.dueDate || 'TBD');
     }
@@ -1270,7 +1275,7 @@ function computeDerivedDemo(rec){
    INIT
    ============================================================ */
 const CFG_DEFAULTS = {
-  departments: [], statuses: ['Open','On Track','On Hold','Closed'], ownersByDept: {},
+  departments: [], statuses: ['On Track','Closed'], ownersByDept: {},
   allOwners: [], allNameAliases: [], nameToDisp: {}, nameToDept: {}, deptColors: {}, ownerRecords: [],
   meetingSuggestions: [], cutoffHour: CUTOFF_HOUR_DEFAULT, cutoffMin: CUTOFF_MIN_DEFAULT
 };
@@ -1755,11 +1760,26 @@ function applySortOrder(rows){
   return sorted;
 }
 
-const STATUS_ICON = { 'Open': '●', 'On Track': '➤', 'On Hold': '⏸', 'Closed': '✓' };
+const STATUS_ICON = { 'Open': '●', 'On Track': '➤', 'On Hold': '⏸', 'Closed': '✓', 'Closed Late': '✓' };
 
 // "In Progress" was renamed "On Track"; normalize old sheet rows.
 function normalizeStatus(s){
-  return s === 'In Progress' ? 'On Track' : s;
+  // Only two statuses exist now: Closed, or On Track. Older rows (Open / On Hold / In Progress)
+  // are treated as On Track.
+  return s === 'Closed' ? 'Closed' : 'On Track';
+}
+
+// Closed AFTER its due date (close time = last update time). Needs a real due date.
+function isClosedLate(it){
+  if (normalizeStatus(it.status) !== 'Closed') return false;
+  if (!it.dueDate || it.dueDate === 'TBD' || !it.lastUpdated) return false;
+  const closed = new Date(it.lastUpdated);
+  if (isNaN(closed.getTime())) return false;
+  return localDateISO(closed) > it.dueDate;
+}
+
+function closedLateBadgeHtml(){
+  return `<span class="badge badge-closedlate badge-2line"><span class="line1">✓ Closed</span><span class="line2">LATE</span></span>`;
 }
 
 function statusBadgeClass(s){
@@ -1781,7 +1801,7 @@ function statusBadgeHtml(s){
 // Status cell folds in due-date urgency for On Track items only.
 function statusCellHtml(it){
   const status = normalizeStatus(it.status);
-  if (status === 'Closed') return statusBadgeHtml('Closed');
+  if (status === 'Closed') return isClosedLate(it) ? closedLateBadgeHtml() : statusBadgeHtml('Closed');
   if (status === 'On Track' && it.dueDate && it.dueDate !== 'TBD'){
     if (it.daysToDue >= 0){
       const days = it.daysToDue;
@@ -1844,6 +1864,13 @@ function getStatusBucket(it){
   return status;
 }
 
+// Value used by the Status filter (splits Closed into on-time vs late).
+function getStatusFilterValue(it){
+  const b = getStatusBucket(it);
+  if (b === 'Closed') return isClosedLate(it) ? 'Closed Late' : 'Closed';
+  return b;
+}
+
 function isMbuMeeting(it){
   const m = (it.meeting||'').trim().toLowerCase();
   return m === 'mbu 1.5' || m === 'mbu 2';
@@ -1855,14 +1882,13 @@ function computeToolbarStats(){
   if (!total) return null;
   const pct = n => Math.round(n/total*100);
   const onTrack = items.filter(i=>getStatusBucket(i)==='On Track').length;
-  const open = items.filter(i=>getStatusBucket(i)==='Open').length;
   const overdue = items.filter(i=>getStatusBucket(i)==='Overdue').length;
 
   // "Updated Today" is based on MBU-meeting items only.
   const mbuItems = items.filter(isMbuMeeting);
   const updatedTodayPct = mbuItems.length ? Math.round(mbuItems.filter(i=>i.updatedToday).length/mbuItems.length*100) : 0;
 
-  return { updatedToday: updatedTodayPct, onTrack: pct(onTrack), open: pct(open), overdue: pct(overdue) };
+  return { updatedToday: updatedTodayPct, onTrack: pct(onTrack), overdue: pct(overdue) };
 }
 
 function renderStatsStrip(){
@@ -1872,7 +1898,6 @@ function renderStatsStrip(){
   strip.innerHTML = `
     <span class="stat-chip stat-updated"><b>${s.updatedToday}%</b> Updated Today</span>
     <span class="stat-chip stat-ontrack"><b>${s.onTrack}%</b> On Track</span>
-    <span class="stat-chip stat-open"><b>${s.open}%</b> Open</span>
     <span class="stat-chip stat-overdue"><b>${s.overdue}%</b> Overdue</span>
   `;
 }
@@ -2459,7 +2484,7 @@ function openActionModal(id, mode){
     document.getElementById('f_dueDate').value = '';
     document.getElementById('f_dueDate').disabled = false;
     document.getElementById('f_noDateYet').checked = false;
-    document.getElementById('f_status').value = 'Open';
+    document.getElementById('f_status').value = 'On Track';
     document.getElementById('f_beforePhotos').value = '';
     document.getElementById('f_currentPhotos').value = '';
     renderPendingGrid('before');
@@ -2710,7 +2735,7 @@ const HISTORY_FIELD_VALUE_GETTERS = {
   'Remarks/Update': h => h.remarks,
   'Owner': h => h.owner,
   'Department': h => h.department,
-  'Status': h => h.status,
+  'Status': h => normalizeStatus(h.status),
   'Due Date': h => (!h.dueDate || h.dueDate === 'TBD') ? 'No date yet' : formatShortDate(h.dueDate)
 };
 
@@ -2827,14 +2852,16 @@ function closeNoUpdateReport(){ document.getElementById('noUpdateOverlay').hidde
 function openDashboard(){
   const items = state.items;
   const total = items.length;
-  const byStatus = s => items.filter(i=>normalizeStatus(i.status)===s).length;
-  const overdue = items.filter(i=> i.status!=='Closed' && typeof i.daysToDue==='number' && i.daysToDue < 0).length;
+  const bucket = b => items.filter(i=>getStatusBucket(i)===b).length;
+  const pending = items.filter(i=>getStatusBucket(i)!=='Closed').length;
+  const closedLate = items.filter(isClosedLate).length;
+  const closedOnTime = bucket('Closed') - closedLate;
   const updatedToday = items.filter(i=>i.status!=='Closed' && i.updatedToday).length;
   const needsUpdate = items.filter(i=>i.status!=='Closed' && !i.updatedToday).length;
 
   const cards = [
-    ['Total Items', total], ['Open', byStatus('Open')], ['On Track', byStatus('On Track')],
-    ['On Hold', byStatus('On Hold')], ['Closed', byStatus('Closed')], ['Overdue', overdue],
+    ['Total Items', total], ['Pending', pending], ['On Track', bucket('On Track')],
+    ['Overdue', bucket('Overdue')], ['Closed', closedOnTime], ['Closed Late', closedLate],
     ['Updated Today', updatedToday], ['Needs Update', needsUpdate],
   ];
   document.getElementById('dashCards').innerHTML = cards.map(([lbl,num])=>`
