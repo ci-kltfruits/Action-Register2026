@@ -1877,18 +1877,16 @@ function isMbuMeeting(it){
 }
 
 function computeToolbarStats(){
-  const items = state.items.filter(i=>getStatusBucket(i)!=='Closed');
+  // All three percentages are based on open (not closed) MBU 1.5 / MBU 2 items only.
+  const items = state.items.filter(i=>getStatusBucket(i)!=='Closed' && isMbuMeeting(i));
   const total = items.length;
   if (!total) return null;
   const pct = n => Math.round(n/total*100);
   const onTrack = items.filter(i=>getStatusBucket(i)==='On Track').length;
   const overdue = items.filter(i=>getStatusBucket(i)==='Overdue').length;
+  const updated = items.filter(i=>i.updatedToday).length;
 
-  // "Updated Today" is based on MBU-meeting items only.
-  const mbuItems = items.filter(isMbuMeeting);
-  const updatedTodayPct = mbuItems.length ? Math.round(mbuItems.filter(i=>i.updatedToday).length/mbuItems.length*100) : 0;
-
-  return { updatedToday: updatedTodayPct, onTrack: pct(onTrack), overdue: pct(overdue) };
+  return { updatedToday: pct(updated), onTrack: pct(onTrack), overdue: pct(overdue) };
 }
 
 function renderStatsStrip(){
