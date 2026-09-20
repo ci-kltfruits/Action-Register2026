@@ -87,7 +87,7 @@ button{font-family:inherit;} input,select,textarea{font-family:inherit;}
 .sort-wrap label{ font-size:12.5px; color:var(--ink-dim); font-weight:600; white-space:nowrap; }
 .sort-wrap select{ border:1px solid var(--border); background:var(--surface); color:var(--ink); padding:6px 8px; border-radius:7px; font-size:13px; font-weight:600; }
 
-/* FILTER DROPDOWNS (generic) */
+/* FILTER DROPDOWNS */
 .filter-wrap{ position:relative; }
 .filter-btn{ display:flex; align-items:center; gap:6px; }
 .filter-btn-right{ display:flex; align-items:center; gap:6px; margin-left:auto; }
@@ -115,8 +115,7 @@ button{font-family:inherit;} input,select,textarea{font-family:inherit;}
 .tab.dept-tab:hover{ background:color-mix(in srgb, var(--tab-dept-color) 26%, var(--surface)); }
 .tab.dept-tab.active{ background:var(--tab-dept-color); color:var(--tab-dept-ink); border-color:var(--tab-dept-color); }
 
-/* Holographic foil texture for "iridescent" departments — a lined, lightly textured pastel
-   rainbow sheen instead of a single flat gradient color. */
+/* Holographic foil texture for "iridescent" departments */
 .tab.dept-tab.iridescent-fill{
   background:
     repeating-linear-gradient(115deg, rgba(255,255,255,.55) 0px, rgba(255,255,255,.55) 2px, rgba(255,255,255,0) 2px, rgba(255,255,255,0) 7px),
@@ -149,16 +148,14 @@ table{ width:100%; table-layout:fixed; border-collapse:separate; border-spacing:
 thead th:nth-child(1){ width:4%; }
 thead th:nth-child(2){ width:6%; }
 thead th:nth-child(3){ width:8%; }
-thead th:nth-child(4){ width:9%; }
-thead th:nth-child(5){ width:12%; }
-thead th:nth-child(6){ width:9%; }
-thead th:nth-child(7){ width:8%; }
-thead th:nth-child(8){ width:7%; }
-thead th:nth-child(9){ width:6%; }
-thead th:nth-child(10){ width:9%; }
-thead th:nth-child(11){ width:8%; }
-thead th:nth-child(12){ width:7%; }
-thead th:nth-child(13){ width:7%; }
+thead th:nth-child(4){ width:8%; }
+thead th:nth-child(5){ width:29%; }
+thead th:nth-child(6){ width:7%; }
+thead th:nth-child(7){ width:6%; }
+thead th:nth-child(8){ width:9%; }
+thead th:nth-child(9){ width:8%; }
+thead th:nth-child(10){ width:7%; }
+thead th:nth-child(11){ width:7%; }
 thead th:first-child{ border-top-left-radius:var(--radius); }
 thead th:last-child{ border-top-right-radius:var(--radius); }
 tbody tr:last-child td:first-child{ border-bottom-left-radius:var(--radius); }
@@ -175,7 +172,6 @@ td.id-cell{ font-family:'IBM Plex Mono'; font-weight:700; color:var(--ink-dim); 
 td.wrap{ white-space:normal; overflow-wrap:break-word; }
 td.nowrap{ white-space:nowrap; }
 .muted{ color:var(--ink-dim); }
-
 
 .badge{ display:inline-flex; align-items:center; padding:4px 11px; border-radius:6px; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.3px; white-space:nowrap; }
 .badge-open{ background:var(--info-soft); color:var(--info); }
@@ -205,7 +201,6 @@ td.nowrap{ white-space:nowrap; }
 
 .due-date-cell{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:4px; }
 .due-date-main{ font-weight:700; font-size:14.5px; }
-
 .aging-num{ font-family:'IBM Plex Mono'; font-weight:700; font-size:13px; white-space:nowrap; }
 
 .mediabin{ display:flex; gap:8px; }
@@ -341,7 +336,7 @@ td.nowrap{ white-space:nowrap; }
 .lightbox-prev{ left:20px; } .lightbox-next{ right:20px; }
 .lightbox-caption{ position:absolute; bottom:22px; left:0; right:0; text-align:center; color:#fff; font-size:14px; font-weight:600; letter-spacing:.3px; opacity:.85; }
 
-/* PRESENT MODE — full screen, side-by-side photos */
+/* PRESENT MODE */
 .present-overlay{ position:fixed; inset:0; background:var(--bg); z-index:100; display:flex; flex-direction:column; }
 .present-overlay[hidden]{ display:none; }
 .present-count{ font-family:'IBM Plex Mono'; font-size:15px; color:var(--ink-dim); font-weight:600; }
@@ -392,6 +387,14 @@ td.nowrap{ white-space:nowrap; }
 
 /* DASHBOARD */
 .dash-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+.noupdate-row{ display:flex; align-items:center; gap:12px; padding:12px; border:1px solid var(--border); border-radius:10px; background:var(--bg); margin-bottom:8px; }
+.noupdate-rank{ width:28px; height:28px; border-radius:50%; background:var(--surface-2); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; color:var(--ink-dim); flex:none; }
+.noupdate-owner{ flex:1; min-width:0; }
+.noupdate-name{ font-weight:700; font-size:14.5px; }
+.noupdate-items{ font-size:12.5px; color:var(--ink-dim); margin-top:2px; }
+.noupdate-total{ font-family:'IBM Plex Mono'; font-weight:800; font-size:20px; color:var(--bad); text-align:right; flex:none; line-height:1.1; }
+.noupdate-total span{ font-size:10.5px; font-weight:600; display:block; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.3px; }
+.noupdate-empty{ text-align:center; padding:30px; color:var(--ink-dim); }
 .dash-card{ background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:14px; }
 .dash-num{ font-family:'IBM Plex Mono'; font-size:25px; font-weight:700; }
 .dash-lbl{ font-size:11.5px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.3px; margin-top:2px; }
@@ -408,10 +411,7 @@ td.nowrap{ white-space:nowrap; }
   .titles .tagline{ display:none; }
 }
 
-/* ============================================================
-   MOBILE MODE — manually toggled card view (independent of actual
-   viewport width), for a phone-friendly reading experience.
-   ============================================================ */
+/* MOBILE MODE — manually toggled card view */
 .mobile-card-list{ display:none; flex-direction:column; gap:10px; padding-bottom:8px; }
 body.mobile-mode .table-wrap{ padding:0 10px 10px; }
 body.mobile-mode table{ display:none; }
@@ -430,9 +430,6 @@ body.mobile-mode .mobile-card-list{ display:flex; }
 .mcard-media{ display:flex; gap:8px; }
 .mcard-bottom{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
 
-/* Header simplified to a single row in mobile mode: branding + hamburger only.
-   The toolbar/topbar-controls are emptied out via JS (their contents get moved into the
-   sidebar), so hiding what's left over (Present Mode, empty wrappers) is just a formality. */
 body.mobile-mode .topbar{ height:auto; padding:10px 14px; }
 body.mobile-mode .titles .tagline{ display:none; }
 body.mobile-mode #presentModeBtn{ display:none; }
@@ -463,7 +460,6 @@ body.mobile-mode .tabs{ padding:10px 14px; }
 .mobile-sidebar-body .filter-panel{ position:static; box-shadow:none; width:100%; margin-top:6px; }
 body.mobile-mode #folderLinkWrap, body.mobile-mode #previewFolderWrap{ display:none !important; }
 
-/* Modals/present mode always stack on mobile, regardless of actual window width */
 body.mobile-mode .present-card{ flex-direction:column; height:auto; max-height:100%; overflow-y:auto; }
 body.mobile-mode .present-photos-col{ border-left:none; border-top:1px solid var(--border); flex-direction:row; }
 body.mobile-mode .present-photo-half:first-child{ border-bottom:none; border-right:1px solid var(--border); }
@@ -504,6 +500,7 @@ body.mobile-mode .modal{ max-width:96vw; }
     <button class="btn btn-accent" id="presentModeBtn">▶ Present Mode</button>
     <button class="btn btn-ghost" id="dashboardBtn">📊 Dashboard</button>
     <button class="theme-toggle" id="themeToggle" title="Toggle light/dark">🌙</button>
+    <button class="theme-toggle" id="noUpdateBtn" title="No-update tracker">🚩</button>
     <button class="theme-toggle" id="mobileToggle" title="Toggle mobile view">📱</button>
     <button class="theme-toggle" id="mobileSidebarBtn" title="Menu" hidden>☰</button>
   </div>
@@ -525,8 +522,7 @@ body.mobile-mode .modal{ max-width:96vw; }
   <div class="stats-strip" id="statsStrip"></div>
 </div>
 
-<!-- Mobile sidebar drawer: holds Search / New Action / Filter / Order / theme toggle / stats
-     when in mobile mode, via reparenting the existing controls (JS moves them in and out). -->
+<!-- Mobile sidebar drawer (controls are reparented here in mobile mode) -->
 <div class="mobile-sidebar-overlay" id="mobileSidebarOverlay" hidden>
   <div class="mobile-sidebar">
     <div class="mobile-sidebar-head">
@@ -548,8 +544,6 @@ body.mobile-mode .modal{ max-width:96vw; }
         <th>Meeting</th>
         <th>Updated Today</th>
         <th>Issues/Concerns</th>
-        <th>Details</th>
-        <th>Remarks/Update</th>
         <th>Media Bin</th>
         <th>Owner</th>
         <th>Department</th>
@@ -739,6 +733,20 @@ body.mobile-mode .modal{ max-width:96vw; }
   </div>
 </div>
 
+<!-- No-Update Tracker -->
+<div class="overlay" id="noUpdateOverlay" hidden>
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-head">
+      <h2>🚩 No-Update Tracker</h2>
+      <button class="close-x" id="closeNoUpdateBtn">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="muted" style="font-size:13px; margin:0 0 4px;">Single-owner, non-closed items that haven't been updated today — ranked by total accumulated no-update days across all of an owner's stale items.</p>
+      <div id="noUpdateList"></div>
+    </div>
+  </div>
+</div>
+
 <!-- Present Mode -->
 <div class="present-overlay" id="presentOverlay" hidden>
   <div class="present-body" id="presentBody"></div>
@@ -796,9 +804,7 @@ let state = {
   lightbox: { images: [], index: 0, label: '' }
 };
 
-// An item's Department (and Owner) field may hold several comma-separated values now that
-// items can have multiple owners across multiple departments. "All" expands to every real
-// value so such an item matches every tab/filter/dashboard bucket, same as a literal wildcard.
+// Department/Owner fields may hold several comma-separated values. "All" expands to every real value.
 function itemDeptList(it){
   const list = (it.department||'').split(',').map(s=>s.trim()).filter(Boolean);
   if (list.some(d=>d.toLowerCase()==='all')) return CFG.departments.slice();
@@ -811,22 +817,19 @@ function itemOwnerList(it){
 }
 const CROSS_DEPT_LABEL = 'Cross Dept';
 
-// An item counts as "cross-department" only if it actually spans 2+ distinct departments (or
-// its department is "All") — multiple owners who all happen to share one department still
-// belong to that single department tab, not Cross Dept.
+// Cross-department = spans 2+ distinct departments (or "All").
 function isCrossDeptItem(it){
   const raw = (it.department||'').trim();
   if (!raw) return false;
   if (raw.toLowerCase() === 'all') return true;
   const parts = raw.split(',').map(s=>s.trim().toLowerCase()).filter(Boolean);
-  const uniq = new Set(parts);
-  return uniq.size > 1;
+  return new Set(parts).size > 1;
 }
 
 function itemMatchesDeptTab(it, tab){
   if (tab === 'All') return true;
   if (tab === CROSS_DEPT_LABEL) return isCrossDeptItem(it);
-  if (isCrossDeptItem(it)) return false; // cross-dept items live only under All / Cross Dept
+  if (isCrossDeptItem(it)) return false;
   const raw = (it.department||'').split(',').map(s=>s.trim());
   return raw.some(d=>d.toLowerCase()==='all') || raw.indexOf(tab) !== -1;
 }
@@ -844,9 +847,7 @@ const FILTER_DEFS = [
 ];
 
 /* ============================================================
-   COLOR RESOLUTION — turns the free-text "Department color"
-   value from the roster file into real CSS (solid color or a
-   multi-color gradient), independent of how it was written.
+   COLOR RESOLUTION
    ============================================================ */
 const COLOR_SPECIAL = { 'emerald':'#50C878', 'gunmetal black':'#2A3439', 'mustard':'#FFDB58' };
 const IRIDESCENT_STOPS = ['#A78BFA','#60A5FA','#34D399','#FBBF24','#F472B6'];
@@ -855,9 +856,9 @@ function resolveColorToken_(tok){
   const t = (tok||'').trim().toLowerCase();
   if (!t) return null;
   if (t.startsWith('#')) return tok.trim();
-  if (t === 'iridescent') return null; // signals "expand to gradient stops"
+  if (t === 'iridescent') return null;
   if (COLOR_SPECIAL[t]) return COLOR_SPECIAL[t];
-  return t.replace(/\s+/g,''); // "light blue" -> "lightblue", "dark blue" -> "darkblue" (valid CSS names)
+  return t.replace(/\s+/g,'');
 }
 
 function conicFrom_(colors){
@@ -881,24 +882,19 @@ function departmentColorCss(raw){
 }
 function deptColor(name){ return departmentColorCss(CFG.deptColors[name]); }
 
-// True if this department's color includes "iridescent" — those get a special holographic
-// foil texture (see .iridescent-fill) instead of a flat solid color, since a gradient can't
-// be represented as a single CSS custom-property color for the usual tab/pill treatment.
 function isIridescentDept(name){
   const raw = CFG.deptColors[name];
   if (!raw) return false;
   return raw.toString().split(',').some(tok => tok.trim().toLowerCase() === 'iridescent');
 }
 
-// A single solid color representing a department (used for theming/tab fills, where a
-// gradient like the dept "chip" dot uses isn't valid — e.g. as a button background).
 function departmentFlatColor(name){
   const raw = CFG.deptColors[name];
   if (!raw) return '#6B7280';
   const tokens = raw.toString().split(',').map(s=>s.trim()).filter(Boolean);
   for (const tok of tokens){
     const r = resolveColorToken_(tok);
-    if (r === null) return IRIDESCENT_STOPS[0]; // "iridescent" -> use its first stop as the flat color
+    if (r === null) return IRIDESCENT_STOPS[0];
     return r;
   }
   return '#6B7280';
@@ -917,9 +913,6 @@ function singleDeptPillHtml(dept){
   return `<span class="tab dept-tab dept-pill" style="--tab-dept-color:${flat}; --tab-dept-ink:${ink};">${escapeHtml(dept)}</span>`;
 }
 
-// Renders a department field (which may hold several comma-separated departments, since an
-// item can now have multiple owners spanning multiple departments) as the same colored pill
-// style used by the department tabs — just without the item count.
 function departmentPillHtml(deptField){
   const depts = (deptField||'').split(',').map(s=>s.trim()).filter(Boolean);
   if (!depts.length) return '';
@@ -936,7 +929,7 @@ function cssColorToRgb_(colorStr){
       _inkCanvasCtx = c.getContext && c.getContext('2d');
       if (!_inkCanvasCtx) { _inkCanvasUnavailable = true; return null; }
     }
-    _inkCanvasCtx.fillStyle = '#000'; // reset so an unparsable value falls back to black, not stale
+    _inkCanvasCtx.fillStyle = '#000';
     _inkCanvasCtx.fillStyle = colorStr;
     _inkCanvasCtx.fillRect(0, 0, 1, 1);
     const d = _inkCanvasCtx.getImageData(0, 0, 1, 1).data;
@@ -948,14 +941,12 @@ function cssColorToRgb_(colorStr){
 }
 function pickInkColor(colorStr){
   const rgb = cssColorToRgb_(colorStr);
-  if (!rgb) return '#FFFFFF'; // safe default if canvas isn't available for some reason
+  if (!rgb) return '#FFFFFF';
   const lum = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
   return lum > 0.6 ? '#1E2230' : '#FFFFFF';
 }
 
-// Re-themes the whole app to a department's color when its tab is selected — this drives the
-// accent color used by the primary button, active tab, filter badges, logo, etc. "All" resets
-// back to the app's default accent.
+// Re-themes the app accent to the selected department's color; "All" resets to default.
 function applyDepartmentTheme(deptName){
   const root = document.documentElement;
   if (!deptName || deptName === 'All'){
@@ -972,13 +963,14 @@ function applyDepartmentTheme(deptName){
 }
 
 /* ============================================================
-   SERVER BRIDGE (Apps Script) with local demo fallback
+   SERVER BRIDGE
+   Works in both places:
+   - Inside Apps Script (served via doGet): uses google.script.run
+   - Hosted elsewhere (e.g. GitHub Pages): uses fetch -> doPost JSON API
    ============================================================ */
-// ============================================================
-// PASTE THIS IN PLACE OF THE OLD isAppsScript / run() BLOCK
-// ============================================================
+const isAppsScript = !!(window.google && google.script && google.script.run);
 
-// 👇 PASTE YOUR APPS SCRIPT WEB APP URL HERE (the one ending in /exec)
+// Only used when hosted outside Apps Script (e.g. GitHub Pages)
 const API_URL = "https://script.google.com/macros/s/AKfycbxd8uCBpLiTTz5zRHFjLbZp3rR61h18mV6jZPjc1Ywb9QwEk5xxGWfYyMO9VfkMyPa9qg/exec";
 
 async function fetchWithRetry(url, options, retries = 5, delay = 800) {
@@ -989,20 +981,24 @@ async function fetchWithRetry(url, options, retries = 5, delay = 800) {
       return res;
     } catch (err) {
       if (i === retries - 1) throw err;
-      await new Promise(r => setTimeout(r, delay * Math.pow(2, i))); // exponential backoff
+      await new Promise(r => setTimeout(r, delay * Math.pow(2, i)));
     }
   }
 }
 
 function run(fnName, ...args){
   return new Promise(async (resolve, reject) => {
-    // If you haven't pasted your real Apps Script URL yet, fall back to the local demo data
-    // so the page still works while you're setting things up.
+    if (isAppsScript) {
+      google.script.run.withSuccessHandler(resolve).withFailureHandler(err => reject(err))[fnName](...args);
+      return;
+    }
+    // Local demo fallback if no real URL is set.
     if (!API_URL || API_URL.indexOf('PASTE_YOUR') === 0) {
       demoBackend[fnName](...args).then(resolve).catch(reject);
       return;
     }
     try {
+      // No Content-Type header on purpose: avoids a CORS preflight Apps Script can't answer.
       const res = await fetchWithRetry(API_URL, {
         method: 'POST',
         body: JSON.stringify({ fn: fnName, args: args })
@@ -1014,7 +1010,7 @@ function run(fnName, ...args){
       reject(err);
     }
   });
-};
+}
 
 /* ---- Demo/local fallback backend (mirrors Code.gs roster) ---- */
 const DEMO_KEY = 'AR_DEMO_DATA_V5';
@@ -1043,15 +1039,15 @@ const DEMO_ROSTER = [
   { full: 'Reina Catherina Romero', disp: 'R. Romero', dept: 'MS', color: 'dark blue' },
   { full: 'Nestor Bonifacio Jr', disp: 'N. Bonifacio', dept: 'PPIC', color: 'pink' },
   { full: 'Shekinah Shannon  Daduya', disp: 'S. Daduya', dept: 'PPIC', color: 'pink' },
-  { full: 'Ej Diaz', disp: 'E. Diaz', dept: 'PROD - NP', color: 'yellow, light blue, brown, purple' },
-  { full: 'Gilbert Odi', disp: 'G. Odi', dept: 'PROD - NP', color: 'yellow, light blue, brown, purple' },
-  { full: 'Jocelyn Barnachea', disp: 'J. Barnachea', dept: 'PROD - NP', color: 'yellow, light blue, brown, purple' },
-  { full: 'Maria Carmina De Guzman', disp: 'M. De Guzman', dept: 'PROD - NP', color: 'yellow, light blue, brown, purple' },
-  { full: 'Marianne Del Rosario', disp: 'M. Del Rosario', dept: 'PROD - NP', color: 'yellow, light blue, brown, purple' },
-  { full: 'Neressa Buenaflor', disp: 'N. Buenaflor', dept: 'PROD - NP', color: 'yellow, light blue, brown, purple' },
-  { full: 'Reniel Badanoy', disp: 'R. Badanoy', dept: 'PROD - NP', color: 'yellow, light blue, brown, purple' },
-  { full: 'Jenesis Carlo Sy', disp: 'J. Sy', dept: 'PROD - Puree', color: 'mustard' },
-  { full: 'Ryan Avelino', disp: 'R. Avelino', dept: 'PROD - Puree', color: 'mustard' },
+  { full: 'Ej Diaz', disp: 'E. Diaz', dept: 'PROD', color: 'yellow, light blue, brown, purple' },
+  { full: 'Gilbert Odi', disp: 'G. Odi', dept: 'PROD', color: 'yellow, light blue, brown, purple' },
+  { full: 'Jocelyn Barnachea', disp: 'J. Barnachea', dept: 'PROD', color: 'yellow, light blue, brown, purple' },
+  { full: 'Maria Carmina De Guzman', disp: 'M. De Guzman', dept: 'PROD', color: 'yellow, light blue, brown, purple' },
+  { full: 'Marianne Del Rosario', disp: 'M. Del Rosario', dept: 'PROD', color: 'yellow, light blue, brown, purple' },
+  { full: 'Neressa Buenaflor', disp: 'N. Buenaflor', dept: 'PROD', color: 'yellow, light blue, brown, purple' },
+  { full: 'Reniel Badanoy', disp: 'R. Badanoy', dept: 'PROD', color: 'yellow, light blue, brown, purple' },
+  { full: 'Jenesis Carlo Sy', disp: 'J. Sy', dept: 'PROD', color: 'mustard' },
+  { full: 'Ryan Avelino', disp: 'R. Avelino', dept: 'PROD', color: 'mustard' },
   { full: 'Benedict Ella', disp: 'B. Ella', dept: 'PURCH - Fruits', color: 'emerald' },
   { full: 'Diana Shane Agdeppa', disp: 'D. Agdeppa', dept: 'PURCH - Fruits', color: 'emerald' },
   { full: 'Jerome Magadia', disp: 'J. Magadia', dept: 'PURCH - Fruits', color: 'emerald' },
@@ -1075,7 +1071,7 @@ const DEMO_ROSTER = [
 ];
 const DEMO_DEPARTMENT_ORDER = [
   'ACCTG', 'CI', 'EHS', 'EMD', 'HRAD', 'IMPEX', 'FLEET', 'MS', 'PPIC',
-  'PROD - NP', 'PROD - Puree', 'PURCH - Fruits', 'PURCH - NF', 'QA/QC',
+  'PROD', 'PURCH - Fruits', 'PURCH - NF', 'QA/QC',
   'R&D', 'RF', 'SLT', 'WHSE'
 ];
 function demoDeriveConfig(){
@@ -1084,7 +1080,7 @@ function demoDeriveConfig(){
   const extra = Array.from(rosterDepts).filter(d=>DEMO_DEPARTMENT_ORDER.indexOf(d)===-1).sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
   const departments = ordered.concat(extra);
   const ownersByDept = {};
-  const colorSeen = {}; // dept -> { lowercasedToken: originalToken } — aggregated across every member
+  const colorSeen = {};
   const nameToDisp = {};
   const nameToDept = {};
   const allOwnersSet = new Set();
@@ -1228,7 +1224,7 @@ function seedDemoData(){
   return [
     mk('1','QA/QC','Recalibrate line 2 metal detector','P. Arellano','M. Benipayo','Open',6,addDaysISO(2),3,'Vendor scheduled for Thursday.','MBU 1.5',
       ['https://picsum.photos/seed/before1/700/700'], ['https://picsum.photos/seed/current1/700/700']),
-    mk('2','PROD - Puree','Reduce changeover downtime on Line 4','R. Avelino','G. Odi','On Track',12,'TBD',30,'Timing study in progress.','MBU 2'),
+    mk('2','PROD','Reduce changeover downtime on Line 4','R. Avelino','G. Odi','On Track',12,'TBD',30,'Timing study in progress.','MBU 2'),
     mk('3','EHS','Replace worn fire extinguisher signage','M. Alegado','M. Alegado','Open',20,addDaysISO(-4),50,'Waiting on signage supplier quote.','MBU 1.5',
       ['https://picsum.photos/seed/before3/700/700']),
     mk('4','IMPEX','Re-layout pallet racks in Bay 3','M. Campo','M. Monteza','On Hold',15,'TBD',80,'On hold pending space study.','MBU 2'),
@@ -1274,8 +1270,7 @@ function showLoadError(msg){
 async function init(){
   applyStoredTheme();
   applyStoredMobileMode();
-  // Bind every static button/control FIRST so the app stays interactive even if
-  // loading config or data below fails — a data error should never leave the UI dead.
+  // Bind controls FIRST so the UI stays interactive even if loading fails.
   bindEvents();
 
   try {
@@ -1356,7 +1351,7 @@ function buildStaticOptions(){
 }
 
 /* ============================================================
-   THEME
+   THEME + MOBILE MODE
    ============================================================ */
 function applyStoredTheme(){
   const saved = localStorage.getItem('AR_THEME') || 'light';
@@ -1371,12 +1366,10 @@ function toggleTheme(){
   document.getElementById('themeToggle').textContent = next==='dark' ? '☀️' : '🌙';
 }
 
-// Controls that get physically moved into the mobile sidebar (and back) — reparenting like
-// this (rather than duplicating markup/ids) means every existing event listener just keeps
-// working no matter which container the element currently lives in.
+// Controls physically moved into the mobile sidebar (and back), so listeners keep working.
 const MOBILE_SIDEBAR_MOVE_IDS = [
   'newActionBtn', 'searchWrap', 'filterExpandPanel', 'filterToggleBtn',
-  'sortWrap', 'dashboardBtn', 'themeToggle', 'mobileToggle', 'statsStrip'
+  'sortWrap', 'dashboardBtn', 'themeToggle', 'noUpdateBtn', 'mobileToggle', 'statsStrip'
 ];
 let _mobileOriginalPositions = null;
 
@@ -1386,12 +1379,10 @@ function captureMobileOriginalPositions(){
     return { id, parent: el.parentNode, nextSibling: el.nextSibling };
   });
 }
-
 function moveControlsIntoSidebar(){
   const body = document.getElementById('mobileSidebarBody');
   MOBILE_SIDEBAR_MOVE_IDS.forEach(id=> body.appendChild(document.getElementById(id)));
 }
-
 function restoreControlsFromSidebar(){
   if (!_mobileOriginalPositions) return;
   _mobileOriginalPositions.forEach(({id, parent, nextSibling})=>{
@@ -1400,11 +1391,9 @@ function restoreControlsFromSidebar(){
     else parent.appendChild(el);
   });
 }
-
 function detectShouldAutoEnableMobile(){
   return window.innerWidth <= 720 || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
-
 function setMobileMode(on){
   document.body.classList.toggle('mobile-mode', on);
   if (on) moveControlsIntoSidebar(); else restoreControlsFromSidebar();
@@ -1413,12 +1402,10 @@ function setMobileMode(on){
   document.getElementById('mobileSidebarBtn').hidden = !on;
   if (!on) closeMobileSidebar();
 }
-
 function applyStoredMobileMode(){
   captureMobileOriginalPositions();
   let saved = localStorage.getItem('AR_MOBILE_MODE');
   if (saved === null){
-    // No explicit preference yet on this device — auto-switch based on screen/device.
     saved = detectShouldAutoEnableMobile() ? 'on' : 'off';
     localStorage.setItem('AR_MOBILE_MODE', saved);
   }
@@ -1429,10 +1416,8 @@ function toggleMobileMode(){
   localStorage.setItem('AR_MOBILE_MODE', next ? 'on' : 'off');
   setMobileMode(next);
 }
-
 function openMobileSidebar(){ document.getElementById('mobileSidebarOverlay').hidden = false; }
 function closeMobileSidebar(){ document.getElementById('mobileSidebarOverlay').hidden = true; }
-
 
 /* ============================================================
    GENERIC COLUMN FILTER DROPDOWNS
@@ -1571,8 +1556,6 @@ function updateClearFiltersButton(){
   const toggleBadge = document.getElementById('filterToggleBadge');
   toggleBadge.hidden = totalActive === 0;
   toggleBadge.textContent = totalActive;
-  // Keep the expanded panel's width in sync if filters change while it's open (max-width was
-  // pinned to a fixed px during the open transition — refresh it so nothing gets clipped).
   const panel = document.getElementById('filterExpandPanel');
   if (panel.classList.contains('expanded')) panel.style.maxWidth = 'none';
 }
@@ -1599,12 +1582,11 @@ function toggleFilterExpand(){
       panel.removeEventListener('transitionend', onEnd);
       if (panel.classList.contains('expanded')){
         panel.style.maxWidth = 'none';
-        panel.style.overflow = 'visible'; // let per-column filter dropdowns show without clipping
+        panel.style.overflow = 'visible';
       }
     });
   } else {
-    panel.style.overflow = 'hidden'; // re-clip before collapsing so the reveal animates cleanly
-    // Pin to the current pixel width first so the collapse has something concrete to animate from.
+    panel.style.overflow = 'hidden';
     panel.style.maxWidth = panel.scrollWidth + 'px';
     panel.classList.remove('expanded');
     btn.classList.remove('active');
@@ -1681,13 +1663,9 @@ function applySortOrder(rows){
   return sorted;
 }
 
-// Each status gets its own small icon "logo" alongside its color, so the four meanings
-// (Open / On Track / On Hold / Closed) are distinguishable at a glance, not just by color.
 const STATUS_ICON = { 'Open': '●', 'On Track': '➤', 'On Hold': '⏸', 'Closed': '✓' };
 
-// "In Progress" was renamed to "On Track" for uniformity with the due-date timeliness badge —
-// this normalizes any older sheet rows that still literally say "In Progress" so they render
-// (and re-save) as "On Track" without needing a one-time data migration.
+// "In Progress" was renamed "On Track"; normalize old sheet rows.
 function normalizeStatus(s){
   return s === 'In Progress' ? 'On Track' : s;
 }
@@ -1701,7 +1679,6 @@ function statusBadgeClass(s){
   return 'badge-open';
 }
 
-// Plain status badge — used where due-date urgency doesn't apply (history entries, etc).
 function statusBadgeHtml(s){
   s = normalizeStatus(s);
   const cls = statusBadgeClass(s);
@@ -1709,14 +1686,10 @@ function statusBadgeHtml(s){
   return `<span class="badge ${cls}">${icon?icon+' ':''}${escapeHtml(s)}</span>`;
 }
 
-// Status column now folds in due-date urgency: Closed items show "Closed"; anything else with
-// a real due date shows "On Track / Xd remaining" or "Overdue / Xd" instead of the raw status;
-// everything else (no due date yet) falls back to the plain status (Open / On Track / On Hold).
+// Status cell folds in due-date urgency for On Track items only.
 function statusCellHtml(it){
   const status = normalizeStatus(it.status);
   if (status === 'Closed') return statusBadgeHtml('Closed');
-  // Timeliness (On Track Xd remaining / Overdue) only makes sense once someone is actually
-  // working the item — Open (untouched) and On Hold (paused) always show their plain badge.
   if (status === 'On Track' && it.dueDate && it.dueDate !== 'TBD'){
     if (it.daysToDue >= 0){
       const days = it.daysToDue;
@@ -1772,12 +1745,16 @@ function mediaBinCellHtml(it){
   return `<div class="mediabin">${col('Before', before, 'before')}${col('Now', current, 'current')}</div>`;
 }
 
-// Buckets an item into exactly one of Open / On Hold / On Track / Overdue / Closed — the same
-// partition shown by the Status column's badge — used by both the stats strip and the Status filter.
+// Partition: Open / On Hold / On Track / Overdue / Closed.
 function getStatusBucket(it){
   const status = normalizeStatus(it.status);
   if (status === 'On Track' && it.dueDate && it.dueDate !== 'TBD' && it.daysToDue < 0) return 'Overdue';
   return status;
+}
+
+function isMbuMeeting(it){
+  const m = (it.meeting||'').trim().toLowerCase();
+  return m === 'mbu 1.5' || m === 'mbu 2';
 }
 
 function computeToolbarStats(){
@@ -1785,11 +1762,15 @@ function computeToolbarStats(){
   const total = items.length;
   if (!total) return null;
   const pct = n => Math.round(n/total*100);
-  const updatedToday = items.filter(i=>i.updatedToday).length;
   const onTrack = items.filter(i=>getStatusBucket(i)==='On Track').length;
   const open = items.filter(i=>getStatusBucket(i)==='Open').length;
   const overdue = items.filter(i=>getStatusBucket(i)==='Overdue').length;
-  return { updatedToday: pct(updatedToday), onTrack: pct(onTrack), open: pct(open), overdue: pct(overdue) };
+
+  // "Updated Today" is based on MBU-meeting items only.
+  const mbuItems = items.filter(isMbuMeeting);
+  const updatedTodayPct = mbuItems.length ? Math.round(mbuItems.filter(i=>i.updatedToday).length/mbuItems.length*100) : 0;
+
+  return { updatedToday: updatedTodayPct, onTrack: pct(onTrack), open: pct(open), overdue: pct(overdue) };
 }
 
 function renderStatsStrip(){
@@ -1839,8 +1820,6 @@ function render(){
       <td style="text-align:center;"><span class="ellipsis" title="${escapeHtml(it.meeting)}">${escapeHtml(it.meeting)}</span></td>
       <td class="nowrap" data-noopen="1">${updCellHtml}</td>
       <td><span class="ellipsis" title="${escapeHtml(it.issues)}"><strong>${escapeHtml(it.issues)}</strong></span></td>
-      <td><span class="ellipsis muted" title="${escapeHtml(it.details)}">${escapeHtml(it.details)}</span></td>
-      <td><span class="ellipsis muted" title="${escapeHtml(it.remarks)}">${escapeHtml(it.remarks)}</span></td>
       <td class="nowrap" data-noopen="1">${mediaBinCellHtml(it)}</td>
       <td><span class="ellipsis" title="${escapeHtml(it.owner)}">${escapeHtml(it.owner)}</span></td>
       <td class="nowrap" style="text-align:center;">${departmentPillHtml(it.department)}</td>
@@ -1873,9 +1852,6 @@ function render(){
   tbody.innerHTML = tableRows.join('');
   cardList.innerHTML = cards.join('');
 
-  tbody.querySelectorAll('[data-action="open-edit-row"]').forEach(btn=>{
-    btn.addEventListener('click', (e)=>{ e.stopPropagation(); openActionModal(btn.dataset.id, 'edit'); });
-  });
   [tbody, cardList].forEach(container=>{
     container.querySelectorAll('[data-action="open-update"]').forEach(btn=>{
       btn.addEventListener('click', (e)=>{ e.stopPropagation(); openActionModal(btn.dataset.id, 'update'); });
@@ -1893,7 +1869,6 @@ function render(){
       el.addEventListener('click', (e)=>{ e.stopPropagation(); openActionModal(el.dataset.id, 'edit'); });
     });
   });
-  // Row/card click (anywhere not already handled above) opens the read-only preview.
   tbody.querySelectorAll('tr[data-id]').forEach(tr=>{
     tr.addEventListener('click', (e)=>{
       if (e.target.closest('[data-action]')) return;
@@ -1935,7 +1910,7 @@ function isValidChoice(value, list){
   if (v === 'all') return true;
   return list.some(x=>x.toLowerCase()===v);
 }
-// Resolves either a roster "full" name or a "disp" name to the canonical disp name to store.
+// Resolves a roster full name or disp name to the canonical disp name.
 function resolveDisplayName(value){
   const v = (value||'').trim();
   if (!v) return '';
@@ -1977,7 +1952,7 @@ function lightboxNav(dir){
 }
 function closeLightbox(){
   document.getElementById('lightboxOverlay').hidden = true;
-  document.getElementById('lightboxStage').innerHTML = ''; // stop any playing video/iframe
+  document.getElementById('lightboxStage').innerHTML = '';
 }
 
 /* ============================================================
@@ -2069,7 +2044,7 @@ function renderPhotoGrid(containerId, mediaList, opts){
   });
 }
 
-// NEW-item flow: media isn't uploaded yet, so removal is just a local array splice.
+// NEW-item flow: media isn't uploaded yet, so removal is a local splice.
 function renderPendingGrid(bin){
   const arr = bin==='before' ? state.pendingBefore : state.pendingCurrent;
   const media = arr.map(pendingFileToMedia);
@@ -2080,7 +2055,7 @@ function renderPendingGrid(bin){
   });
 }
 
-// EDIT/UPDATE flow: media is already saved to Drive, so removal calls the server and updates state.
+// EDIT/UPDATE flow: media already saved to Drive, so removal calls the server.
 function renderExistingGrid(bin, it){
   const media = bin==='before' ? (it.beforePhotos||[]) : (it.currentPhotos||[]);
   renderPhotoGrid(bin==='before' ? 'beforePhotoGrid' : 'currentPhotoGrid', media, {
@@ -2116,11 +2091,9 @@ function applyModalTheme(mode){
   modalEl.classList.add('theme-' + mode);
 }
 
-// ---- Multi-owner / multi-department checkbox selectors ----
-// state.ownerSelection / state.deptSelection are Sets: either {'All'} alone, or a set of
-// individual disp names / department names. Picking owners auto-fills their department(s);
-// picking department(s) auto-adds everyone in them as owners — each direction is guarded with
-// a skip flag so the two don't ping-pong off each other.
+// ---- Multi-owner / multi-department selectors ----
+// Sets hold either {'All'} alone, or individual names. Owners auto-fill departments and
+// vice versa; skip flags stop the two from ping-ponging.
 function ownerSelectionSummary(){
   if (state.ownerSelection.has('All')) return 'All';
   return Array.from(state.ownerSelection).join(', ');
@@ -2151,7 +2124,6 @@ function parseDeptFieldToSelection(value){
   return set;
 }
 
-// Union of departments across every selected owner.
 function autofillDeptSelectionFromOwners(){
   if (state.ownerSelection.has('All')){
     state.deptSelection = new Set(['All']);
@@ -2166,10 +2138,8 @@ function autofillDeptSelectionFromOwners(){
   syncDeptSelectUI({ skipOwnerAutofill: true });
 }
 
-// Adds everyone from the selected department(s) into the owner selection (union — doesn't
-// remove anyone already picked from a different department).
 function autofillOwnersFromDepartments(){
-  if (state.deptSelection.has('All')) return; // "All" departments doesn't imply a specific owner list
+  if (state.deptSelection.has('All')) return;
   let added = false;
   state.deptSelection.forEach(dept=>{
     (CFG.ownersByDept[dept]||[]).forEach(disp=>{
@@ -2283,7 +2253,6 @@ function toggleOwnerSelectPanel(){
   const panel = document.getElementById('ownerSelectPanel');
   if (panel.hidden) openOwnerSelectPanel(); else closeOwnerSelectPanel();
 }
-
 function openDeptSelectPanel(){
   document.getElementById('deptSelectPanel').hidden = false;
   renderDeptSelectList(document.getElementById('deptSelectSearch').value);
@@ -2294,9 +2263,7 @@ function toggleDeptSelectPanel(){
   if (panel.hidden) openDeptSelectPanel(); else closeDeptSelectPanel();
 }
 
-// Matches the typed text against BOTH the roster's full "Searchable Name" and the short
-// "Suggested" (disp) name, but only ever returns/display the disp name — so typing part of
-// someone's full name (e.g. "Merlwin Re") surfaces their short name (e.g. "M. Pugay").
+// Matches typed text against both full and short names, but only returns the short (disp) name.
 function ownerMatches(query){
   const q = (query||'').trim().toLowerCase();
   const seen = new Set();
@@ -2322,13 +2289,11 @@ function attachNameAutocomplete(inputId, listId, opts){
   function updateHighlight(){
     list.querySelectorAll('.name-opt').forEach((el,i)=> el.classList.toggle('highlighted', i===highlighted));
   }
-
   function selectValue(v){
     input.value = v;
     list.hidden = true;
     if (opts.onSelect) opts.onSelect(v);
   }
-
   function renderList(){
     const q = input.value;
     let matches = ownerMatches(q).slice(0, 8);
@@ -2342,7 +2307,7 @@ function attachNameAutocomplete(inputId, listId, opts){
     } else {
       list.innerHTML = items.map((v,i)=>`<div class="name-opt" data-idx="${i}">${escapeHtml(v)}</div>`).join('');
       list.querySelectorAll('.name-opt').forEach(el=>{
-        // mousedown (not click) fires before the input's blur handler hides the list.
+        // mousedown fires before the input's blur handler hides the list.
         el.addEventListener('mousedown', (e)=>{
           e.preventDefault();
           selectValue(items[parseInt(el.dataset.idx,10)]);
@@ -2488,8 +2453,7 @@ async function handleBinUpload(bin, inputEl){
   }
 }
 
-// Validates a comma-separated list of names against the roster (or "All"), returning the
-// resolved, deduped, comma-joined canonical (disp) value — or null if anything doesn't match.
+// Validates a comma-separated name list against the roster (or "All"); returns canonical value or null.
 function resolveMultiNameField(value){
   const v = (value||'').trim();
   if (!v) return null;
@@ -2505,7 +2469,6 @@ function resolveMultiNameField(value){
   return resolved.join(', ');
 }
 
-// Same idea, but against the department list instead of the name roster.
 function resolveMultiDeptField(value){
   const v = (value||'').trim();
   if (!v) return null;
@@ -2577,8 +2540,7 @@ const UPDATE_FIELD_LABELS = {
   department: 'Department', status: 'Status', dueDate: 'Due Date'
 };
 
-// Compares the submitted payload against the snapshot taken when the Update modal opened,
-// returning the human-readable labels of whichever fields actually changed (for the history log).
+// Compares payload against the snapshot taken when the Update modal opened.
 function computeChangedFieldLabels(payload){
   const snap = state.updateSnapshot;
   if (!snap) return [];
@@ -2660,7 +2622,6 @@ const HISTORY_FIELD_VALUE_GETTERS = {
 function historyEntryDetailHtml(h){
   const tags = (h.changedFields||'').split(',').map(s=>s.trim()).filter(Boolean);
   if (!tags.length){
-    // Legacy entries logged before "Changed Fields" existed — fall back to just Remarks.
     return `<div class="history-remarks">${escapeHtml(h.remarks) || '<span class="muted">No remarks entered.</span>'}</div>`;
   }
   return tags.map(label=>{
@@ -2705,8 +2666,68 @@ async function openHistory(id){
 function closeHistory(){ document.getElementById('historyOverlay').hidden = true; }
 
 /* ============================================================
-   DASHBOARD
+   DASHBOARD + NO-UPDATE TRACKER
    ============================================================ */
+function daysSince_(dateObj){
+  if (!dateObj || isNaN(dateObj.getTime())) return 0;
+  return Math.max(0, Math.floor((new Date() - dateObj) / 86400000));
+}
+
+// Days without an update: from last update, or from discussion date if never updated.
+function daysWithoutUpdate(it){
+  if (it.lastUpdated){
+    const last = new Date(it.lastUpdated);
+    if (!isNaN(last.getTime())) return daysSince_(last);
+  }
+  if (it.dateDiscussed){
+    const start = new Date(it.dateDiscussed + 'T00:00:00');
+    if (!isNaN(start.getTime())) return daysSince_(start);
+  }
+  return 0;
+}
+
+// Single-owner, non-closed, not-updated-today items, ranked by owner's summed no-update days.
+function computeNoUpdateReport(){
+  const byOwner = {};
+  state.items.forEach(it=>{
+    if (getStatusBucket(it) === 'Closed') return;
+    if (it.updatedToday) return;
+    const raw = (it.owner||'').trim();
+    if (!raw || raw.toLowerCase() === 'all') return;
+    const parts = raw.split(',').map(s=>s.trim()).filter(Boolean);
+    if (parts.length !== 1) return;
+    const owner = parts[0];
+    const days = daysWithoutUpdate(it);
+    if (!byOwner[owner]) byOwner[owner] = { totalDays: 0, items: [] };
+    byOwner[owner].totalDays += days;
+    byOwner[owner].items.push({ id: it.id, issues: it.issues, days });
+  });
+  return Object.entries(byOwner)
+    .map(([owner, data]) => ({ owner, totalDays: data.totalDays, items: data.items.sort((a,b)=>b.days-a.days) }))
+    .sort((a,b) => b.totalDays - a.totalDays);
+}
+
+function openNoUpdateReport(){
+  const rows = computeNoUpdateReport();
+  const list = document.getElementById('noUpdateList');
+  if (!rows.length){
+    list.innerHTML = `<div class="noupdate-empty">Nobody's single-owner items are overdue for an update right now 🎉</div>`;
+  } else {
+    list.innerHTML = rows.map((r,i)=>`
+      <div class="noupdate-row">
+        <div class="noupdate-rank">${i+1}</div>
+        <div class="noupdate-owner">
+          <div class="noupdate-name">${escapeHtml(r.owner)}</div>
+          <div class="noupdate-items">${r.items.map(it=>`Item ${it.id} (${it.days}d)`).join(', ')}</div>
+        </div>
+        <div class="noupdate-total">${r.totalDays}<span>day${r.totalDays===1?'':'s'}</span></div>
+      </div>
+    `).join('');
+  }
+  document.getElementById('noUpdateOverlay').hidden = false;
+}
+function closeNoUpdateReport(){ document.getElementById('noUpdateOverlay').hidden = true; }
+
 function openDashboard(){
   const items = state.items;
   const total = items.length;
@@ -2739,8 +2760,7 @@ function openDashboard(){
 }
 
 /* ============================================================
-   PRESENT MODE — full screen, side-by-side Before/Currently
-   Only presents items visible under the current tab/search/filters.
+   PRESENT MODE
    ============================================================ */
 function openPresentMode(){
   state.presentQueue = getFiltered().filter(i=>i.status!=='Closed');
@@ -2830,6 +2850,8 @@ function presentNav(dir){
    ============================================================ */
 function bindEvents(){
   document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+  document.getElementById('noUpdateBtn').addEventListener('click', ()=>{ closeMobileSidebar(); openNoUpdateReport(); });
+  document.getElementById('closeNoUpdateBtn').addEventListener('click', closeNoUpdateReport);
   document.getElementById('mobileToggle').addEventListener('click', toggleMobileMode);
   document.getElementById('mobileSidebarBtn').addEventListener('click', openMobileSidebar);
   document.getElementById('closeMobileSidebarBtn').addEventListener('click', closeMobileSidebar);
