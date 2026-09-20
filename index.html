@@ -487,6 +487,7 @@ body.mobile-mode .modal{ max-width:96vw; }
       <h1>Action Register</h1>
       <p class="tagline">Track • Update • Monitor • Close Actions</p>
     </div>
+    <span id="syncStatus" style="font-size:12px; color:var(--ink-dim); white-space:nowrap; margin-left:4px;"></span>
   </div>
   <div class="topbar-controls">
     <div class="sort-wrap" id="sortWrap">
@@ -561,8 +562,8 @@ body.mobile-mode .modal{ max-width:96vw; }
   </table>
   <div class="mobile-card-list" id="mobileCardList"></div>
   <div class="empty-state" id="emptyState" hidden>
-    <h3>No action items here</h3>
-    <p>Try a different tab, clear filters, or add a new action.</p>
+    <h3 id="emptyTitle">No action items here</h3>
+    <p id="emptyMsg">Try a different tab, clear filters, or add a new action.</p>
   </div>
 </main>
 
@@ -806,7 +807,8 @@ let state = {
   deptSelection: new Set(),
   presentQueue: [],
   presentIndex: 0,
-  lightbox: { images: [], index: 0, label: '' }
+  lightbox: { images: [], index: 0, label: '' },
+  loading: false
 };
 
 // Department/Owner fields may hold several comma-separated values. "All" expands to every real value.
@@ -982,15 +984,20 @@ const API_URL = "https://script.google.com/macros/s/AKfycbxd8uCBpLiTTz5zRHFjLbZp
 // can never be repeated and create duplicates.
 const READ_FNS = ['getConfig', 'getActions', 'getHistory'];
 
-async function fetchWithRetry(url, options, retries = 5, delay = 800) {
+async function fetchWithRetry(url, options, retries = 2, delay = 800) {
   for (let i = 0; i < retries; i++) {
     try {
       const res = await fetch(url, options);
-      if (!res.ok) throw new Error('Bad response: ' + res.status);
+      if (!res.ok) {
+        const e = new Error('Bad response: ' + res.status);
+        if (res.status >= 400 && res.status < 500) e.noRetry = true; // will never fix itself
+        throw e;
+      }
       return res;
     } catch (err) {
-      if (i === retries - 1) throw err;
-      await new Promise(r => setTimeout(r, delay * Math.pow(2, i)));
+      if (err.noRetry || i === retries - 1) throw err;
+      // exponential backoff + random jitter so several tabs don't retry at the same instant
+      await new Promise(r => setTimeout(r, delay * Math.pow(2, i) + Math.random() * 600));
     }
   }
 }
@@ -1011,7 +1018,7 @@ function run(fnName, ...args){
       const res = await fetchWithRetry(API_URL, {
         method: 'POST',
         body: JSON.stringify({ fn: fnName, args: args })
-      }, READ_FNS.indexOf(fnName) !== -1 ? 5 : 1);
+      }, READ_FNS.indexOf(fnName) !== -1 ? 2 : 1);
       const data = await res.json();
       if (data.ok) resolve(data.result);
       else reject(new Error(data.error || 'Server error'));
@@ -1276,6 +1283,13 @@ function showLoadError(msg){
   console.error(msg);
 }
 
+function clearLoadError(){
+  const b = document.getElementById('loadErrorBanner');
+  b.textContent = ''; b.hidden = true;
+}
+
+function setSync(msg){ document.getElementById('syncStatus').textContent = msg || ''; }
+
 async function init(){
   applyStoredTheme();
   applyStoredMobileMode();
@@ -1299,11 +1313,26 @@ async function init(){
     showLoadError('Could not build page controls. ' + errMsg(err));
   }
 
+  // Show the last saved copy instantly (if any), then refresh from the server in the background.
+  const saved = readItemsCache();
+  if (saved){
+    state.items = saved.items;
+    itemsStamp = saved.t;
+    setSync('Saved copy from ' + formatTime(new Date(saved.t).toISOString()) + ' · refreshing…');
+  } else {
+    state.loading = true;
+  }
+  render();
+
   try {
-    await loadItems();
+    await loadItems(true);
   } catch (err) {
-    showLoadError('Could not load action items from the sheet. ' + errMsg(err));
-    document.getElementById('emptyState').hidden = false;
+    if (state.items.length){
+      showLoadError('Could not refresh — showing your last saved copy. ' + errMsg(err));
+    } else {
+      showLoadError('Could not load action items from the sheet. ' + errMsg(err));
+      document.getElementById('emptyState').hidden = false;
+    }
   }
 }
 
@@ -1317,18 +1346,69 @@ window.addEventListener('error', (e)=>{
   showLoadError('Unexpected error: ' + (e.error && e.error.message ? e.error.message : e.message));
 });
 
+// ---- Browser-side saved copy of the item list (instant first paint) ----
+const ITEMS_CACHE_KEY = 'AR_ITEMS_CACHE_V1';
+const ITEMS_CACHE_MAX_AGE = 3 * 24 * 3600 * 1000;
+let itemsStamp = 0;
+let _persistTimer = null;
+
+function readItemsCache(){
+  try {
+    const raw = localStorage.getItem(ITEMS_CACHE_KEY);
+    if (!raw) return null;
+    const obj = JSON.parse(raw);
+    if (!obj || !Array.isArray(obj.items) || !obj.items.length) return null;
+    if (Date.now() - obj.t > ITEMS_CACHE_MAX_AGE) return null;
+    return obj;
+  } catch (e) { return null; }
+}
+function persistItemsNow(){
+  try { localStorage.setItem(ITEMS_CACHE_KEY, JSON.stringify({ t: itemsStamp || Date.now(), items: state.items })); } catch (e) {}
+}
+function schedulePersist(){
+  if (!state.items.length) return;
+  clearTimeout(_persistTimer);
+  _persistTimer = setTimeout(persistItemsNow, 1500);
+}
+
+// ---- Loading: one request at a time, and skip if we loaded very recently ----
 let lastLoadAt = 0;
-async function loadItems(){
-  state.items = await run('getActions');
-  lastLoadAt = Date.now();
-  render();
+let loadInFlight = null;
+const MIN_RELOAD_MS = 20 * 1000;
+
+async function loadItems(force){
+  if (loadInFlight) return loadInFlight;                       // reuse the running request
+  if (!force && state.items.length && Date.now() - lastLoadAt < MIN_RELOAD_MS) return;
+  loadInFlight = (async ()=>{
+    setSync(state.items.length ? 'Refreshing…' : 'Loading…');
+    try {
+      state.items = await run('getActions');
+      lastLoadAt = Date.now();
+      itemsStamp = lastLoadAt;
+      state.loading = false;
+      clearLoadError();
+      persistItemsNow();
+      render();
+      setSync('Updated ' + formatTime(new Date(lastLoadAt).toISOString()));
+    } catch (err) {
+      state.loading = false;
+      setSync(state.items.length ? 'Showing saved copy' : '');
+      render();
+      throw err;
+    } finally {
+      loadInFlight = null;
+    }
+  })();
+  return loadInFlight;
 }
 
 async function refreshData(){
   const logo = document.getElementById('logoRefreshBtn');
   logo.classList.add('is-refreshing');
   try{
-    await loadItems();
+    await loadItems(true);
+  } catch (err) {
+    showLoadError('Could not refresh. ' + errMsg(err));
   } finally {
     logo.classList.remove('is-refreshing');
   }
@@ -1804,10 +1884,13 @@ function render(){
   const empty = document.getElementById('emptyState');
   updateTabCounts();
   renderStatsStrip();
+  schedulePersist();
 
   if (!rows.length){
     tbody.innerHTML = '';
     cardList.innerHTML = '';
+    document.getElementById('emptyTitle').textContent = state.loading ? 'Loading items…' : 'No action items here';
+    document.getElementById('emptyMsg').textContent = state.loading ? 'Fetching the latest data — this can take a few seconds.' : 'Try a different tab, clear filters, or add a new action.';
     empty.hidden = false;
     return;
   }
