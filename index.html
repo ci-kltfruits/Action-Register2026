@@ -520,14 +520,14 @@ body.mobile-mode .modal{ max-width:96vw; }
   <div class="search-wrap" id="searchWrap">
     <input type="search" id="searchInput" placeholder="Search item, issues, owner, meeting…">
   </div>
-  <div class="filter-expand" id="filterExpandPanel">
-    <div class="filter-bar" id="filterBar"></div>
-    <button class="btn btn-sm btn-ghost" id="clearFiltersBtn" hidden>✕ Clear filters</button>
-  </div>
   <button class="btn filter-toggle-btn" id="filterToggleBtn">
     <span class="filter-toggle-arrow" id="filterToggleArrow">▸</span> Filter
     <span class="filter-badge" id="filterToggleBadge" hidden>0</span>
   </button>
+  <div class="filter-expand" id="filterExpandPanel">
+    <div class="filter-bar" id="filterBar"></div>
+    <button class="btn btn-sm btn-ghost" id="clearFiltersBtn" hidden>✕ Clear filters</button>
+  </div>
   <div class="stats-strip" id="statsStrip"></div>
 </div>
 
@@ -1465,7 +1465,7 @@ function toggleTheme(){
 
 // Controls physically moved into the mobile sidebar (and back), so listeners keep working.
 const MOBILE_SIDEBAR_MOVE_IDS = [
-  'newActionBtn', 'searchWrap', 'filterExpandPanel', 'filterToggleBtn',
+  'newActionBtn', 'searchWrap', 'filterToggleBtn', 'filterExpandPanel',
   'sortWrap', 'dashboardBtn', 'themeToggle', 'noUpdateBtn', 'mobileToggle', 'statsStrip'
 ];
 let _mobileOriginalPositions = null;
