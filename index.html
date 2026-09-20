@@ -241,7 +241,9 @@ td.nowrap{ white-space:nowrap; }
 .modal-head{ display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:1; gap:10px; }
 .modal-head h2{ font-size:17px; margin:0; }
 .modal-head-actions{ display:flex; align-items:center; gap:8px; margin-left:auto; }
-.modal-body{ padding:18px 20px; display:grid; gap:14px; }
+.modal-body{ padding:18px 20px; display:grid; grid-template-columns:minmax(0,1fr); gap:14px; }
+.modal{ overflow-x:hidden; }
+.modal-body > *{ min-width:0; }
 .close-x{ background:none; border:none; font-size:19px; cursor:pointer; color:var(--ink-dim); line-height:1; }
 .field{ display:grid; gap:6px; position:relative; }
 .field label{ font-size:12.5px; font-weight:700; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.3px; }
@@ -266,7 +268,7 @@ td.nowrap{ white-space:nowrap; }
 .name-autocomplete .name-opt-empty{ padding:8px 12px; font-size:13px; color:var(--ink-dim); }
 
 .owner-select-btn{ width:100%; justify-content:flex-start; text-align:left; font-weight:500; color:var(--ink); background:var(--bg); }
-.owner-select-btn{ white-space:normal; height:auto; min-height:38px; line-height:1.35; align-items:flex-start; overflow-wrap:anywhere; word-break:break-word; }
+.owner-select-btn{ display:block; width:100%; max-width:100%; min-width:0; white-space:normal !important; height:auto; min-height:38px; line-height:1.4; text-align:left; overflow-wrap:anywhere; word-break:break-word; }
 .field{ min-width:0; }
 .row2{ grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
 .owner-select-btn.placeholder{ color:var(--ink-dim); font-weight:400; }
@@ -976,6 +978,10 @@ const isAppsScript = !!(window.google && google.script && google.script.run);
 // Only used when hosted outside Apps Script (e.g. GitHub Pages)
 const API_URL = "https://script.google.com/macros/s/AKfycbxd8uCBpLiTTz5zRHFjLbZp3rR61h18mV6jZPjc1Ywb9QwEk5xxGWfYyMO9VfkMyPa9qg/exec";
 
+// Only safe (read-only) calls are retried; saves are sent once so a slow-but-successful save
+// can never be repeated and create duplicates.
+const READ_FNS = ['getConfig', 'getActions', 'getHistory'];
+
 async function fetchWithRetry(url, options, retries = 5, delay = 800) {
   for (let i = 0; i < retries; i++) {
     try {
@@ -1005,7 +1011,7 @@ function run(fnName, ...args){
       const res = await fetchWithRetry(API_URL, {
         method: 'POST',
         body: JSON.stringify({ fn: fnName, args: args })
-      });
+      }, READ_FNS.indexOf(fnName) !== -1 ? 5 : 1);
       const data = await res.json();
       if (data.ok) resolve(data.result);
       else reject(new Error(data.error || 'Server error'));
@@ -1277,8 +1283,9 @@ async function init(){
   bindEvents();
 
   try {
-    const cfg = await run('getConfig');
-    CFG = Object.assign({}, CFG_DEFAULTS, cfg || {});
+    // Roster/config is static and already in this page (DEMO_ROSTER) — no server round trip.
+    // KEEP DEMO_ROSTER IN SYNC with ROSTER in Code.gs when you edit names/departments.
+    CFG = Object.assign({}, CFG_DEFAULTS, demoDeriveConfig());
   } catch (err) {
     CFG = Object.assign({}, CFG_DEFAULTS);
     showLoadError('Could not load configuration (departments/owners). ' + errMsg(err));
@@ -1310,8 +1317,10 @@ window.addEventListener('error', (e)=>{
   showLoadError('Unexpected error: ' + (e.error && e.error.message ? e.error.message : e.message));
 });
 
+let lastLoadAt = 0;
 async function loadItems(){
   state.items = await run('getActions');
+  lastLoadAt = Date.now();
   render();
 }
 
@@ -2938,7 +2947,17 @@ function bindEvents(){
     if (e.key === 'Escape') closePresentMode();
   });
 
-  setInterval(async ()=>{ await loadItems(); }, 5 * 60 * 1000);
+  // Auto-refresh every 10 min, but never in a hidden tab; catch up when the tab is shown again.
+  const AUTO_REFRESH_MS = 10 * 60 * 1000;
+  setInterval(async ()=>{
+    if (document.hidden) return;
+    try { await loadItems(); } catch (e) { console.error(e); }
+  }, AUTO_REFRESH_MS);
+  document.addEventListener('visibilitychange', async ()=>{
+    if (!document.hidden && Date.now() - lastLoadAt > AUTO_REFRESH_MS){
+      try { await loadItems(); } catch (e) { console.error(e); }
+    }
+  });
 }
 
 init();
