@@ -3324,7 +3324,7 @@ function startMusic(){
   if (!_music.audio){
     const a = new Audio();
     a.preload = 'auto';
-    a.volume = 2.0;
+    a.volume = 1.0;
     a.addEventListener('ended', _playNextTrack);
     a.addEventListener('error', ()=>{ if (_music.active) _onTrackError(); });
     a.addEventListener('playing', ()=>{ _music.errors = 0; });
