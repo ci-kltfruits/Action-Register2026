@@ -3189,7 +3189,7 @@ function setXmas(on, quiet){
   if (on) document.documentElement.setAttribute('data-xmas', 'on');
   else document.documentElement.removeAttribute('data-xmas');
   try { localStorage.setItem(XMAS_KEY, on ? 'on' : 'off'); } catch (e) {}
-  if (on) startSnow(); else stopSnow();
+  if (on){ startSnow(); startMusic(); } else { stopSnow(); stopMusic(); }
   if (!quiet) xmasToast(on ? '🎄 Merry Christmas!' : 'Christmas mode off');
 }
 
@@ -3220,6 +3220,138 @@ function bindChristmasEgg(){
       tryXmasTrigger('christmas');
     }
   });
+}
+
+
+/* ============================================================
+   CHRISTMAS MUSIC
+   - Plays only while the Christmas theme is on.
+   - Shuffle "bag": all tracks play once in random order before any track can repeat;
+     then the bag is reshuffled (and a round never starts with the track that just played).
+   - Turning the theme off stops and resets the audio; turning it on starts a fresh song.
+   - Files live in a "music" folder next to index.html (see XMAS_TRACKS).
+   ============================================================ */
+const XMAS_TRACKS = ['01.mp3', '02.mp3', '03.mp3', '04.mp3', '05.mp3'];
+// On GitHub Pages the files are found next to the page. When the page is opened from Apps Script,
+// they are loaded from the GitHub Pages site instead (change this URL if the repo/site name changes).
+const MUSIC_BASE = /github\.io$/i.test(location.hostname)
+  ? 'music/'
+  : 'https://ci-kltfruits.github.io/Action-Register2026/music/';
+const XMAS_MUTE_KEY = 'AR_XMAS_MUTE';
+const _music = { audio: null, queue: [], last: null, current: null, active: false, errors: 0, waiting: false };
+
+function _shuffle(a){
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function _refillQueue(){
+  const q = _shuffle(XMAS_TRACKS.slice());
+  // never start a new round with the track that just played
+  if (_music.last && q.length > 1 && q[0] === _music.last){
+    const k = 1 + Math.floor(Math.random() * (q.length - 1));
+    [q[0], q[k]] = [q[k], q[0]];
+  }
+  _music.queue = q;
+}
+
+function _playCurrent(){
+  const a = _music.audio;
+  if (!a || !_music.active || !_music.current) return;
+  const p = a.play();
+  if (p && p.catch){
+    p.catch(err=>{
+      if (!_music.active) return;
+      if (err && err.name === 'NotAllowedError') _waitForGesture();   // browser wants a click/key first
+      else if (err && err.name !== 'AbortError') _onTrackError();
+    });
+  }
+}
+
+function _playNextTrack(){
+  if (!_music.active) return;
+  if (!_music.queue.length) _refillQueue();
+  const track = _music.queue.shift();
+  _music.current = track;
+  _music.last = track;
+  _music.audio.src = MUSIC_BASE + track;
+  _playCurrent();
+}
+
+function _onTrackError(){
+  _music.errors++;
+  console.warn('Christmas music: could not play', _music.current);
+  if (_music.errors >= XMAS_TRACKS.length * 2){ _music.active = false; return; }   // give up quietly
+  _playNextTrack();
+}
+
+// Browsers block sound until the user has clicked/typed on the page. If that happens (e.g. the
+// theme was already on when the page loaded), start the same track on the very next interaction.
+function _waitForGesture(){
+  if (_music.waiting) return;
+  _music.waiting = true;
+  const evs = ['pointerdown', 'keydown', 'touchstart'];
+  const go = ()=>{
+    evs.forEach(ev => document.removeEventListener(ev, go, true));
+    _music.waiting = false;
+    _playCurrent();
+  };
+  evs.forEach(ev => document.addEventListener(ev, go, true));
+}
+
+function _ensureMuteButton(){
+  if (document.getElementById('xmasMuteBtn')) return;
+  const b = document.createElement('button');
+  b.id = 'xmasMuteBtn';
+  b.type = 'button';
+  b.title = 'Mute / unmute Christmas music';
+  b.style.cssText = 'position:fixed; left:50%; bottom:20px; transform:translateX(-50%); z-index:60; width:36px; height:36px; border-radius:50%; border:2px solid var(--xmas-gold, #C99A2E); background:var(--surface); color:var(--ink); font-size:16px; cursor:pointer; box-shadow:var(--shadow); padding:0;';
+  b.addEventListener('click', ()=>{
+    const muted = !(_music.audio && _music.audio.muted);
+    if (_music.audio) _music.audio.muted = muted;
+    try { localStorage.setItem(XMAS_MUTE_KEY, muted ? '1' : '0'); } catch (e) {}
+    b.textContent = muted ? '🔇' : '🔊';
+  });
+  document.body.appendChild(b);
+  b.textContent = (_music.audio && _music.audio.muted) ? '🔇' : '🔊';
+}
+
+function startMusic(){
+  if (_music.active) return;
+  if (!_music.audio){
+    const a = new Audio();
+    a.preload = 'auto';
+    a.volume = 0.5;
+    a.addEventListener('ended', _playNextTrack);
+    a.addEventListener('error', ()=>{ if (_music.active) _onTrackError(); });
+    a.addEventListener('playing', ()=>{ _music.errors = 0; });
+    _music.audio = a;
+  }
+  let muted = false;
+  try { muted = localStorage.getItem(XMAS_MUTE_KEY) === '1'; } catch (e) {}
+  _music.audio.muted = muted;
+  _music.active = true;
+  _music.errors = 0;
+  _refillQueue();          // fresh shuffled round every time the theme is turned on
+  _ensureMuteButton();
+  _playNextTrack();        // always a NEW song — never resumes where it left off
+}
+
+function stopMusic(){
+  _music.active = false;
+  _music.waiting = false;
+  _music.queue = [];
+  _music.current = null;
+  if (_music.audio){
+    _music.audio.pause();
+    _music.audio.removeAttribute('src');
+    _music.audio.load();   // fully reset, so nothing is left to resume
+  }
+  const b = document.getElementById('xmasMuteBtn');
+  if (b) b.remove();
 }
 
 function startSnow(){
