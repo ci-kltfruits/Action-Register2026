@@ -484,32 +484,49 @@ body.mobile-mode .modal{ max-width:96vw; }
    with pine-green, cranberry and gold accents.
    ============================================================ */
 html[data-xmas="on"][data-theme="light"]{
-  --bg:#F6EADB; --surface:#FFF8EE; --surface-2:#F0DFC9; --border:#E2CCAF;
-  --ink:#3A2A1F; --ink-dim:#8B7560;
-  --accent:#B8323A; --accent-ink:#FFFFFF; --accent-soft:#F8DDD8;
-  --good:#2F7A4A; --good-soft:#DDEBD9; --good-strong:#1F5A35;
-  --shadow:0 1px 2px rgba(90,50,20,.08), 0 10px 26px rgba(120,70,30,.14);
-  --xmas-red:#B8323A; --xmas-green:#2F7A4A; --xmas-gold:#C98A2B; --xmas-blue:#4A7FB8;
+  --bg:#E6ECF8; --surface:#FBFCFF; --surface-2:#DDE5F5; --border:#C7D2EA;
+  --ink:#1F2A4A; --ink-dim:#6A78A0;
+  --accent:#B8323A; --accent-ink:#FFFFFF; --accent-soft:#F7DDE2;
+  --good:#2F7A4A; --good-soft:#DDEBE3; --good-strong:#1F5A35;
+  --shadow:0 1px 2px rgba(30,45,100,.08), 0 10px 26px rgba(40,60,130,.14);
+  --xmas-red:#B8323A; --xmas-green:#2F7A4A; --xmas-gold:#C98A2B; --xmas-blue:#3D6FC0;
 }
 html[data-xmas="on"][data-theme="dark"]{
-  --bg:#1B1C15; --surface:#25271D; --surface-2:#2F3225; --border:#4A4A34;
-  --ink:#F7ECD9; --ink-dim:#BFAE92;
-  --accent:#E0655C; --accent-ink:#2A0C09; --accent-soft:#452A24;
-  --good:#7FCB92; --good-soft:#243A2A; --good-strong:#A5DDB2;
-  --shadow:0 1px 2px rgba(0,0,0,.35), 0 10px 26px rgba(20,10,0,.45);
-  --xmas-red:#E0655C; --xmas-green:#7FCB92; --xmas-gold:#F2BC62; --xmas-blue:#7FB0E8;
+  --bg:#0B1230; --surface:#141C42; --surface-2:#1B2554; --border:#2E3C74;
+  --ink:#F1F0FA; --ink-dim:#A9B4DC;
+  --accent:#EA5560; --accent-ink:#2A0A0D; --accent-soft:#3B2144;
+  --good:#6FDC9A; --good-soft:#123A33; --good-strong:#9BEBB8;
+  --shadow:0 1px 2px rgba(2,5,25,.5), 0 10px 26px rgba(2,5,30,.55);
+  --xmas-red:#F0646D; --xmas-green:#6FDC9A; --xmas-gold:#F6CF6A; --xmas-blue:#8CB4FF;
 }
 html[data-xmas="on"]{ --radius:18px; }
 html[data-xmas="on"] ::selection{ background:color-mix(in srgb, var(--xmas-gold) 45%, transparent); }
 html[data-xmas="on"] ::-webkit-scrollbar-thumb{ background:color-mix(in srgb, var(--xmas-gold) 40%, var(--border)); }
 
-/* fireplace glow from the bottom-left, faint cranberry warmth top-right */
-html[data-xmas="on"] body{
+/* Christmas night sky: deep midnight gradient + twinkling stars */
+html[data-xmas="on"][data-theme="dark"] body{
   background:
-    radial-gradient(ellipse at 0% 100%, color-mix(in srgb, var(--xmas-gold) 24%, transparent), transparent 55%),
-    radial-gradient(ellipse at 100% 0%, color-mix(in srgb, var(--xmas-red) 13%, transparent), transparent 50%),
-    var(--bg);
+    radial-gradient(ellipse at 50% 125%, rgba(90,120,255,.24), transparent 60%),
+    radial-gradient(ellipse at 0% 100%, color-mix(in srgb, var(--xmas-green) 14%, transparent), transparent 48%),
+    linear-gradient(180deg, #060A20 0%, var(--bg) 45%, #16225A 100%);
 }
+html[data-xmas="on"][data-theme="light"] body{
+  background:
+    radial-gradient(ellipse at 50% 125%, rgba(120,150,255,.20), transparent 60%),
+    linear-gradient(180deg, #C6D5F2 0%, var(--bg) 50%, #EFE8F8 100%);
+}
+html[data-xmas="on"] body::before{
+  content:''; position:fixed; inset:0; z-index:-1; pointer-events:none;
+  background:
+    radial-gradient(1.6px 1.6px at 23px 37px, rgba(255,255,255,.95), transparent 60%) 0 0 / 173px 149px,
+    radial-gradient(1px 1px at 91px 12px, rgba(255,255,255,.75), transparent 60%) 0 0 / 131px 197px,
+    radial-gradient(2px 2px at 60px 100px, rgba(255,236,170,.95), transparent 60%) 0 0 / 251px 223px,
+    radial-gradient(1.2px 1.2px at 140px 70px, rgba(190,215,255,.85), transparent 60%) 0 0 / 97px 113px;
+  animation:xmas-stars 4.5s ease-in-out infinite alternate;
+}
+html[data-xmas="on"][data-theme="light"] body::before{ display:none; }
+@keyframes xmas-stars{ from{ opacity:.5; } to{ opacity:1; } }
+@media (prefers-reduced-motion: reduce){ html[data-xmas="on"] body::before{ animation:none; } }
 html[data-xmas="on"] .table-wrap{ background:transparent; }
 
 /* candy-cane header lining (kept as-is) */
@@ -521,9 +538,25 @@ html[data-xmas="on"] .topbar::after{
 
 /* header: title, tagline, logo star, gift on the New Action button */
 html[data-xmas="on"] .titles h1::before{ content:'🎄 '; }
-html[data-xmas="on"] .titles h1::after{ content:' 🎅'; }
-html[data-xmas="on"] .titles h1{ color:var(--xmas-red); }
-html[data-xmas="on"] .titles .tagline{ color:var(--xmas-gold); font-weight:600; }
+/* header only: cool pine green */
+html[data-xmas="on"] .topbar{ background:linear-gradient(180deg,#1F5B3F,#153B2C); }
+html[data-xmas="on"] .titles h1{ color:#F7F1E5; }
+html[data-xmas="on"] .topbar .sort-wrap label{ color:#C9DCCF; }
+html[data-xmas="on"] .topbar .btn-ghost{ color:#F7F1E5; border-color:rgba(247,241,229,.35); }
+html[data-xmas="on"] .topbar .btn-ghost:hover{ background:rgba(247,241,229,.14); }
+/* toolbar (New Action / search / filter / stats) and the tab row are green too */
+html[data-xmas="on"] .toolbar{ background:#173F2E; border-bottom:1px solid rgba(255,255,255,.12); }
+html[data-xmas="on"] .toolbar .btn-ghost{ color:#F7F1E5; border-color:rgba(247,241,229,.35); }
+html[data-xmas="on"] .toolbar .stat-chip{ color:#CFE3D6; }
+html[data-xmas="on"] .toolbar .stat-chip b{ color:#FFFFFF; }
+html[data-xmas="on"] .toolbar .stat-chip.stat-updated b{ color:#9BF0B8; }
+html[data-xmas="on"] .toolbar .stat-chip.stat-ontrack b{ color:#FFE08A; }
+html[data-xmas="on"] .toolbar .stat-chip.stat-overdue b{ color:#FFA3A3; }
+html[data-xmas="on"] .tabs{ background:#143829; }
+html[data-xmas="on"] .tabs .tab:not(.dept-tab){ color:#D7E8DD; }
+html[data-xmas="on"] .tabs .tab:not(.dept-tab):hover{ background:rgba(255,255,255,.14); color:#FFFFFF; }
+html[data-xmas="on"] .tabs .tab.active:not(.dept-tab){ background:var(--accent); color:var(--accent-ink); }
+html[data-xmas="on"] .titles .tagline{ color:#F2C14E; font-weight:600; }
 html[data-xmas="on"] .titles .tagline::after{ content:' • Merry Christmas! 🎁'; }
 html[data-xmas="on"] .logo{ position:relative; overflow:visible; box-shadow:0 0 0 2px var(--xmas-gold) inset, 0 0 12px color-mix(in srgb, var(--xmas-gold) 55%, transparent); }
 html[data-xmas="on"] .logo::after{ content:'⭐'; position:absolute; top:-10px; right:-7px; font-size:13px; }
@@ -543,14 +576,13 @@ html[data-xmas="on"] thead th{
 html[data-xmas="on"] tbody td{ border-bottom:1px dashed color-mix(in srgb, var(--xmas-gold) 32%, var(--border)); }
 html[data-xmas="on"] tbody tr:nth-child(even){ background:color-mix(in srgb, var(--xmas-gold) 6%, var(--surface)); }
 html[data-xmas="on"] tbody tr:hover{ background:color-mix(in srgb, var(--xmas-gold) 16%, var(--surface)); }
-html[data-xmas="on"] tbody tr td:first-child{ box-shadow:inset 5px 0 0 var(--xmas-red); }
-html[data-xmas="on"] tbody tr:nth-child(4n+2) td:first-child{ box-shadow:inset 5px 0 0 var(--xmas-gold); }
-html[data-xmas="on"] tbody tr:nth-child(4n+3) td:first-child{ box-shadow:inset 5px 0 0 var(--xmas-green); }
-html[data-xmas="on"] tbody tr:nth-child(4n) td:first-child{ box-shadow:inset 5px 0 0 var(--xmas-blue); }
-html[data-xmas="on"] .mcard{ border-left:5px solid var(--xmas-red); border-radius:16px; outline:1.5px dashed color-mix(in srgb, var(--xmas-gold) 40%, transparent); outline-offset:-5px; }
-html[data-xmas="on"] .mcard:nth-child(4n+2){ border-left-color:var(--xmas-gold); }
-html[data-xmas="on"] .mcard:nth-child(4n+3){ border-left-color:var(--xmas-green); }
-html[data-xmas="on"] .mcard:nth-child(4n){ border-left-color:var(--xmas-blue); }
+html[data-xmas="on"] tbody tr td:first-child{ position:relative; }
+html[data-xmas="on"] tbody tr td:first-child::before,
+html[data-xmas="on"] .mcard::before{
+  content:''; position:absolute; left:0; top:0; bottom:0; width:8px; pointer-events:none;
+  background:repeating-linear-gradient(45deg,#C62F3B 0 6px,#FFFFFF 6px 12px);   /* candy-cane lining */
+}
+html[data-xmas="on"] .mcard{ position:relative; overflow:hidden; border-radius:16px; outline:1.5px dashed color-mix(in srgb, var(--xmas-gold) 40%, transparent); outline-offset:-5px; }
 html[data-xmas="on"] .empty-state h3::before{ content:'🎄 '; }
 
 /* modals: stitched inner border + candy ribbon under the title bar; dashboard cards colored + stitched */
@@ -570,12 +602,6 @@ html[data-xmas="on"] .present-overlay::before{
   background:repeating-linear-gradient(135deg,#C62F3B 0 12px,#FFFFFF 12px 24px,#1E7B45 24px 36px,#FFFFFF 36px 48px);
 }
 
-/* cloud-like snow drift along the bottom edge */
-html[data-xmas="on"] body::after{
-  content:''; position:fixed; left:0; right:0; bottom:0; height:13px; z-index:3; pointer-events:none;
-  background:radial-gradient(circle at 12px 14px, #FFF8EA 0 12px, transparent 12.5px) 0 0 / 24px 13px repeat-x;
-  filter:drop-shadow(0 -1px 2px rgba(90,60,30,.35));
-}
 </style>
 </head>
 <body>
