@@ -480,21 +480,37 @@ body.mobile-mode .modal{ max-width:96vw; }
 
 /* ============================================================
    CHRISTMAS THEME (hidden easter egg — type "christmas" in the All view)
-   Mostly pine green, with red / gold / blue accents and lots of festive bits.
+   COZY edition: warm cocoa / candlelight tones, stitched edges, fireplace glow,
+   with pine-green, cranberry and gold accents.
    ============================================================ */
 html[data-xmas="on"][data-theme="light"]{
-  --bg:#F8F3EA; --surface:#FFFFFF; --surface-2:#F2EADD; --border:#E7DCC9;
-  --accent:#C62F3B; --accent-ink:#FFFFFF; --accent-soft:#FBE4E6;
-  --good:#1E7B45; --good-soft:#E0F3E8; --good-strong:#155B33;
-  --xmas-red:#C62F3B; --xmas-green:#1E7B45; --xmas-gold:#C99A2E; --xmas-blue:#3D7FD9;
+  --bg:#F6EADB; --surface:#FFF8EE; --surface-2:#F0DFC9; --border:#E2CCAF;
+  --ink:#3A2A1F; --ink-dim:#8B7560;
+  --accent:#B8323A; --accent-ink:#FFFFFF; --accent-soft:#F8DDD8;
+  --good:#2F7A4A; --good-soft:#DDEBD9; --good-strong:#1F5A35;
+  --shadow:0 1px 2px rgba(90,50,20,.08), 0 10px 26px rgba(120,70,30,.14);
+  --xmas-red:#B8323A; --xmas-green:#2F7A4A; --xmas-gold:#C98A2B; --xmas-blue:#4A7FB8;
 }
 html[data-xmas="on"][data-theme="dark"]{
-  --bg:#0E1A14; --surface:#15251C; --surface-2:#1C3226; --border:#2A4534;
-  --ink:#F4EFE6; --ink-dim:#9FB5A6;
-  --accent:#E5535D; --accent-ink:#1A0709; --accent-soft:#3A1F25;
-  --good:#5FD68C; --good-soft:#173A27; --good-strong:#8FE8B0;
-  --xmas-red:#E5535D; --xmas-green:#5FD68C; --xmas-gold:#F2C14E; --xmas-blue:#6FA8F5;
+  --bg:#1B1C15; --surface:#25271D; --surface-2:#2F3225; --border:#4A4A34;
+  --ink:#F7ECD9; --ink-dim:#BFAE92;
+  --accent:#E0655C; --accent-ink:#2A0C09; --accent-soft:#452A24;
+  --good:#7FCB92; --good-soft:#243A2A; --good-strong:#A5DDB2;
+  --shadow:0 1px 2px rgba(0,0,0,.35), 0 10px 26px rgba(20,10,0,.45);
+  --xmas-red:#E0655C; --xmas-green:#7FCB92; --xmas-gold:#F2BC62; --xmas-blue:#7FB0E8;
 }
+html[data-xmas="on"]{ --radius:18px; }
+html[data-xmas="on"] ::selection{ background:color-mix(in srgb, var(--xmas-gold) 45%, transparent); }
+html[data-xmas="on"] ::-webkit-scrollbar-thumb{ background:color-mix(in srgb, var(--xmas-gold) 40%, var(--border)); }
+
+/* fireplace glow from the bottom-left, faint cranberry warmth top-right */
+html[data-xmas="on"] body{
+  background:
+    radial-gradient(ellipse at 0% 100%, color-mix(in srgb, var(--xmas-gold) 24%, transparent), transparent 55%),
+    radial-gradient(ellipse at 100% 0%, color-mix(in srgb, var(--xmas-red) 13%, transparent), transparent 50%),
+    var(--bg);
+}
+html[data-xmas="on"] .table-wrap{ background:transparent; }
 
 /* candy-cane header lining (kept as-is) */
 html[data-xmas="on"] .topbar{ border-bottom:none; position:relative; padding-bottom:4px; }
@@ -509,39 +525,41 @@ html[data-xmas="on"] .titles h1::after{ content:' 🎅'; }
 html[data-xmas="on"] .titles h1{ color:var(--xmas-red); }
 html[data-xmas="on"] .titles .tagline{ color:var(--xmas-gold); font-weight:600; }
 html[data-xmas="on"] .titles .tagline::after{ content:' • Merry Christmas! 🎁'; }
-html[data-xmas="on"] .logo{ position:relative; overflow:visible; box-shadow:0 0 0 2px var(--xmas-gold) inset; }
+html[data-xmas="on"] .logo{ position:relative; overflow:visible; box-shadow:0 0 0 2px var(--xmas-gold) inset, 0 0 12px color-mix(in srgb, var(--xmas-gold) 55%, transparent); }
 html[data-xmas="on"] .logo::after{ content:'⭐'; position:absolute; top:-10px; right:-7px; font-size:13px; }
 html[data-xmas="on"] #newActionBtn::before{ content:'🎁'; }
+html[data-xmas="on"] .btn{ border-radius:12px; }
 html[data-xmas="on"] .btn-accent{ background:var(--xmas-gold); border-color:var(--xmas-gold); color:#2A1A00; }
 html[data-xmas="on"] .btn-accent::before{ content:'⭐'; }
 
-/* golden toolbar edge, red "stitched" tab-bar edge */
-html[data-xmas="on"] .toolbar{ border-bottom:2px solid var(--xmas-gold); }
+/* red "stitched" tab-bar edge */
 html[data-xmas="on"] .tabs{ border-bottom:2px dashed var(--xmas-red); }
 
-/* table: red header line, gold/blue/red ribbon markers, green-tinted alternate rows */
+/* table: stitched (dashed) lines, warm alternate rows, colored ribbon markers */
 html[data-xmas="on"] thead th{
-  background:color-mix(in srgb, var(--xmas-red) 12%, var(--surface-2));
-  border-bottom:2px solid var(--xmas-red);
+  background:color-mix(in srgb, var(--xmas-red) 11%, var(--surface-2));
+  border-bottom:2px dashed var(--xmas-gold);
 }
-html[data-xmas="on"] tbody tr:nth-child(even){ background:color-mix(in srgb, var(--xmas-green) 6%, var(--surface)); }
-html[data-xmas="on"] tbody tr:hover{ background:color-mix(in srgb, var(--xmas-gold) 14%, var(--surface)); }
+html[data-xmas="on"] tbody td{ border-bottom:1px dashed color-mix(in srgb, var(--xmas-gold) 32%, var(--border)); }
+html[data-xmas="on"] tbody tr:nth-child(even){ background:color-mix(in srgb, var(--xmas-gold) 6%, var(--surface)); }
+html[data-xmas="on"] tbody tr:hover{ background:color-mix(in srgb, var(--xmas-gold) 16%, var(--surface)); }
 html[data-xmas="on"] tbody tr td:first-child{ box-shadow:inset 5px 0 0 var(--xmas-red); }
 html[data-xmas="on"] tbody tr:nth-child(4n+2) td:first-child{ box-shadow:inset 5px 0 0 var(--xmas-gold); }
 html[data-xmas="on"] tbody tr:nth-child(4n+3) td:first-child{ box-shadow:inset 5px 0 0 var(--xmas-green); }
 html[data-xmas="on"] tbody tr:nth-child(4n) td:first-child{ box-shadow:inset 5px 0 0 var(--xmas-blue); }
-html[data-xmas="on"] .mcard{ border-left:5px solid var(--xmas-red); }
+html[data-xmas="on"] .mcard{ border-left:5px solid var(--xmas-red); border-radius:16px; outline:1.5px dashed color-mix(in srgb, var(--xmas-gold) 40%, transparent); outline-offset:-5px; }
 html[data-xmas="on"] .mcard:nth-child(4n+2){ border-left-color:var(--xmas-gold); }
 html[data-xmas="on"] .mcard:nth-child(4n+3){ border-left-color:var(--xmas-green); }
 html[data-xmas="on"] .mcard:nth-child(4n){ border-left-color:var(--xmas-blue); }
 html[data-xmas="on"] .empty-state h3::before{ content:'🎄 '; }
 
-/* modals: candy ribbon under the title bar; dashboard cards get colored tops */
+/* modals: stitched inner border + candy ribbon under the title bar; dashboard cards colored + stitched */
+html[data-xmas="on"] .modal{ border-radius:22px; outline:2px dashed color-mix(in srgb, var(--xmas-gold) 45%, transparent); outline-offset:-9px; }
 html[data-xmas="on"] .modal-head{
   border-bottom-width:5px; border-bottom-style:solid;
   border-image:repeating-linear-gradient(135deg,#C62F3B 0 10px,#FFFFFF 10px 20px,#1E7B45 20px 30px,#FFFFFF 30px 40px) 1;
 }
-html[data-xmas="on"] .dash-card{ border-top:3px solid var(--xmas-red); }
+html[data-xmas="on"] .dash-card{ border-top:3px solid var(--xmas-red); border-radius:14px; outline:1.5px dashed color-mix(in srgb, var(--xmas-gold) 38%, transparent); outline-offset:-5px; }
 html[data-xmas="on"] .dash-card:nth-child(4n+2){ border-top-color:var(--xmas-gold); }
 html[data-xmas="on"] .dash-card:nth-child(4n+3){ border-top-color:var(--xmas-green); }
 html[data-xmas="on"] .dash-card:nth-child(4n){ border-top-color:var(--xmas-blue); }
@@ -552,22 +570,11 @@ html[data-xmas="on"] .present-overlay::before{
   background:repeating-linear-gradient(135deg,#C62F3B 0 12px,#FFFFFF 12px 24px,#1E7B45 24px 36px,#FFFFFF 36px 48px);
 }
 
-/* decorations pinned to the bottom corners + a snow drift along the bottom edge */
-html[data-xmas="on"] body::before{
-  content:'🎄 🎁 🎄'; position:fixed; left:16px; bottom:12px; font-size:28px; letter-spacing:2px;
-  z-index:4; pointer-events:none; filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));
-}
-html[data-xmas="on"]::after{
-  content:'⛄ 🎅 🦌'; position:fixed; right:34px; bottom:12px; font-size:28px; letter-spacing:2px;
-  z-index:4; pointer-events:none; filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));
-}
+/* cloud-like snow drift along the bottom edge */
 html[data-xmas="on"] body::after{
   content:''; position:fixed; left:0; right:0; bottom:0; height:13px; z-index:3; pointer-events:none;
-  background:radial-gradient(circle at 12px 14px, #FFFFFF 0 12px, transparent 12.5px) 0 0 / 24px 13px repeat-x;
-  filter:drop-shadow(0 -1px 2px rgba(60,80,110,.35));
-}
-@media (max-width:720px){
-  html[data-xmas="on"] body::before, html[data-xmas="on"]::after{ display:none; }
+  background:radial-gradient(circle at 12px 14px, #FFF8EA 0 12px, transparent 12.5px) 0 0 / 24px 13px repeat-x;
+  filter:drop-shadow(0 -1px 2px rgba(90,60,30,.35));
 }
 </style>
 </head>
@@ -596,6 +603,8 @@ html[data-xmas="on"] body::after{
         <option value="discussed_asc">Date Discussed (Oldest)</option>
         <option value="aging_desc">Aging (Most days)</option>
         <option value="aging_asc">Aging (Fewest days)</option>
+        <option value="updated_desc">Last Updated (Newest)</option>
+        <option value="updated_asc">Last Updated (Oldest)</option>
       </select>
     </div>
     <button class="btn btn-accent" id="presentModeBtn">▶ Present Mode</button>
@@ -1836,6 +1845,17 @@ function applySortOrder(rows){
         if (da===null) return 1;
         if (db===null) return -1;
         return db - da;
+      }
+      case 'updated_desc': {
+        const ta = a.lastUpdated ? new Date(a.lastUpdated).getTime() : 0;
+        const tb = b.lastUpdated ? new Date(b.lastUpdated).getTime() : 0;
+        return tb - ta;
+      }
+      case 'updated_asc': {
+        // never-updated items count as oldest, so they come first
+        const ta = a.lastUpdated ? new Date(a.lastUpdated).getTime() : 0;
+        const tb = b.lastUpdated ? new Date(b.lastUpdated).getTime() : 0;
+        return ta - tb;
       }
       case 'discussed_desc': return (dateVal(b.dateDiscussed)||0) - (dateVal(a.dateDiscussed)||0);
       case 'discussed_asc': return (dateVal(a.dateDiscussed)||0) - (dateVal(b.dateDiscussed)||0);
@@ -3324,7 +3344,7 @@ function startMusic(){
   if (!_music.audio){
     const a = new Audio();
     a.preload = 'auto';
-    a.volume = 1.0;
+    a.volume = 0.5;
     a.addEventListener('ended', _playNextTrack);
     a.addEventListener('error', ()=>{ if (_music.active) _onTrackError(); });
     a.addEventListener('playing', ()=>{ _music.errors = 0; });
@@ -3369,13 +3389,13 @@ function startSnow(){
     W = window.innerWidth; H = window.innerHeight;
     canvas.width = W * dpr; canvas.height = H * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const n = W < 720 ? 45 : 85;
+    const n = W < 720 ? 38 : 70;
     while (flakes.length < n) flakes.push(make(true));
     flakes.length = n;
   }
   function make(initial){
     return { x: Math.random() * W, y: -6 - (initial ? Math.random() * H : Math.random() * 40),   // always starts ABOVE the screen
-             r: Math.random() * 1.6 + 0.9, s: Math.random() * 0.8 + 0.45,
+             r: Math.random() * 2.6 + 2.0, s: Math.random() * 0.8 + 0.45,
              d: Math.random() * Math.PI * 2, w: Math.random() * 0.02 + 0.006,
              o: Math.random() * 0.35 + 0.6,
              k: (function(){ const q = Math.random(); return q < 0.72 ? 0 : (q < 0.90 ? 1 : 2); })() };  // 0 dot, 1 snowflake, 2 gold star
@@ -3384,20 +3404,20 @@ function startSnow(){
     raf = requestAnimationFrame(frame);
     if (document.hidden) return;
     ctx.clearRect(0, 0, W, H);
-    ctx.lineWidth = 0.6;
+    ctx.lineWidth = 0.9;
     ctx.strokeStyle = 'rgba(120,160,210,0.55)'; // faint outline so flakes show on light backgrounds too
     for (const f of flakes){
       f.y += f.s; f.d += f.w; f.x += Math.sin(f.d) * 0.4;
       if (f.y > H + 6){ Object.assign(f, make(false)); f.x = Math.random() * W; }
       if (f.x > W + 6) f.x = -6; else if (f.x < -6) f.x = W + 6;
       if (f.k === 1){
-        ctx.font = (f.r * 6 + 4) + 'px sans-serif';
+        ctx.font = (f.r * 6 + 8) + 'px sans-serif';
         ctx.fillStyle = 'rgba(175,205,250,' + f.o + ')';
         ctx.fillText('\u2744', f.x, f.y);
         continue;
       }
       if (f.k === 2){
-        ctx.font = (f.r * 5 + 4) + 'px sans-serif';
+        ctx.font = (f.r * 5 + 8) + 'px sans-serif';
         ctx.fillStyle = 'rgba(242,193,78,' + f.o + ')';
         ctx.fillText('\u2726', f.x, f.y);
         continue;
