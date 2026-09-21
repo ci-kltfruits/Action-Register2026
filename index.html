@@ -503,31 +503,17 @@ html[data-xmas="on"]{ --radius:18px; }
 html[data-xmas="on"] ::selection{ background:color-mix(in srgb, var(--xmas-gold) 45%, transparent); }
 html[data-xmas="on"] ::-webkit-scrollbar-thumb{ background:color-mix(in srgb, var(--xmas-gold) 40%, var(--border)); }
 
-/* Christmas night sky: deep midnight gradient + twinkling stars */
-html[data-xmas="on"][data-theme="dark"] body{
-  background:
-    radial-gradient(ellipse at 50% 125%, rgba(90,120,255,.24), transparent 60%),
-    radial-gradient(ellipse at 0% 100%, color-mix(in srgb, var(--xmas-green) 14%, transparent), transparent 48%),
-    linear-gradient(180deg, #060A20 0%, var(--bg) 45%, #16225A 100%);
+/* Christmas village picture as the page background, with a dark "veil" so text stays readable */
+html[data-xmas="on"]{ --xmas-veil:linear-gradient(180deg, rgba(6,10,32,.50), rgba(6,10,32,.70)); }
+html[data-xmas="on"][data-theme="light"]{ --xmas-veil:linear-gradient(180deg, rgba(236,241,252,.55), rgba(236,241,252,.74)); }
+html[data-xmas="on"] body,
+html[data-xmas="on"] .present-overlay{
+  background:var(--xmas-veil), var(--xmas-bg-image, none) center / cover no-repeat fixed, var(--bg);
 }
-html[data-xmas="on"][data-theme="light"] body{
-  background:
-    radial-gradient(ellipse at 50% 125%, rgba(120,150,255,.20), transparent 60%),
-    linear-gradient(180deg, #C6D5F2 0%, var(--bg) 50%, #EFE8F8 100%);
-}
-html[data-xmas="on"] body::before{
-  content:''; position:fixed; inset:0; z-index:-1; pointer-events:none;
-  background:
-    radial-gradient(1.6px 1.6px at 23px 37px, rgba(255,255,255,.95), transparent 60%) 0 0 / 173px 149px,
-    radial-gradient(1px 1px at 91px 12px, rgba(255,255,255,.75), transparent 60%) 0 0 / 131px 197px,
-    radial-gradient(2px 2px at 60px 100px, rgba(255,236,170,.95), transparent 60%) 0 0 / 251px 223px,
-    radial-gradient(1.2px 1.2px at 140px 70px, rgba(190,215,255,.85), transparent 60%) 0 0 / 97px 113px;
-  animation:xmas-stars 4.5s ease-in-out infinite alternate;
-}
-html[data-xmas="on"][data-theme="light"] body::before{ display:none; }
-@keyframes xmas-stars{ from{ opacity:.5; } to{ opacity:1; } }
-@media (prefers-reduced-motion: reduce){ html[data-xmas="on"] body::before{ animation:none; } }
+html[data-xmas="on"] body::before{ display:none; }   /* (the picture already has stars) */
 html[data-xmas="on"] .table-wrap{ background:transparent; }
+html[data-xmas="on"] table{ background:color-mix(in srgb, var(--surface) 78%, transparent); -webkit-backdrop-filter:blur(5px); backdrop-filter:blur(5px); }
+html[data-xmas="on"] .mcard{ background:color-mix(in srgb, var(--surface) 80%, transparent); -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); }
 
 /* candy-cane header lining (kept as-is) */
 html[data-xmas="on"] .topbar{ border-bottom:none; position:relative; padding-bottom:4px; }
@@ -574,8 +560,8 @@ html[data-xmas="on"] thead th{
   border-bottom:2px dashed var(--xmas-gold);
 }
 html[data-xmas="on"] tbody td{ border-bottom:1px dashed color-mix(in srgb, var(--xmas-gold) 32%, var(--border)); }
-html[data-xmas="on"] tbody tr:nth-child(even){ background:color-mix(in srgb, var(--xmas-gold) 6%, var(--surface)); }
-html[data-xmas="on"] tbody tr:hover{ background:color-mix(in srgb, var(--xmas-gold) 16%, var(--surface)); }
+html[data-xmas="on"] tbody tr:nth-child(even){ background:color-mix(in srgb, var(--xmas-gold) 8%, transparent); }
+html[data-xmas="on"] tbody tr:hover{ background:color-mix(in srgb, var(--xmas-gold) 22%, transparent); }
 html[data-xmas="on"] tbody tr td:first-child{ position:relative; }
 html[data-xmas="on"] tbody tr td:first-child::before,
 html[data-xmas="on"] .mcard::before{
@@ -3232,8 +3218,13 @@ function xmasToast(msg){
 }
 
 function setXmas(on, quiet){
-  if (on) document.documentElement.setAttribute('data-xmas', 'on');
-  else document.documentElement.removeAttribute('data-xmas');
+  if (on){
+    document.documentElement.style.setProperty('--xmas-bg-image', 'url("' + XMAS_BG_URL + '")');
+    document.documentElement.setAttribute('data-xmas', 'on');
+  } else {
+    document.documentElement.removeAttribute('data-xmas');
+    document.documentElement.style.removeProperty('--xmas-bg-image');
+  }
   try { localStorage.setItem(XMAS_KEY, on ? 'on' : 'off'); } catch (e) {}
   if (on){ startSnow(); startMusic(); } else { stopSnow(); stopMusic(); }
   if (!quiet) xmasToast(on ? '🎄 Merry Christmas!' : 'Christmas mode off');
@@ -3283,6 +3274,10 @@ const XMAS_TRACKS = ['01.mp3', '02.mp3', '03.mp3', '04.mp3', '05.mp3'];
 const MUSIC_BASE = /github\.io$/i.test(location.hostname)
   ? 'music/'
   : 'https://ci-kltfruits.github.io/Action-Register2026/music/';
+// Background picture for the Christmas theme (same hosting rule as the music files).
+const XMAS_BG_URL = /github\.io$/i.test(location.hostname)
+  ? 'images/xmas-bg.jpg'
+  : 'https://ci-kltfruits.github.io/Action-Register2026/images/xmas-bg.jpg';
 const XMAS_MUTE_KEY = 'AR_XMAS_MUTE';
 const _music = { audio: null, queue: [], last: null, current: null, active: false, errors: 0, waiting: false };
 
