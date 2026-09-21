@@ -503,14 +503,43 @@ html[data-xmas="on"]{ --radius:18px; }
 html[data-xmas="on"] ::selection{ background:color-mix(in srgb, var(--xmas-gold) 45%, transparent); }
 html[data-xmas="on"] ::-webkit-scrollbar-thumb{ background:color-mix(in srgb, var(--xmas-gold) 40%, var(--border)); }
 
-/* Christmas village picture as the page background, with a dark "veil" so text stays readable */
+/* Background: Christmas NIGHT SKY by default (gradient + twinkling stars).
+   If images/xmas-bg.jpg loads, JS adds data-xmas-bg="photo" and the village picture is used instead. */
 html[data-xmas="on"]{ --xmas-veil:linear-gradient(180deg, rgba(6,10,32,.50), rgba(6,10,32,.70)); }
 html[data-xmas="on"][data-theme="light"]{ --xmas-veil:linear-gradient(180deg, rgba(236,241,252,.55), rgba(236,241,252,.74)); }
+
 html[data-xmas="on"] body,
 html[data-xmas="on"] .present-overlay{
+  background:
+    radial-gradient(ellipse at 50% 125%, rgba(90,120,255,.24), transparent 60%),
+    radial-gradient(ellipse at 0% 100%, color-mix(in srgb, var(--xmas-green) 14%, transparent), transparent 48%),
+    linear-gradient(180deg, #060A20 0%, var(--bg) 45%, #16225A 100%);
+}
+html[data-xmas="on"][data-theme="light"] body,
+html[data-xmas="on"][data-theme="light"] .present-overlay{
+  background:
+    radial-gradient(ellipse at 50% 125%, rgba(120,150,255,.20), transparent 60%),
+    linear-gradient(180deg, #C6D5F2 0%, var(--bg) 50%, #EFE8F8 100%);
+}
+html[data-xmas="on"][data-xmas-bg="photo"] body,
+html[data-xmas="on"][data-xmas-bg="photo"] .present-overlay{
   background:var(--xmas-veil), var(--xmas-bg-image, none) center / cover no-repeat fixed, var(--bg);
 }
-html[data-xmas="on"] body::before{ display:none; }   /* (the picture already has stars) */
+
+/* twinkling stars (night-sky mode, dark theme only) */
+html[data-xmas="on"] body::before{
+  content:''; position:fixed; inset:0; z-index:-1; pointer-events:none;
+  background:
+    radial-gradient(1.6px 1.6px at 23px 37px, rgba(255,255,255,.95), transparent 60%) 0 0 / 173px 149px,
+    radial-gradient(1px 1px at 91px 12px, rgba(255,255,255,.75), transparent 60%) 0 0 / 131px 197px,
+    radial-gradient(2px 2px at 60px 100px, rgba(255,236,170,.95), transparent 60%) 0 0 / 251px 223px,
+    radial-gradient(1.2px 1.2px at 140px 70px, rgba(190,215,255,.85), transparent 60%) 0 0 / 97px 113px;
+  animation:xmas-stars 4.5s ease-in-out infinite alternate;
+}
+html[data-xmas="on"][data-theme="light"] body::before,
+html[data-xmas="on"][data-xmas-bg="photo"] body::before{ display:none; }
+@keyframes xmas-stars{ from{ opacity:.5; } to{ opacity:1; } }
+@media (prefers-reduced-motion: reduce){ html[data-xmas="on"] body::before{ animation:none; } }
 html[data-xmas="on"] .table-wrap{ background:transparent; }
 html[data-xmas="on"] table{ background:color-mix(in srgb, var(--surface) 78%, transparent); -webkit-backdrop-filter:blur(5px); backdrop-filter:blur(5px); }
 html[data-xmas="on"] .mcard{ background:color-mix(in srgb, var(--surface) 80%, transparent); -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); }
@@ -3217,13 +3246,31 @@ function xmasToast(msg){
   setTimeout(()=>t.remove(), 2200);
 }
 
+// Uses the village picture only if images/xmas-bg.jpg actually loads; otherwise the night sky stays.
+function loadXmasBackground(){
+  const root = document.documentElement;
+  const img = new Image();
+  img.onload = ()=>{
+    if (!isXmasOn()) return;
+    root.style.setProperty('--xmas-bg-image', 'url("' + XMAS_BG_URL + '")');
+    root.setAttribute('data-xmas-bg', 'photo');
+  };
+  img.onerror = ()=>{
+    root.removeAttribute('data-xmas-bg');
+    root.style.removeProperty('--xmas-bg-image');
+  };
+  img.src = XMAS_BG_URL;
+}
+
 function setXmas(on, quiet){
+  const root = document.documentElement;
   if (on){
-    document.documentElement.style.setProperty('--xmas-bg-image', 'url("' + XMAS_BG_URL + '")');
-    document.documentElement.setAttribute('data-xmas', 'on');
+    root.setAttribute('data-xmas', 'on');      // night-sky background shows right away
+    loadXmasBackground();                       // ...and switches to the picture only if it exists
   } else {
-    document.documentElement.removeAttribute('data-xmas');
-    document.documentElement.style.removeProperty('--xmas-bg-image');
+    root.removeAttribute('data-xmas');
+    root.removeAttribute('data-xmas-bg');
+    root.style.removeProperty('--xmas-bg-image');
   }
   try { localStorage.setItem(XMAS_KEY, on ? 'on' : 'off'); } catch (e) {}
   if (on){ startSnow(); startMusic(); } else { stopSnow(); stopMusic(); }
