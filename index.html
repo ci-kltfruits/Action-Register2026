@@ -1851,28 +1851,34 @@ function toggleFilterExpand(){
 /* ============================================================
    FILTERING + SORTING + RENDER
    ============================================================ */
-function getFiltered(){
-  const rows = state.items.filter(it=>{
-    if (!itemMatchesDeptTab(it, state.activeTab)) return false;
-    for (const def of FILTER_DEFS){
-      const set = state.filters[def.key];
-      if (set.size){
-        if (def.multi){
-          const vals = def.getValue(it);
-          if (!vals.some(v=>set.has(v))) return false;
-        } else {
-          const val = def.getValue(it);
-          if (val === null || !set.has(val)) return false;
-        }
+// Everything a row must match EXCEPT which department tab it's under — shared by getFiltered()
+// (for the active tab) and updateTabCounts() (for every tab's badge number), so the count next
+// to a tab always equals how many rows would actually be listed if you clicked it.
+function matchesActiveFiltersAndSearch(it){
+  for (const def of FILTER_DEFS){
+    const set = state.filters[def.key];
+    if (set.size){
+      if (def.multi){
+        const vals = def.getValue(it);
+        if (!vals.some(v=>set.has(v))) return false;
+      } else {
+        const val = def.getValue(it);
+        if (val === null || !set.has(val)) return false;
       }
     }
-    if (state.search) {
-      const q = state.search.toLowerCase();
-      const hay = [it.id,it.issues,it.owner,it.meeting,it.details,it.remarks].join(' ').toLowerCase();
-      if (!hay.includes(q)) return false;
-    }
-    return true;
-  });
+  }
+  if (state.search) {
+    const q = state.search.toLowerCase();
+    const hay = [it.id,it.issues,it.owner,it.meeting,it.details,it.remarks].join(' ').toLowerCase();
+    if (!hay.includes(q)) return false;
+  }
+  return true;
+}
+
+function getFiltered(){
+  const rows = state.items.filter(it=>
+    itemMatchesDeptTab(it, state.activeTab) && matchesActiveFiltersAndSearch(it)
+  );
   return applySortOrder(rows);
 }
 
@@ -2194,10 +2200,12 @@ function render(){
   });
 }
 
+// Each tab's number = how many items would actually be listed if that tab were clicked right
+// now, i.e. it honors whatever filters and search are currently active (same rule as getFiltered).
 function updateTabCounts(){
   document.querySelectorAll('#tabs .tab').forEach(btn=>{
     const tab = btn.dataset.tab;
-    const n = state.items.filter(i => getStatusBucket(i)!=='Closed' && itemMatchesDeptTab(i, tab)).length;
+    const n = state.items.filter(i => itemMatchesDeptTab(i, tab) && matchesActiveFiltersAndSearch(i)).length;
     btn.innerHTML = `${escapeHtml(tab)}<span class="count">${n}</span>`;
   });
 }
