@@ -202,6 +202,16 @@ td.nowrap{ white-space:nowrap; }
 .upd-sub{ display:block; font-size:11px; color:var(--ink-dim); margin-top:3px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .upd-by{ display:block; font-size:11px; margin-top:1px; font-weight:700; opacity:.85; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
+/* Per-department update stack (cross-department items): one row per department, lined up
+   with the matching department row in the Department column. */
+tbody tr.tr-multidept td{ height:auto; max-height:none; vertical-align:top; padding-top:14px; padding-bottom:14px; }
+.dept-stack{ display:flex; flex-direction:column; gap:8px; align-items:center; }
+.dept-stack-row{ min-height:58px; width:100%; display:flex; align-items:center; justify-content:center; }
+.dept-update-note{ font-size:11.5px; color:var(--ink-dim); text-align:center; padding:6px 4px; }
+.mcard-dept-list{ display:flex; flex-direction:column; gap:8px; }
+.mcard-dept-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.mcard-dept-row .upd-btn{ width:auto; flex:none; min-width:120px; }
+
 .due-date-cell{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:4px; }
 .due-date-main{ font-weight:700; font-size:14.5px; }
 .aging-num{ font-family:'IBM Plex Mono'; font-weight:700; font-size:13px; white-space:nowrap; }
@@ -769,7 +779,8 @@ html[data-xmas="on"] .present-overlay::before{
         <span class="field-error-msg">Details are required.</span>
       </div>
       <div class="field">
-        <label>Remarks / Update</label>
+        <label id="f_remarksLabel">Remarks / Update</label>
+        <div id="updateDeptNote" class="dept-update-note" style="display:none; text-align:left; padding:0 0 6px;"></div>
         <textarea id="f_remarks" placeholder="Latest progress notes"></textarea>
       </div>
 
@@ -1988,6 +1999,38 @@ function agingCellHtml(it){
   return `<span class="aging-num">${a.days} day${a.days===1?'':'s'}</span>`;
 }
 
+function wholeItemUpdCellHtml(it){
+  if (it.status === 'Closed') return `<span class="muted" style="font-size:13px;">—</span>`;
+  const lastUpdStr = it.lastUpdated ? formatDateTime(it.lastUpdated) : 'No updates yet';
+  const byLine = it.lastUpdatedBy ? `<span class="upd-by">${escapeHtml(it.lastUpdatedBy)}</span>` : '';
+  return it.updatedToday
+    ? `<button class="upd-btn upd-ok" data-action="open-update" data-id="${it.id}"><span class="upd-label">✓ Updated</span><span class="upd-sub">${formatTime(it.lastUpdated)}</span>${byLine}</button>`
+    : `<button class="upd-btn upd-warn" data-action="open-update" data-id="${it.id}"><span class="upd-label">Needs Update</span><span class="upd-sub">Last: ${lastUpdStr}</span>${byLine}</button>`;
+}
+
+// One update button for a single department of a cross-department item.
+function deptUpdBtnHtml(it, dept){
+  if (it.status === 'Closed') return `<span class="muted" style="font-size:12.5px;">—</span>`;
+  const du = (it.deptUpdates && it.deptUpdates[dept]) || { t:'', by:'', updatedToday:false };
+  const lastStr = du.t ? formatDateTime(du.t) : 'No updates yet';
+  const byLine = du.by ? `<span class="upd-by">${escapeHtml(du.by)}</span>` : '';
+  return du.updatedToday
+    ? `<button class="upd-btn upd-ok" data-action="open-update" data-id="${it.id}" data-dept="${escapeHtml(dept)}"><span class="upd-label">✓ Updated</span><span class="upd-sub">${formatTime(du.t)}</span>${byLine}</button>`
+    : `<button class="upd-btn upd-warn" data-action="open-update" data-id="${it.id}" data-dept="${escapeHtml(dept)}"><span class="upd-label">Needs Update</span><span class="upd-sub">Last: ${lastStr}</span>${byLine}</button>`;
+}
+
+// Stacks one row per department (Department column and Updated Today column use the same
+// stack, in the same department order, so each row lines up across both columns).
+function deptStackHtml(it, cellFn){
+  return `<div class="dept-stack">${it.deptList.map(d=>`<div class="dept-stack-row">${cellFn(d)}</div>`).join('')}</div>`;
+}
+
+function mcardDeptListHtml(it){
+  return `<div class="mcard-dept-list">${it.deptList.map(d=>`
+    <div class="mcard-dept-row">${singleDeptPillHtml(d)}${deptUpdBtnHtml(it, d)}</div>
+  `).join('')}</div>`;
+}
+
 function mediaBinCellHtml(it){
   const before = it.beforePhotos || [];
   const current = it.currentPhotos || [];
@@ -2078,24 +2121,19 @@ function render(){
   const cards = [];
 
   rows.forEach(it=>{
-    const lastUpdStr = it.lastUpdated ? formatDateTime(it.lastUpdated) : 'No updates yet';
-    const byLine = it.lastUpdatedBy ? `<span class="upd-by">${escapeHtml(it.lastUpdatedBy)}</span>` : '';
-    const updCellHtml = it.status === 'Closed'
-      ? `<span class="muted" style="font-size:13px;">—</span>`
-      : it.updatedToday
-        ? `<button class="upd-btn upd-ok" data-action="open-update" data-id="${it.id}"><span class="upd-label">✓ Updated</span><span class="upd-sub">${formatTime(it.lastUpdated)}</span>${byLine}</button>`
-        : `<button class="upd-btn upd-warn" data-action="open-update" data-id="${it.id}"><span class="upd-label">Needs Update</span><span class="upd-sub">Last: ${lastUpdStr}</span>${byLine}</button>`;
+    const updCellHtml = wholeItemUpdCellHtml(it);
+    const isMultiDept = it.deptList && it.deptList.length > 0;
 
     tableRows.push(`
-    <tr data-id="${it.id}">
+    <tr data-id="${it.id}"${isMultiDept ? ' class="tr-multidept"' : ''}>
       <td class="id-cell nowrap" style="text-align:center;">${it.id}</td>
       <td class="nowrap" style="text-align:center;">${formatShortDate(it.dateDiscussed)}</td>
       <td style="text-align:center;"><span class="ellipsis" title="${escapeHtml(it.meeting)}">${escapeHtml(it.meeting)}</span></td>
-      <td class="nowrap" data-noopen="1">${updCellHtml}</td>
+      <td class="nowrap" data-noopen="1">${isMultiDept ? deptStackHtml(it, d=>deptUpdBtnHtml(it, d)) : updCellHtml}</td>
       <td><span class="ellipsis" title="${escapeHtml(it.issues)}"><strong>${escapeHtml(it.issues)}</strong></span></td>
       <td class="nowrap" data-noopen="1">${mediaBinCellHtml(it)}</td>
       <td><span class="ellipsis" title="${escapeHtml(it.owner)}">${escapeHtml(it.owner)}</span></td>
-      <td class="nowrap" style="text-align:center;">${departmentPillHtml(it.department)}</td>
+      <td class="nowrap" style="text-align:center;">${isMultiDept ? deptStackHtml(it, d=>singleDeptPillHtml(d)) : departmentPillHtml(it.department)}</td>
       <td class="nowrap" style="text-align:center;">${dueDateCellHtml(it)}</td>
       <td class="nowrap" style="text-align:center;">${statusCellHtml(it)}</td>
       <td class="nowrap" style="text-align:center;">${agingCellHtml(it)}</td>
@@ -2118,7 +2156,7 @@ function render(){
         <span><b>Due:</b> ${dueDateCellHtml(it)}</span>
       </div>
       ${hasMedia ? `<div class="mcard-media" data-noopen="1">${mediaBinCellHtml(it)}</div>` : ''}
-      <div class="mcard-bottom" data-noopen="1">${updCellHtml}</div>
+      <div class="mcard-bottom" data-noopen="1">${isMultiDept ? mcardDeptListHtml(it) : updCellHtml}</div>
     </div>`);
   });
 
@@ -2127,7 +2165,7 @@ function render(){
 
   [tbody, cardList].forEach(container=>{
     container.querySelectorAll('[data-action="open-update"]').forEach(btn=>{
-      btn.addEventListener('click', (e)=>{ e.stopPropagation(); openActionModal(btn.dataset.id, 'update'); });
+      btn.addEventListener('click', (e)=>{ e.stopPropagation(); openActionModal(btn.dataset.id, 'update', { updateDept: btn.dataset.dept || null }); });
     });
     container.querySelectorAll('[data-action="open-lightbox"]').forEach(img=>{
       img.addEventListener('click', (e)=>{
@@ -2254,14 +2292,21 @@ function openPreview(id){
         ${departmentPillHtml(it.department)}
       </div>
       <div class="preview-meta-right">
-        ${it.status!=='Closed' ? (it.updatedToday ? `<span class="upd-btn upd-ok" style="cursor:default; width:auto;">✓ Updated Today${it.lastUpdatedBy?' · '+escapeHtml(it.lastUpdatedBy):''}</span>` : `<span class="upd-btn upd-warn" style="cursor:default; width:auto;">Needs Update · Last: ${lastUpdStr}</span>`) : ''}
+        ${(it.status!=='Closed' && !(it.deptList && it.deptList.length)) ? (it.updatedToday ? `<span class="upd-btn upd-ok" style="cursor:default; width:auto;">✓ Updated Today${it.lastUpdatedBy?' · '+escapeHtml(it.lastUpdatedBy):''}</span>` : `<span class="upd-btn upd-warn" style="cursor:default; width:auto;">Needs Update · Last: ${lastUpdStr}</span>`) : ''}
         ${statusCellHtml(it)}
       </div>
     </div>
     <h2 class="preview-title">${escapeHtml(it.issues)}</h2>
+    ${(it.deptList && it.deptList.length) ? `
+    <div class="preview-block">
+      <span class="preview-label">Per-Department Updates</span>
+      <div class="mcard-dept-list" style="margin-top:4px;">
+        ${it.deptList.map(d=>`<div class="mcard-dept-row" data-action="preview-open-update" data-dept="${escapeHtml(d)}" style="cursor:${it.status!=='Closed'?'pointer':'default'};">${singleDeptPillHtml(d)}${deptUpdBtnHtml(it, d)}</div>`).join('')}
+      </div>
+    </div>` : ''}
     <div class="preview-grid">
       <div class="preview-block"><span class="preview-label">Details</span><span class="preview-value">${escapeHtml(it.details)||'—'}</span></div>
-      <div class="preview-block"><span class="preview-label">Remarks / Update</span><span class="preview-value">${escapeHtml(it.remarks)||'—'}</span></div>
+      ${(it.deptList && it.deptList.length) ? '' : `<div class="preview-block"><span class="preview-label">Remarks / Update</span><span class="preview-value">${escapeHtml(it.remarks)||'—'}</span></div>`}
       <div class="preview-block"><span class="preview-label">Owner</span><span class="preview-value">${escapeHtml(it.owner)||'—'}</span></div>
       <div class="preview-block"><span class="preview-label">Input By</span><span class="preview-value">${escapeHtml(it.inputBy)||'—'}</span></div>
       <div class="preview-block"><span class="preview-label">Updated By</span><span class="preview-value">${escapeHtml(it.lastUpdatedBy)||'—'}</span></div>
@@ -2275,6 +2320,10 @@ function openPreview(id){
       ${photoBox('Currently', it.currentPhotos||[], 'current')}
     </div>
   `;
+  document.getElementById('previewBody').querySelectorAll('[data-action="preview-open-update"]').forEach(row=>{
+    if (it.status === 'Closed') return;
+    row.addEventListener('click', ()=>{ closePreview(); openActionModal(it.id, 'update', { updateDept: row.dataset.dept }); });
+  });
   document.getElementById('previewBody').querySelectorAll('.preview-photo-box img, .preview-photo-box .video-placeholder').forEach(node=>{
     node.addEventListener('click', ()=>{
       const bin = node.dataset.bin;
@@ -2284,6 +2333,7 @@ function openPreview(id){
   });
   document.getElementById('previewFolderWrap').innerHTML = it.photoFolder
     ? `<a class="folder-link" href="${it.photoFolder}" target="_blank">📁 Open full photo folder in Drive →</a>` : '';
+  document.getElementById('previewUpdateBtn').hidden = !!(it.deptList && it.deptList.length);
   document.getElementById('previewOverlay').hidden = false;
   document.getElementById('previewModal').scrollTop = 0;
 }
@@ -2356,7 +2406,11 @@ async function removeSavedMedia(bin, mediaId){
   }
 }
 
-function clearFieldErrors(){ document.querySelectorAll('#actionOverlay .field').forEach(f=>f.classList.remove('field-error')); }
+function clearFieldErrors(){
+  document.querySelectorAll('#actionOverlay .field').forEach(f=>f.classList.remove('field-error'));
+  const msgEl = document.querySelector('#actionOverlay [data-field="updatedBy"] .field-error-msg');
+  if (msgEl) msgEl.textContent = 'Updated By is required and must match the roster (or \"All\").';
+}
 
 function applyModalTheme(mode){
   const modalEl = document.getElementById('actionModal');
@@ -2602,9 +2656,11 @@ function attachNameAutocomplete(inputId, listId, opts){
   input.addEventListener('blur', ()=>{ setTimeout(()=>{ list.hidden = true; }, 120); });
 }
 
-function openActionModal(id, mode){
+function openActionModal(id, mode, opts){
+  opts = opts || {};
   state.editingId = id || null;
   state.modalMode = mode;
+  state.updateDept = (mode === 'update') ? (opts.updateDept || null) : null;
   state.pendingBefore = [];
   state.pendingCurrent = [];
   clearFieldErrors();
@@ -2643,12 +2699,26 @@ function openActionModal(id, mode){
     renderPendingGrid('before');
     renderPendingGrid('current');
   } else {
-    document.getElementById('modalTitle').textContent = 'Item ' + id + (mode === 'update' ? ' — Update Action' : ' — Edit Action');
+    document.getElementById('modalTitle').textContent = 'Item ' + id
+      + (mode === 'update' ? (state.updateDept ? ' — Update Action (' + state.updateDept + ')' : ' — Update Action') : ' — Edit Action');
     document.getElementById('f_dateDiscussed').value = it.dateDiscussed || '';
     document.getElementById('f_meeting').value = it.meeting || '';
     document.getElementById('f_issues').value = it.issues || '';
     document.getElementById('f_details').value = it.details || '';
-    document.getElementById('f_remarks').value = it.remarks || '';
+    {
+      const note = document.getElementById('updateDeptNote');
+      if (state.updateDept){
+        const du = (it.deptUpdates && it.deptUpdates[state.updateDept]) || null;
+        document.getElementById('f_remarksLabel').textContent = 'Remarks / Update — ' + state.updateDept;
+        document.getElementById('f_remarks').value = du ? (du.remarks || '') : '';
+        note.style.display = 'block';
+        note.textContent = 'You are recording the update for ' + state.updateDept + ' only. The other departments on this item update separately.';
+      } else {
+        document.getElementById('f_remarksLabel').textContent = 'Remarks / Update';
+        document.getElementById('f_remarks').value = it.remarks || '';
+        note.style.display = 'none';
+      }
+    }
     document.getElementById('f_inputBy').value = it.inputBy || '';
     state.deptSelection = parseDeptFieldToSelection(it.department);
     document.getElementById('deptSelectSearch').value = '';
@@ -2789,11 +2859,23 @@ function validateForm(mode){
   if (!vals.status) missing.push('status');
   if (!vals.noDateYet && !vals.dueDate) missing.push('dueDate');
   if (mode === 'update' && (!vals.updatedBy || !isValidChoice(vals.updatedBy, CFG.allNameAliases))) missing.push('updatedBy');
+  let updatedByDeptError = '';
+  if (mode === 'update' && state.updateDept && vals.updatedBy && isValidChoice(vals.updatedBy, CFG.allNameAliases) && vals.updatedBy.toLowerCase() !== 'all'){
+    const belongDept = CFG.nameToDept[resolveDisplayName(vals.updatedBy).toLowerCase()];
+    if (belongDept !== state.updateDept){
+      missing.push('updatedBy');
+      updatedByDeptError = 'Updated By must be someone from ' + state.updateDept + '.';
+    }
+  }
 
   missing.forEach(key=>{
     const wrap = document.querySelector(`#actionOverlay [data-field="${key}"]`);
     if (wrap) wrap.classList.add('field-error');
   });
+  if (updatedByDeptError){
+    const msgEl = document.querySelector('#actionOverlay [data-field="updatedBy"] .field-error-msg');
+    if (msgEl) msgEl.textContent = updatedByDeptError;
+  }
 
   if (missing.length){
     const first = document.querySelector(`#actionOverlay [data-field="${missing[0]}"]`);
@@ -2813,14 +2895,16 @@ const UPDATE_FIELD_LABELS = {
   department: 'Department', status: 'Status', dueDate: 'Due Date'
 };
 
-// Compares payload against the snapshot taken when the Update modal opened.
-function computeChangedFieldLabels(payload){
+// Compares payload against the snapshot taken when the Update modal opened. When updating a
+// single department's status, "remarks" holds that department's own note (not the shared
+// item remarks), so it's excluded from this comparison and reported separately.
+function computeChangedFieldLabels(payload, skipRemarks){
   const snap = state.updateSnapshot;
   if (!snap) return [];
   const dueDateNow = payload.noDateYet ? '' : (payload.dueDate || '');
   const cmp = {
     dateDiscussed: payload.dateDiscussed, meeting: payload.meeting, issues: payload.issues,
-    details: payload.details, remarks: payload.remarks, owner: payload.owner,
+    details: payload.details, remarks: skipRemarks ? snap.remarks : payload.remarks, owner: payload.owner,
     department: payload.department, status: payload.status, dueDate: dueDateNow
   };
   return Object.keys(UPDATE_FIELD_LABELS).filter(key => (cmp[key]||'') !== (snap[key]||'')).map(key => UPDATE_FIELD_LABELS[key]);
@@ -2851,7 +2935,10 @@ async function saveAction(){
       if (idx>-1) state.items[idx] = updated;
     } else {
       payload.updatedBy = vals.updatedBy;
-      payload.changedFields = computeChangedFieldLabels(payload).join(', ');
+      if (state.updateDept) payload.updateDept = state.updateDept;
+      const labels = computeChangedFieldLabels(payload, !!state.updateDept);
+      if (state.updateDept) labels.push('Remarks/Update (' + state.updateDept + ')');
+      payload.changedFields = labels.join(', ');
       const updated = await run('submitUpdate', state.editingId, payload);
       const idx = state.items.findIndex(i=>i.id===state.editingId);
       if (idx>-1) state.items[idx] = updated;
@@ -2898,8 +2985,10 @@ function historyEntryDetailHtml(h){
     return `<div class="history-remarks">${escapeHtml(h.remarks) || '<span class="muted">No remarks entered.</span>'}</div>`;
   }
   return tags.map(label=>{
-    const getter = HISTORY_FIELD_VALUE_GETTERS[label];
-    const value = getter ? getter(h) : '';
+    // "Remarks/Update (DEPT)" — a per-department update — always shows this entry's own remarks.
+    const isDeptRemark = /^Remarks\/Update \(/.test(label);
+    const getter = isDeptRemark ? null : HISTORY_FIELD_VALUE_GETTERS[label];
+    const value = isDeptRemark ? h.remarks : (getter ? getter(h) : '');
     return `<div class="history-field-change">
       <div class="history-field-label">${escapeHtml(label)}</div>
       <div class="history-field-value">${value ? escapeHtml(value) : '<span class="muted">—</span>'}</div>
@@ -2929,7 +3018,7 @@ async function openHistory(id){
         </div>
         <div class="history-time">${h.timestamp ? formatDateTime(h.timestamp) : ''}</div>
       </div>
-      ${statusBadgeHtml(h.status||'')}
+      ${statusBadgeHtml(h.status||'')}${h.updateDept ? ` <span class="history-changed-tag" style="margin-left:6px;">🏷 ${escapeHtml(h.updateDept)}</span>` : ''}
       ${changedTags.length ? `<div class="history-changed"><span class="history-changed-label">Changed:</span> ${changedTags.map(t=>`<span class="history-changed-tag">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
       <div class="history-detail">${historyEntryDetailHtml(h)}</div>
     </div>
@@ -3085,14 +3174,21 @@ function renderPresentCard(){
             ${departmentPillHtml(it.department)}
           </div>
           <div class="present-meta-right">
-            <span class="${it.updatedToday?'upd-btn upd-ok':'upd-btn upd-warn'}" style="cursor:default;">${it.updatedToday? '✓ Updated Today'+(it.lastUpdatedBy?' · '+escapeHtml(it.lastUpdatedBy):'') : 'Needs Update · Last: '+lastUpdStr}</span>
+            ${(it.deptList && it.deptList.length) ? '' : `<span class="${it.updatedToday?'upd-btn upd-ok':'upd-btn upd-warn'}" style="cursor:default;">${it.updatedToday? '✓ Updated Today'+(it.lastUpdatedBy?' · '+escapeHtml(it.lastUpdatedBy):'') : 'Needs Update · Last: '+lastUpdStr}</span>`}
             ${statusCellHtml(it)}
           </div>
         </div>
         <h1 class="present-title">${escapeHtml(it.issues)}</h1>
+        ${(it.deptList && it.deptList.length) ? `
+        <div style="margin:0 0 22px;">
+          <div class="present-label">Per-Department Updates</div>
+          <div class="mcard-dept-list" style="margin-top:8px;">
+            ${it.deptList.map(d=>`<div class="mcard-dept-row" data-action="present-open-update" data-dept="${escapeHtml(d)}" style="cursor:pointer;">${singleDeptPillHtml(d)}${deptUpdBtnHtml(it, d)}</div>`).join('')}
+          </div>
+        </div>` : ''}
         <div class="present-grid">
           <div><div class="present-label">Details</div><div class="present-value">${escapeHtml(it.details)||'—'}</div></div>
-          <div><div class="present-label">Remarks / Update</div><div class="present-value">${escapeHtml(it.remarks)||'—'}</div></div>
+          ${(it.deptList && it.deptList.length) ? '' : `<div><div class="present-label">Remarks / Update</div><div class="present-value">${escapeHtml(it.remarks)||'—'}</div></div>`}
           <div><div class="present-label">Owner</div><div class="present-value">${escapeHtml(it.owner)||'—'}</div></div>
           <div><div class="present-label">Updated By</div><div class="present-value">${escapeHtml(it.lastUpdatedBy)||'—'}</div></div>
           <div><div class="present-label">Meeting</div><div class="present-value">${escapeHtml(it.meeting)||'—'}</div></div>
@@ -3114,6 +3210,10 @@ function renderPresentCard(){
       openLightbox(media, parseInt(node.dataset.idx,10), (bin==='before'?'Before':'Currently') + ' — ' + it.issues);
     });
   });
+  document.getElementById('presentBody').querySelectorAll('[data-action="present-open-update"]').forEach(row=>{
+    row.addEventListener('click', ()=> openActionModal(it.id, 'update', { updateDept: row.dataset.dept }));
+  });
+  document.getElementById('presentMarkUpdated').hidden = !!(it.deptList && it.deptList.length);
 }
 
 function presentNav(dir){
@@ -3184,13 +3284,13 @@ function bindEvents(){
   document.getElementById('presentNext').addEventListener('click', ()=>presentNav(1));
   document.getElementById('presentMarkUpdated').addEventListener('click', ()=>{
     const it = state.presentQueue[state.presentIndex];
-    openActionModal(it.id, 'update');
+    openActionModal(it.id, 'update', {});
   });
 
   document.getElementById('closePreviewBtn').addEventListener('click', closePreview);
   document.getElementById('previewOverlay').addEventListener('click', (e)=>{ if (e.target.id === 'previewOverlay') closePreview(); });
   document.getElementById('previewEditBtn').addEventListener('click', ()=>{ closePreview(); openActionModal(state.previewId, 'edit'); });
-  document.getElementById('previewUpdateBtn').addEventListener('click', ()=>{ closePreview(); openActionModal(state.previewId, 'update'); });
+  document.getElementById('previewUpdateBtn').addEventListener('click', ()=>{ closePreview(); openActionModal(state.previewId, 'update', {}); });
 
   document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
   document.getElementById('lightboxPrev').addEventListener('click', ()=>lightboxNav(-1));
