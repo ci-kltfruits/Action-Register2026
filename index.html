@@ -783,7 +783,7 @@ html[data-xmas="on"] .present-overlay::before{
         <span class="field-error-msg">Details are required.</span>
       </div>
       <div class="field">
-        <label id="f_remarksLabel">Remarks / Update</label>
+        <label id="f_remarksLabel">Update</label>
         <div id="updateDeptNote" class="dept-update-note" style="display:none; text-align:left; padding:0 0 6px;"></div>
         <div id="updateDeptPrevRemarks" class="prev-remarks-box" hidden><span class="prev-remarks-label">Previous note:</span> <span class="prev-remarks-text"></span></div>
         <textarea id="f_remarks" placeholder="Write this update notes here (starts blank on purpose, so each update is its own dated entry in History)"></textarea>
@@ -1874,7 +1874,12 @@ function matchesActiveFiltersAndSearch(it){
   }
   if (state.search) {
     const q = state.search.toLowerCase();
-    const hay = [it.id,it.issues,it.owner,it.meeting,it.details,it.remarks].join(' ').toLowerCase();
+    // Names appear in several places (Owner, Input By, Last Updated By, and — for cross-department
+    // items — each department's own updater) — searching a name like "G. Tagotong" should find it
+    // no matter which of those roles it's in.
+    const deptByNames = (it.deptUpdates ? Object.values(it.deptUpdates).map(du => du.by || '') : []);
+    const hay = [it.id, it.issues, it.owner, it.meeting, it.details, it.remarks, it.inputBy, it.lastUpdatedBy]
+      .concat(deptByNames).join(' ').toLowerCase();
     if (!hay.includes(q)) return false;
   }
   return true;
@@ -2335,7 +2340,7 @@ function openPreview(id){
     </div>` : ''}
     <div class="preview-grid">
       <div class="preview-block"><span class="preview-label">Details</span><span class="preview-value">${escapeHtml(it.details)||'—'}</span></div>
-      ${(it.deptList && it.deptList.length) ? '' : `<div class="preview-block"><span class="preview-label">Remarks / Update</span><span class="preview-value">${escapeHtml(it.remarks)||'—'}</span></div>`}
+      ${(it.deptList && it.deptList.length) ? '' : `<div class="preview-block"><span class="preview-label">Update</span><span class="preview-value">${escapeHtml(it.remarks)||'—'}</span></div>`}
       <div class="preview-block"><span class="preview-label">Owner</span><span class="preview-value">${escapeHtml(it.owner)||'—'}</span></div>
       <div class="preview-block"><span class="preview-label">Input By</span><span class="preview-value">${escapeHtml(it.inputBy)||'—'}</span></div>
       <div class="preview-block"><span class="preview-label">Updated By</span><span class="preview-value">${escapeHtml(it.lastUpdatedBy)||'—'}</span></div>
@@ -2745,12 +2750,12 @@ function openActionModal(id, mode, opts){
         let prevText = '';
         if (state.updateDept){
           const du = (it.deptUpdates && it.deptUpdates[state.updateDept]) || null;
-          document.getElementById('f_remarksLabel').textContent = 'Remarks / Update — ' + state.updateDept;
+          document.getElementById('f_remarksLabel').textContent = 'Update — ' + state.updateDept;
           note.style.display = 'block';
           note.textContent = 'You are recording the update for ' + state.updateDept + ' only. The other departments on this item update separately.';
           prevText = du ? (du.remarks || '') : '';
         } else {
-          document.getElementById('f_remarksLabel').textContent = 'Remarks / Update';
+          document.getElementById('f_remarksLabel').textContent = 'Update';
           note.style.display = 'none';
           prevText = it.remarks || '';
         }
@@ -2759,7 +2764,7 @@ function openActionModal(id, mode, opts){
         else { prevWrap.hidden = true; }
       } else {
         // Edit mode still shows the current value, since editing corrects existing data.
-        document.getElementById('f_remarksLabel').textContent = 'Remarks / Update';
+        document.getElementById('f_remarksLabel').textContent = 'Update';
         document.getElementById('f_remarks').value = it.remarks || '';
         note.style.display = 'none';
         prevWrap.hidden = true;
@@ -2937,7 +2942,7 @@ function validateForm(mode){
 
 const UPDATE_FIELD_LABELS = {
   dateDiscussed: 'Date Discussed', meeting: 'Meeting', issues: 'Issues/Concerns',
-  details: 'Details', remarks: 'Remarks/Update', owner: 'Owner',
+  details: 'Details', remarks: 'Update', owner: 'Owner',
   department: 'Department', status: 'Status', dueDate: 'Due Date'
 };
 
@@ -2983,7 +2988,7 @@ async function saveAction(){
       payload.updatedBy = vals.updatedBy;
       if (state.updateDept) payload.updateDept = state.updateDept;
       const labels = computeChangedFieldLabels(payload, !!state.updateDept);
-      if (state.updateDept) labels.push('Remarks/Update (' + state.updateDept + ')');
+      if (state.updateDept) labels.push('Update (' + state.updateDept + ')');
       payload.changedFields = labels.join(', ');
       const updated = await run('submitUpdate', state.editingId, payload);
       const idx = state.items.findIndex(i=>i.id===state.editingId);
@@ -3018,7 +3023,8 @@ const HISTORY_FIELD_VALUE_GETTERS = {
   'Meeting': h => h.meeting,
   'Issues/Concerns': h => h.issues,
   'Details': h => h.details,
-  'Remarks/Update': h => h.remarks,
+  'Update': h => h.remarks,
+  'Remarks/Update': h => h.remarks,   // legacy tag text from entries saved before this label was renamed
   'Owner': h => h.owner,
   'Department': h => h.department,
   'Status': h => normalizeStatus(h.status),
@@ -3031,8 +3037,9 @@ function historyEntryDetailHtml(h){
     return `<div class="history-remarks">${escapeHtml(h.remarks) || '<span class="muted">No remarks entered.</span>'}</div>`;
   }
   return tags.map(label=>{
-    // "Remarks/Update (DEPT)" — a per-department update — always shows this entry's own remarks.
-    const isDeptRemark = /^Remarks\/Update \(/.test(label);
+    // "Update (DEPT)" (or the older "Remarks/Update (DEPT)" tag text) — a per-department
+    // update — always shows this entry's own remarks.
+    const isDeptRemark = /^(Update|Remarks\/Update) \(/.test(label);
     const getter = isDeptRemark ? null : HISTORY_FIELD_VALUE_GETTERS[label];
     const value = isDeptRemark ? h.remarks : (getter ? getter(h) : '');
     return `<div class="history-field-change">
@@ -3234,7 +3241,7 @@ function renderPresentCard(){
         </div>` : ''}
         <div class="present-grid">
           <div><div class="present-label">Details</div><div class="present-value">${escapeHtml(it.details)||'—'}</div></div>
-          ${(it.deptList && it.deptList.length) ? '' : `<div><div class="present-label">Remarks / Update</div><div class="present-value">${escapeHtml(it.remarks)||'—'}</div></div>`}
+          ${(it.deptList && it.deptList.length) ? '' : `<div><div class="present-label">Update</div><div class="present-value">${escapeHtml(it.remarks)||'—'}</div></div>`}
           <div><div class="present-label">Owner</div><div class="present-value">${escapeHtml(it.owner)||'—'}</div></div>
           <div><div class="present-label">Updated By</div><div class="present-value">${escapeHtml(it.lastUpdatedBy)||'—'}</div></div>
           <div><div class="present-label">Meeting</div><div class="present-value">${escapeHtml(it.meeting)||'—'}</div></div>
