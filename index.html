@@ -208,6 +208,8 @@ tbody tr.tr-multidept td{ height:auto; max-height:none; vertical-align:top; padd
 .dept-stack{ display:flex; flex-direction:column; gap:8px; align-items:center; }
 .dept-stack-row{ min-height:58px; width:100%; display:flex; align-items:center; justify-content:center; }
 .dept-update-note{ font-size:11.5px; color:var(--ink-dim); text-align:center; padding:6px 4px; }
+.prev-remarks-box{ font-size:12.5px; color:var(--ink-dim); background:var(--bg); border:1px dashed var(--border); border-radius:8px; padding:7px 10px; margin-bottom:6px; }
+.prev-remarks-label{ font-weight:700; color:var(--ink); }
 .mcard-dept-list{ display:flex; flex-direction:column; gap:8px; }
 .mcard-dept-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
 .mcard-dept-row .upd-btn{ width:auto; flex:none; min-width:120px; }
@@ -781,7 +783,8 @@ html[data-xmas="on"] .present-overlay::before{
       <div class="field">
         <label id="f_remarksLabel">Remarks / Update</label>
         <div id="updateDeptNote" class="dept-update-note" style="display:none; text-align:left; padding:0 0 6px;"></div>
-        <textarea id="f_remarks" placeholder="Latest progress notes"></textarea>
+        <div id="updateDeptPrevRemarks" class="prev-remarks-box" hidden><span class="prev-remarks-label">Previous note:</span> <span class="prev-remarks-text"></span></div>
+        <textarea id="f_remarks" placeholder="Write this update notes here (starts blank on purpose, so each update is its own dated entry in History)"></textarea>
       </div>
 
       <div class="row2">
@@ -2689,6 +2692,7 @@ function openActionModal(id, mode, opts){
     document.getElementById('f_issues').value = '';
     document.getElementById('f_details').value = '';
     document.getElementById('f_remarks').value = '';
+    document.getElementById('updateDeptPrevRemarks').hidden = true;
     document.getElementById('f_inputBy').value = '';
     state.deptSelection = (state.activeTab !== 'All' && state.activeTab !== CROSS_DEPT_LABEL) ? new Set([state.activeTab]) : new Set();
     document.getElementById('deptSelectSearch').value = '';
@@ -2714,17 +2718,33 @@ function openActionModal(id, mode, opts){
     document.getElementById('f_issues').value = it.issues || '';
     document.getElementById('f_details').value = it.details || '';
     {
+      // Update mode always starts with a BLANK remarks box -- each update is meant to be a new,
+      // dated note (kept forever in Update History), not text piled on top of the last one.
+      // The previous note is shown as a small reference line above the box instead.
       const note = document.getElementById('updateDeptNote');
-      if (state.updateDept){
-        const du = (it.deptUpdates && it.deptUpdates[state.updateDept]) || null;
-        document.getElementById('f_remarksLabel').textContent = 'Remarks / Update — ' + state.updateDept;
-        document.getElementById('f_remarks').value = du ? (du.remarks || '') : '';
-        note.style.display = 'block';
-        note.textContent = 'You are recording the update for ' + state.updateDept + ' only. The other departments on this item update separately.';
+      const prevWrap = document.getElementById('updateDeptPrevRemarks');
+      if (mode === 'update'){
+        let prevText = '';
+        if (state.updateDept){
+          const du = (it.deptUpdates && it.deptUpdates[state.updateDept]) || null;
+          document.getElementById('f_remarksLabel').textContent = 'Remarks / Update — ' + state.updateDept;
+          note.style.display = 'block';
+          note.textContent = 'You are recording the update for ' + state.updateDept + ' only. The other departments on this item update separately.';
+          prevText = du ? (du.remarks || '') : '';
+        } else {
+          document.getElementById('f_remarksLabel').textContent = 'Remarks / Update';
+          note.style.display = 'none';
+          prevText = it.remarks || '';
+        }
+        document.getElementById('f_remarks').value = '';
+        if (prevText){ prevWrap.hidden = false; prevWrap.querySelector('.prev-remarks-text').textContent = prevText; }
+        else { prevWrap.hidden = true; }
       } else {
+        // Edit mode still shows the current value, since editing corrects existing data.
         document.getElementById('f_remarksLabel').textContent = 'Remarks / Update';
         document.getElementById('f_remarks').value = it.remarks || '';
         note.style.display = 'none';
+        prevWrap.hidden = true;
       }
     }
     document.getElementById('f_inputBy').value = it.inputBy || '';
