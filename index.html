@@ -986,6 +986,11 @@ function itemOwnerList(it){
 const CROSS_DEPT_LABEL = 'Cross Dept';
 const NO_DUE_DATE_VALUE = '__no_due_date__';   // sentinel: lets "No date yet" be a selectable Due Date filter value
 
+// These two may record ANY department's per-department update on a cross-department item,
+// bypassing the "must belong to that department" rule — they're the usual meeting facilitators.
+// Keep this in sync with CROSS_DEPT_FACILITATORS in Code.gs (the server enforces this too).
+const CROSS_DEPT_FACILITATORS = ['G. Tagotong', 'C. Lim'];
+
 // Cross-department = spans 2+ distinct departments (or "All").
 function isCrossDeptItem(it){
   const raw = (it.department||'').trim();
@@ -2918,8 +2923,10 @@ function validateForm(mode){
   if (mode === 'update' && (!vals.updatedBy || !isValidChoice(vals.updatedBy, CFG.allNameAliases))) missing.push('updatedBy');
   let updatedByDeptError = '';
   if (mode === 'update' && state.updateDept && vals.updatedBy && isValidChoice(vals.updatedBy, CFG.allNameAliases) && vals.updatedBy.toLowerCase() !== 'all'){
-    const belongDept = CFG.nameToDept[resolveDisplayName(vals.updatedBy).toLowerCase()];
-    if (belongDept !== state.updateDept){
+    const resolvedUpdater = resolveDisplayName(vals.updatedBy);
+    const isFacilitator = CROSS_DEPT_FACILITATORS.some(n => n.toLowerCase() === resolvedUpdater.toLowerCase());
+    const belongDept = CFG.nameToDept[resolvedUpdater.toLowerCase()];
+    if (!isFacilitator && belongDept !== state.updateDept){
       missing.push('updatedBy');
       updatedByDeptError = 'Updated By must be someone from ' + state.updateDept + '.';
     }
