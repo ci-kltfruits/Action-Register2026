@@ -212,6 +212,8 @@ tbody tr.tr-multidept td{ height:auto; max-height:none; vertical-align:top; padd
 .prev-remarks-label{ font-weight:700; color:var(--ink); }
 .mcard-dept-list{ display:flex; flex-direction:column; gap:8px; }
 .mcard-dept-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.dept-update-block{ border:1px solid var(--border); border-radius:10px; padding:10px 12px; background:var(--bg); }
+.dept-update-block + .dept-update-block{ margin-top:10px; }
 .mcard-dept-row .upd-btn{ width:auto; flex:none; min-width:120px; }
 
 .due-date-cell{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:4px; }
@@ -2034,6 +2036,22 @@ function deptStackHtml(it, cellFn){
   return `<div class="dept-stack">${it.deptList.map(d=>`<div class="dept-stack-row">${cellFn(d)}</div>`).join('')}</div>`;
 }
 
+// One box per department for Preview / Present Mode: status row (pill + Updated/Needs Update)
+// PLUS that department's own written remarks underneath — so each department's update is
+// fully visible, not just its status.
+function deptUpdateBlocksHtml(it, actionName, valueClass){
+  return it.deptList.map(d=>{
+    const du = (it.deptUpdates && it.deptUpdates[d]) || null;
+    const remarksHtml = (du && du.remarks) ? escapeHtml(du.remarks) : '<span class="muted">No remarks yet.</span>';
+    return `<div class="dept-update-block">
+      <div class="mcard-dept-row" data-action="${actionName}" data-dept="${escapeHtml(d)}" style="${it.status!=='Closed' ? 'cursor:pointer;' : ''}">
+        ${singleDeptPillHtml(d)}${deptUpdBtnHtml(it, d)}
+      </div>
+      <div class="${valueClass}" style="margin-top:8px; white-space:pre-wrap; overflow-wrap:break-word;">${remarksHtml}</div>
+    </div>`;
+  }).join('');
+}
+
 function mcardDeptListHtml(it){
   return `<div class="mcard-dept-list">${it.deptList.map(d=>`
     <div class="mcard-dept-row">${singleDeptPillHtml(d)}${deptUpdBtnHtml(it, d)}</div>
@@ -2311,8 +2329,8 @@ function openPreview(id){
     ${(it.deptList && it.deptList.length) ? `
     <div class="preview-block">
       <span class="preview-label">Per-Department Updates</span>
-      <div class="mcard-dept-list" style="margin-top:4px;">
-        ${it.deptList.map(d=>`<div class="mcard-dept-row" data-action="preview-open-update" data-dept="${escapeHtml(d)}" style="cursor:${it.status!=='Closed'?'pointer':'default'};">${singleDeptPillHtml(d)}${deptUpdBtnHtml(it, d)}</div>`).join('')}
+      <div style="margin-top:4px;">
+        ${deptUpdateBlocksHtml(it, 'preview-open-update', 'preview-value')}
       </div>
     </div>` : ''}
     <div class="preview-grid">
@@ -3210,8 +3228,8 @@ function renderPresentCard(){
         ${(it.deptList && it.deptList.length) ? `
         <div style="margin:0 0 22px;">
           <div class="present-label">Per-Department Updates</div>
-          <div class="mcard-dept-list" style="margin-top:8px;">
-            ${it.deptList.map(d=>`<div class="mcard-dept-row" data-action="present-open-update" data-dept="${escapeHtml(d)}" style="cursor:pointer;">${singleDeptPillHtml(d)}${deptUpdBtnHtml(it, d)}</div>`).join('')}
+          <div style="margin-top:8px;">
+            ${deptUpdateBlocksHtml(it, 'present-open-update', 'present-value')}
           </div>
         </div>` : ''}
         <div class="present-grid">
