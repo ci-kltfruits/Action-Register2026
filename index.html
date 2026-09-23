@@ -984,6 +984,7 @@ function itemOwnerList(it){
   return list;
 }
 const CROSS_DEPT_LABEL = 'Cross Dept';
+const NO_DUE_DATE_VALUE = '__no_due_date__';   // sentinel: lets "No date yet" be a selectable Due Date filter value
 
 // Cross-department = spans 2+ distinct departments (or "All").
 function isCrossDeptItem(it){
@@ -1010,7 +1011,7 @@ const FILTER_DEFS = [
   { key:'owner', label:'Owner', kind:'value', multi:true, sortDesc:false, getValue: itemOwnerList },
   { key:'department', label:'Department', kind:'value', multi:true, sortDesc:false, getValue: itemDeptList,
     customSort: (a,b)=> CFG.departments.indexOf(a) - CFG.departments.indexOf(b) },
-  { key:'dueDate', label:'Due Date', kind:'value', dateLike:true, sortDesc:true, getValue: it=> (it.dueDate && it.dueDate!=='TBD') ? it.dueDate : null },
+  { key:'dueDate', label:'Due Date', kind:'value', dateLike:true, sortDesc:true, getValue: it=> (it.dueDate && it.dueDate!=='TBD') ? it.dueDate : NO_DUE_DATE_VALUE },
   { key:'status', label:'Status', kind:'fixed', optionsFn: ()=> ['On Track','Overdue','Closed','Closed Late'], getValue: it=> getStatusFilterValue(it) || null }
 ];
 
@@ -1727,7 +1728,7 @@ function buildFilterBar(){
       const key = asOfToday.dataset.key;
       const todayStr = todayISO();
       state.filters[key].clear();
-      getFilterOptions(key).forEach(o=>{ if (o.value <= todayStr) state.filters[key].add(o.value); });
+      getFilterOptions(key).forEach(o=>{ if (o.value === NO_DUE_DATE_VALUE || o.value <= todayStr) state.filters[key].add(o.value); });
       renderFilterPanel(key); updateFilterBadge(key); render();
       return;
     }
@@ -1761,10 +1762,15 @@ function getFilterOptions(key){
     vals = Array.from(new Set(state.items.map(def.getValue).filter(v=>v!==null && v!==undefined && v!=='')));
   }
   vals.sort((a,b)=> def.customSort ? def.customSort(a,b) : (def.sortDesc ? String(b).localeCompare(String(a)) : String(a).localeCompare(String(b))));
+  if (key === 'dueDate'){
+    const idx = vals.indexOf(NO_DUE_DATE_VALUE);
+    if (idx !== -1){ vals.splice(idx, 1); vals.push(NO_DUE_DATE_VALUE); }   // always last, not date-sorted
+  }
   return vals.map(v=>({ value:v, count: state.items.filter(it=>defMatchesValue(def,it,v)).length }));
 }
 
 function formatFilterLabel(def, value){
+  if (value === NO_DUE_DATE_VALUE) return 'No date yet';
   if (def.dateLike){
     const dt = new Date(value);
     if (!isNaN(dt)) return dt.toLocaleDateString(undefined,{weekday:'short', month:'short', day:'numeric', year:'numeric'});
