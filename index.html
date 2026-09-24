@@ -115,6 +115,19 @@ button{font-family:inherit;} input,select,textarea{font-family:inherit;}
 .tab.dept-tab:hover{ background:color-mix(in srgb, var(--tab-dept-color) 26%, var(--surface)); }
 .tab.dept-tab.active{ background:var(--tab-dept-color); color:var(--tab-dept-ink); border-color:var(--tab-dept-color); }
 
+/* SGS tab: a fixed red pill (not tied to a department color) that pulses while at least one
+   active "SGS Correction" item hasn't been updated today, and settles to a steady red once
+   everything is caught up. */
+.tab.sgs-tab, .tab.sgs-tab.active{ background:#D6484B; color:#FFFFFF; border-color:#D6484B; }
+html[data-theme="dark"] .tab.sgs-tab, html[data-theme="dark"] .tab.sgs-tab.active{ background:#E5535D; border-color:#E5535D; }
+.tab.sgs-tab:hover{ filter:brightness(1.08); }
+.tab.sgs-tab.sgs-pulse{ animation:sgs-tab-pulse 1.6s ease-in-out infinite; }
+@keyframes sgs-tab-pulse{
+  0%, 100% { box-shadow:0 0 0 0 rgba(214,72,75,.6); }
+  50% { box-shadow:0 0 0 8px rgba(214,72,75,0); }
+}
+@media (prefers-reduced-motion: reduce){ .tab.sgs-tab.sgs-pulse{ animation:none; } }
+
 /* Holographic foil texture for "iridescent" departments */
 .tab.dept-tab.iridescent-fill{
   background:
@@ -984,6 +997,9 @@ function itemOwnerList(it){
   return list;
 }
 const CROSS_DEPT_LABEL = 'Cross Dept';
+const SGS_LABEL = 'SGS';
+const SGS_MEETING_NAME = 'SGS Correction';
+function isSgsItem(it){ return (it.meeting||'').trim().toLowerCase() === SGS_MEETING_NAME.toLowerCase(); }
 const NO_DUE_DATE_VALUE = '__no_due_date__';   // sentinel: lets "No date yet" be a selectable Due Date filter value
 
 // These two may record ANY department's per-department update on a cross-department item,
@@ -1003,6 +1019,7 @@ function isCrossDeptItem(it){
 function itemMatchesDeptTab(it, tab){
   if (tab === 'All') return true;
   if (tab === CROSS_DEPT_LABEL) return isCrossDeptItem(it);
+  if (tab === SGS_LABEL) return isSgsItem(it);   // by meeting name, regardless of department(s)
   if (isCrossDeptItem(it)) return false;
   const raw = (it.department||'').split(',').map(s=>s.trim());
   return raw.some(d=>d.toLowerCase()==='all') || raw.indexOf(tab) !== -1;
@@ -1587,10 +1604,11 @@ async function refreshData(){
 
 function buildTabs(){
   const tabsEl = document.getElementById('tabs');
-  const all = ['All', CROSS_DEPT_LABEL, ...CFG.departments];
+  const all = ['All', CROSS_DEPT_LABEL, SGS_LABEL, ...CFG.departments];
   tabsEl.innerHTML = all.map(d => {
     if (d === 'All') return `<button class="tab active" data-tab="All">All</button>`;
     if (d === CROSS_DEPT_LABEL) return `<button class="tab" data-tab="${CROSS_DEPT_LABEL}">🔀 Cross Dept</button>`;
+    if (d === SGS_LABEL) return `<button class="tab sgs-tab" data-tab="${SGS_LABEL}">${SGS_LABEL}</button>`;
     if (isIridescentDept(d)) return `<button class="tab dept-tab iridescent-fill" data-tab="${escapeHtml(d)}">${escapeHtml(d)}</button>`;
     const flat = departmentFlatColor(d);
     const ink = pickInkColor(flat);
@@ -2239,11 +2257,18 @@ function render(){
 
 // Each tab's number = how many items would actually be listed if that tab were clicked right
 // now, i.e. it honors whatever filters and search are currently active (same rule as getFiltered).
+// SGS pulses red whenever at least one active (non-closed) "SGS Correction" item hasn't been
+// updated today; it turns to a steady red once every active item is caught up (or there are none).
+function computeSgsNeedsAttention(){
+  return state.items.some(i => isSgsItem(i) && getStatusBucket(i) !== 'Closed' && !i.updatedToday);
+}
+
 function updateTabCounts(){
   document.querySelectorAll('#tabs .tab').forEach(btn=>{
     const tab = btn.dataset.tab;
     const n = state.items.filter(i => itemMatchesDeptTab(i, tab) && matchesActiveFiltersAndSearch(i)).length;
     btn.innerHTML = `${escapeHtml(tab)}<span class="count">${n}</span>`;
+    if (tab === SGS_LABEL) btn.classList.toggle('sgs-pulse', computeSgsNeedsAttention());
   });
 }
 
