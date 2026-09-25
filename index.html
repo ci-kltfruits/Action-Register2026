@@ -207,11 +207,17 @@ td.nowrap{ white-space:nowrap; }
 .badge-3line .line2{ font-size:10.5px; font-weight:800; }
 .badge-3line .line3{ font-size:8px; font-weight:600; opacity:.85; letter-spacing:.2px; }
 
-.upd-btn{ border:1px solid var(--border); background:var(--surface); color:var(--ink-dim); padding:6px 10px; border-radius:7px; font-size:12.5px; font-weight:700; cursor:pointer; text-align:center; width:100%; overflow:hidden; max-height:56px; }
-.upd-btn:hover{ background:var(--surface-2); }
+.upd-btn{ border:1.5px solid var(--border); background:var(--surface); color:var(--ink-dim); padding:6px 10px; border-radius:7px; font-size:12.5px; font-weight:700; cursor:pointer; text-align:center; width:100%; overflow:hidden; max-height:56px; transition:transform .1s ease, box-shadow .15s ease, filter .15s ease; box-shadow:0 1px 2px rgba(20,20,30,.06); }
+.upd-btn:hover{ background:var(--surface-2); transform:translateY(-1px); box-shadow:0 3px 8px rgba(20,20,30,.12); filter:brightness(1.03); }
+.upd-btn:active{ transform:translateY(0); box-shadow:0 1px 2px rgba(20,20,30,.08); }
 .upd-label{ display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .upd-ok{ background:var(--good-soft); color:var(--good); border-color:var(--good); }
-.upd-warn{ background:var(--bad-soft); color:var(--bad); border-color:var(--bad); }
+.upd-warn{ background:var(--bad-soft); color:var(--bad); border-color:var(--bad); border-width:2px; animation:upd-warn-pulse 2s ease-in-out infinite; }
+@keyframes upd-warn-pulse{
+  0%, 100% { box-shadow:0 0 0 0 rgba(214,69,69,.35); }
+  50% { box-shadow:0 0 0 5px rgba(214,69,69,0); }
+}
+@media (prefers-reduced-motion: reduce){ .upd-warn{ animation:none; } }
 .upd-sub{ display:block; font-size:11px; color:var(--ink-dim); margin-top:3px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .upd-by{ display:block; font-size:11px; margin-top:1px; font-weight:700; opacity:.85; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
@@ -871,6 +877,7 @@ html[data-xmas="on"] .present-overlay::before{
         <div class="name-autocomplete" id="f_updatedBy_ac" hidden></div>
         <span class="field-error-msg">Updated By is required and must match the roster (or "All").</span>
       </div>
+      <span class="muted" style="font-size:12px;" id="editModeHint" hidden>✏️ This is for correcting details — use the <b>Update</b> button on the item to log a dated progress update.</span>
 
     </div>
     <div class="modal-foot">
@@ -1020,7 +1027,6 @@ function itemMatchesDeptTab(it, tab){
   if (tab === 'All') return true;
   if (tab === CROSS_DEPT_LABEL) return isCrossDeptItem(it);
   if (tab === SGS_LABEL) return isSgsItem(it);   // by meeting name, regardless of department(s)
-  if (isCrossDeptItem(it)) return false;
   const raw = (it.department||'').split(',').map(s=>s.trim());
   return raw.some(d=>d.toLowerCase()==='all') || raw.indexOf(tab) !== -1;
 }
@@ -1028,8 +1034,12 @@ function itemMatchesDeptTab(it, tab){
 const FILTER_DEFS = [
   { key:'dateDiscussed', label:'Date Discussed', kind:'value', dateLike:true, sortDesc:true, getValue: it=> it.dateDiscussed || null },
   { key:'meeting', label:'Meeting', kind:'value', sortDesc:false, getValue: it=> it.meeting || null },
-  { key:'updatedToday', label:'Updated Today', kind:'fixed', optionsFn: ()=>['Updated','Needs Update','Closed Today'],
-    getValue: it => getStatusBucket(it)==='Closed' ? (it.updatedToday ? 'Closed Today' : null) : (it.updatedToday?'Updated':'Needs Update') },
+  { key:'updatedToday', label:'Updated Today', kind:'fixed', optionsFn: ()=>['Updated','Needs Update','Not Due Yet','Closed Today'],
+    getValue: it => {
+      if (getStatusBucket(it)==='Closed') return it.updatedToday ? 'Closed Today' : null;
+      if (!requiresDailyUpdate(it)) return 'Not Due Yet';
+      return it.updatedToday ? 'Updated' : 'Needs Update';
+    } },
   { key:'owner', label:'Owner', kind:'value', multi:true, sortDesc:false, getValue: itemOwnerList },
   { key:'department', label:'Department', kind:'value', multi:true, sortDesc:false, getValue: itemDeptList,
     customSort: (a,b)=> CFG.departments.indexOf(a) - CFG.departments.indexOf(b) },
@@ -2044,13 +2054,33 @@ function agingCellHtml(it){
   return `<span class="aging-num">${a.days} day${a.days===1?'':'s'}</span>`;
 }
 
+// Partition: Open / On Hold / On Track / Overdue / Closed.
+function getStatusBucket(it){
+  const status = normalizeStatus(it.status);
+  if (status === 'On Track' && it.dueDate && it.dueDate !== 'TBD' && it.daysToDue < 0) return 'Overdue';
+  return status;
+}
+
+// An item only falls under the daily "needs update" nag when it's Overdue, or its due date
+// is today. An On Track item with a future (or no) due date isn't nagged daily anymore.
+function requiresDailyUpdate(it){
+  if (normalizeStatus(it.status) === 'Closed') return false;
+  const bucket = getStatusBucket(it);
+  if (bucket === 'Overdue') return true;
+  if (!it.dueDate || it.dueDate === 'TBD') return false;
+  return it.dueDate === todayISO();
+}
+
 function wholeItemUpdCellHtml(it){
   if (it.status === 'Closed') return `<span class="muted" style="font-size:13px;">—</span>`;
   const lastUpdStr = it.lastUpdated ? formatDateTime(it.lastUpdated) : 'No updates yet';
   const byLine = it.lastUpdatedBy ? `<span class="upd-by">${escapeHtml(it.lastUpdatedBy)}</span>` : '';
+  if (!requiresDailyUpdate(it)){
+    return `<button class="upd-btn" data-action="open-update" data-id="${it.id}"><span class="upd-label">Update →</span><span class="upd-sub">Last: ${lastUpdStr}</span>${byLine}</button>`;
+  }
   return it.updatedToday
     ? `<button class="upd-btn upd-ok" data-action="open-update" data-id="${it.id}"><span class="upd-label">✓ Updated</span><span class="upd-sub">${formatTime(it.lastUpdated)}</span>${byLine}</button>`
-    : `<button class="upd-btn upd-warn" data-action="open-update" data-id="${it.id}"><span class="upd-label">Needs Update</span><span class="upd-sub">Last: ${lastUpdStr}</span>${byLine}</button>`;
+    : `<button class="upd-btn upd-warn" data-action="open-update" data-id="${it.id}"><span class="upd-label">Needs Update →</span><span class="upd-sub">Last: ${lastUpdStr}</span>${byLine}</button>`;
 }
 
 // One update button for a single department of a cross-department item.
@@ -2059,9 +2089,12 @@ function deptUpdBtnHtml(it, dept){
   const du = (it.deptUpdates && it.deptUpdates[dept]) || { t:'', by:'', updatedToday:false };
   const lastStr = du.t ? formatDateTime(du.t) : 'No updates yet';
   const byLine = du.by ? `<span class="upd-by">${escapeHtml(du.by)}</span>` : '';
+  if (!requiresDailyUpdate(it)){
+    return `<button class="upd-btn" data-action="open-update" data-id="${it.id}" data-dept="${escapeHtml(dept)}"><span class="upd-label">Update →</span><span class="upd-sub">Last: ${lastStr}</span>${byLine}</button>`;
+  }
   return du.updatedToday
     ? `<button class="upd-btn upd-ok" data-action="open-update" data-id="${it.id}" data-dept="${escapeHtml(dept)}"><span class="upd-label">✓ Updated</span><span class="upd-sub">${formatTime(du.t)}</span>${byLine}</button>`
-    : `<button class="upd-btn upd-warn" data-action="open-update" data-id="${it.id}" data-dept="${escapeHtml(dept)}"><span class="upd-label">Needs Update</span><span class="upd-sub">Last: ${lastStr}</span>${byLine}</button>`;
+    : `<button class="upd-btn upd-warn" data-action="open-update" data-id="${it.id}" data-dept="${escapeHtml(dept)}"><span class="upd-label">Needs Update →</span><span class="upd-sub">Last: ${lastStr}</span>${byLine}</button>`;
 }
 
 // Stacks one row per department (Department column and Updated Today column use the same
@@ -2116,13 +2149,6 @@ function mediaBinCellHtml(it){
   return `<div class="mediabin">${col('Before', before, 'before')}${col('Now', current, 'current')}</div>`;
 }
 
-// Partition: Open / On Hold / On Track / Overdue / Closed.
-function getStatusBucket(it){
-  const status = normalizeStatus(it.status);
-  if (status === 'On Track' && it.dueDate && it.dueDate !== 'TBD' && it.daysToDue < 0) return 'Overdue';
-  return status;
-}
-
 // Value used by the Status filter (splits Closed into on-time vs late).
 function getStatusFilterValue(it){
   const b = getStatusBucket(it);
@@ -2143,9 +2169,11 @@ function computeToolbarStats(){
   const pct = n => Math.round(n/total*100);
   const onTrack = items.filter(i=>getStatusBucket(i)==='On Track').length;
   const overdue = items.filter(i=>getStatusBucket(i)==='Overdue').length;
-  const updated = items.filter(i=>i.updatedToday).length;
+  const dueItems = items.filter(requiresDailyUpdate);
+  const updated = dueItems.filter(i=>i.updatedToday).length;
+  const updatedPct = dueItems.length ? Math.round(updated/dueItems.length*100) : 0;
 
-  return { updatedToday: pct(updated), onTrack: pct(onTrack), overdue: pct(overdue) };
+  return { updatedToday: updatedPct, onTrack: pct(onTrack), overdue: pct(overdue) };
 }
 
 function renderStatsStrip(){
@@ -2260,7 +2288,7 @@ function render(){
 // SGS pulses red whenever at least one active (non-closed) "SGS Correction" item hasn't been
 // updated today; it turns to a steady red once every active item is caught up (or there are none).
 function computeSgsNeedsAttention(){
-  return state.items.some(i => isSgsItem(i) && getStatusBucket(i) !== 'Closed' && !i.updatedToday);
+  return state.items.some(i => isSgsItem(i) && requiresDailyUpdate(i) && !i.updatedToday);
 }
 
 function updateTabCounts(){
@@ -2362,7 +2390,7 @@ function openPreview(id){
         ${departmentPillHtml(it.department)}
       </div>
       <div class="preview-meta-right">
-        ${(it.status!=='Closed' && !(it.deptList && it.deptList.length)) ? (it.updatedToday ? `<span class="upd-btn upd-ok" style="cursor:default; width:auto;">✓ Updated Today${it.lastUpdatedBy?' · '+escapeHtml(it.lastUpdatedBy):''}</span>` : `<span class="upd-btn upd-warn" style="cursor:default; width:auto;">Needs Update · Last: ${lastUpdStr}</span>`) : ''}
+        ${(it.status!=='Closed' && !(it.deptList && it.deptList.length)) ? (!requiresDailyUpdate(it) ? `<span class="upd-btn" style="cursor:default; width:auto;">Last: ${lastUpdStr}</span>` : (it.updatedToday ? `<span class="upd-btn upd-ok" style="cursor:default; width:auto;">✓ Updated Today${it.lastUpdatedBy?' · '+escapeHtml(it.lastUpdatedBy):''}</span>` : `<span class="upd-btn upd-warn" style="cursor:default; width:auto;">Needs Update · Last: ${lastUpdStr}</span>`)) : ''}
         ${statusCellHtml(it)}
       </div>
     </div>
@@ -2742,6 +2770,7 @@ function openActionModal(id, mode, opts){
   document.getElementById('updatedByWrap').hidden = (mode !== 'update');
   document.getElementById('f_updatedBy').value = '';
   document.getElementById('saveBtn').textContent = mode === 'update' ? 'Save Update' : 'Save Action';
+  document.getElementById('editModeHint').hidden = (mode !== 'edit');
 
   if (mode === 'new'){
     document.getElementById('modalTitle').textContent = 'New Action';
@@ -3145,6 +3174,7 @@ function computeNoUpdateReport(){
   state.items.forEach(it=>{
     if (getStatusBucket(it) === 'Closed') return;
     if (!isMbuMeeting(it)) return; // only MBU 1.5 / MBU 2 items
+    if (!requiresDailyUpdate(it)) return;
     if (it.updatedToday) return;
     const raw = (it.owner||'').trim();
     if (!raw || raw.toLowerCase() === 'all') return;
@@ -3265,7 +3295,7 @@ function renderPresentCard(){
             ${departmentPillHtml(it.department)}
           </div>
           <div class="present-meta-right">
-            ${(it.deptList && it.deptList.length) ? '' : `<span class="${it.updatedToday?'upd-btn upd-ok':'upd-btn upd-warn'}" style="cursor:default;">${it.updatedToday? '✓ Updated Today'+(it.lastUpdatedBy?' · '+escapeHtml(it.lastUpdatedBy):'') : 'Needs Update · Last: '+lastUpdStr}</span>`}
+            ${(it.deptList && it.deptList.length) ? '' : (!requiresDailyUpdate(it) ? `<span class="upd-btn" style="cursor:default;">Last: ${lastUpdStr}</span>` : `<span class="${it.updatedToday?'upd-btn upd-ok':'upd-btn upd-warn'}" style="cursor:default;">${it.updatedToday? '✓ Updated Today'+(it.lastUpdatedBy?' · '+escapeHtml(it.lastUpdatedBy):'') : 'Needs Update · Last: '+lastUpdStr}</span>`)}
             ${statusCellHtml(it)}
           </div>
         </div>
