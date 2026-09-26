@@ -212,6 +212,7 @@ td.nowrap{ white-space:nowrap; }
 .upd-btn:active{ transform:translateY(0); box-shadow:0 1px 2px rgba(20,20,30,.08); }
 .upd-label{ display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .upd-ok{ background:var(--good-soft); color:var(--good); border-color:var(--good); }
+.upd-update{ background:var(--warn-soft); color:var(--warn); border-color:var(--warn); }
 .upd-warn{ background:var(--bad-soft); color:var(--bad); border-color:var(--bad); border-width:2px; animation:upd-warn-pulse 2s ease-in-out infinite; }
 @keyframes upd-warn-pulse{
   0%, 100% { box-shadow:0 0 0 0 rgba(214,69,69,.35); }
@@ -966,7 +967,7 @@ html[data-xmas="on"] .present-overlay::before{
 /* ============================================================
    CONFIG / CONSTANTS
    ============================================================ */
-const CUTOFF_HOUR_DEFAULT = 12, CUTOFF_MIN_DEFAULT = 10;
+const CUTOFF_HOUR_DEFAULT = 0, CUTOFF_MIN_DEFAULT = 0;
 let CFG = {
   departments: [], statuses: [], ownersByDept: {}, allOwners: [], allNameAliases: [],
   nameToDisp: {}, nameToDept: {}, deptColors: {}, meetingSuggestions: [],
@@ -1034,17 +1035,19 @@ function itemMatchesDeptTab(it, tab){
 const FILTER_DEFS = [
   { key:'dateDiscussed', label:'Date Discussed', kind:'value', dateLike:true, sortDesc:true, getValue: it=> it.dateDiscussed || null },
   { key:'meeting', label:'Meeting', kind:'value', sortDesc:false, getValue: it=> it.meeting || null },
-  { key:'updatedToday', label:'Updated Today', kind:'fixed', optionsFn: ()=>['Updated','Needs Update','Not Due Yet','Closed Today'],
+  { key:'updatedToday', label:'Updated Today', kind:'fixed', optionsFn: ()=>['Updated','Update','Needs Update','Closed Today'],
     getValue: it => {
       if (getStatusBucket(it)==='Closed') return it.updatedToday ? 'Closed Today' : null;
-      if (!requiresDailyUpdate(it)) return 'Not Due Yet';
-      return it.updatedToday ? 'Updated' : 'Needs Update';
+      const s = updateStatusInfo(it);
+      if (s === 'updated') return 'Updated';
+      if (s === 'update') return 'Update';
+      return 'Needs Update';
     } },
   { key:'owner', label:'Owner', kind:'value', multi:true, sortDesc:false, getValue: itemOwnerList },
   { key:'department', label:'Department', kind:'value', multi:true, sortDesc:false, getValue: itemDeptList,
     customSort: (a,b)=> CFG.departments.indexOf(a) - CFG.departments.indexOf(b) },
   { key:'dueDate', label:'Due Date', kind:'value', dateLike:true, sortDesc:true, getValue: it=> (it.dueDate && it.dueDate!=='TBD') ? it.dueDate : NO_DUE_DATE_VALUE },
-  { key:'status', label:'Status', kind:'fixed', optionsFn: ()=> ['On Track','Overdue','Closed','Closed Late'], getValue: it=> getStatusFilterValue(it) || null }
+  { key:'status', label:'Status', kind:'fixed', optionsFn: ()=> ['On Track','On Hold','Overdue','Closed','Closed Late'], getValue: it=> getStatusFilterValue(it) || null }
 ];
 
 /* ============================================================
@@ -1312,7 +1315,7 @@ function demoDeriveConfig(){
   const deptColors = {};
   Object.keys(colorSeen).forEach(dept=>{ deptColors[dept] = Object.values(colorSeen[dept]).join(', '); });
   return {
-    departments, statuses: ['On Track','Closed'],
+    departments, statuses: ['On Track','On Hold','Closed'],
     ownersByDept, allOwners: Array.from(allOwnersSet).sort(), allNameAliases: Array.from(aliasSet).sort(),
     nameToDisp, nameToDept, deptColors,
     ownerRecords: DEMO_ROSTER.map(r=>({ full:r.full, disp:r.disp })),
@@ -1449,7 +1452,9 @@ function seedDemoData(){
 }
 function computeDerivedDemo(rec){
   const now = new Date();
-  const cutoff = new Date(now); cutoff.setHours(CFG.cutoffHour||12, CFG.cutoffMin||10,0,0);
+  const cutoffH = (typeof CFG.cutoffHour === 'number') ? CFG.cutoffHour : 0;
+  const cutoffM = (typeof CFG.cutoffMin === 'number') ? CFG.cutoffMin : 0;
+  const cutoff = new Date(now); cutoff.setHours(cutoffH, cutoffM, 0, 0);
   const periodStart = now < cutoff ? new Date(cutoff.getTime()-86400000) : cutoff;
   const last = rec.lastUpdated ? new Date(rec.lastUpdated) : null;
   const updatedToday = !!(last && last >= periodStart);
@@ -1466,7 +1471,7 @@ function computeDerivedDemo(rec){
    INIT
    ============================================================ */
 const CFG_DEFAULTS = {
-  departments: [], statuses: ['On Track','Closed'], ownersByDept: {},
+  departments: [], statuses: ['On Track','On Hold','Closed'], ownersByDept: {},
   allOwners: [], allNameAliases: [], nameToDisp: {}, nameToDept: {}, deptColors: {}, ownerRecords: [],
   meetingSuggestions: [], cutoffHour: CUTOFF_HOUR_DEFAULT, cutoffMin: CUTOFF_MIN_DEFAULT
 };
@@ -1983,11 +1988,12 @@ function applySortOrder(rows){
 
 const STATUS_ICON = { 'Open': '●', 'On Track': '➤', 'On Hold': '⏸', 'Closed': '✓', 'Closed Late': '✓' };
 
-// "In Progress" was renamed "On Track"; normalize old sheet rows.
+// "In Progress"/"Open" were older labels; normalize old sheet rows onto the current set:
+// On Track, On Hold, or Closed.
 function normalizeStatus(s){
-  // Only two statuses exist now: Closed, or On Track. Older rows (Open / On Hold / In Progress)
-  // are treated as On Track.
-  return s === 'Closed' ? 'Closed' : 'On Track';
+  if (s === 'Closed') return 'Closed';
+  if (s === 'On Hold') return 'On Hold';
+  return 'On Track';
 }
 
 // Closed AFTER its due date (close time = last update time). Needs a real due date.
@@ -2061,26 +2067,48 @@ function getStatusBucket(it){
   return status;
 }
 
-// An item only falls under the daily "needs update" nag when it's Overdue, or its due date
-// is today. An On Track item with a future (or no) due date isn't nagged daily anymore.
-function requiresDailyUpdate(it){
-  if (normalizeStatus(it.status) === 'Closed') return false;
-  const bucket = getStatusBucket(it);
-  if (bucket === 'Overdue') return true;
-  if (!it.dueDate || it.dueDate === 'TBD') return false;
-  return it.dueDate === todayISO();
+// Three-state update status for a whole item:
+//  - 'updated' (green)  — updated today (any bucket, including Overdue)
+//  - 'needs'   (red)    — either never updated at all, OR Overdue and not updated today
+//                          (this is the old "daily nag", now scoped to Overdue only, midnight cutoff)
+//  - 'update'  (orange) — On Track / On Hold, has a real update history, just not touched today
+// Closed items return null (callers show a dash instead).
+function updateStatusInfo(it){
+  if (normalizeStatus(it.status) === 'Closed') return null;
+  if (it.updatedToday) return 'updated';
+  if (getStatusBucket(it) === 'Overdue') return 'needs';
+  return it.lastUpdated ? 'update' : 'needs';
+}
+
+// Read-only version of the three-state badge, for Preview / Present Mode (not a button).
+function updateStatusBadgeHtml(it, lastUpdStr, widthAuto){
+  const style = widthAuto ? 'cursor:default; width:auto;' : 'cursor:default;';
+  const state = updateStatusInfo(it);
+  if (state === 'updated') return `<span class="upd-btn upd-ok" style="${style}">✓ Updated Today${it.lastUpdatedBy?' · '+escapeHtml(it.lastUpdatedBy):''}</span>`;
+  if (state === 'update') return `<span class="upd-btn upd-update" style="${style}">Update · Last: ${lastUpdStr}</span>`;
+  return `<span class="upd-btn upd-warn" style="${style}">Needs Update · Last: ${lastUpdStr}</span>`;
+}
+
+// Same three states, for one department's own update record on a cross-department item.
+function deptUpdateStatusInfo(it, du){
+  if (normalizeStatus(it.status) === 'Closed') return null;
+  if (du.updatedToday) return 'updated';
+  if (getStatusBucket(it) === 'Overdue') return 'needs';
+  return du.t ? 'update' : 'needs';
 }
 
 function wholeItemUpdCellHtml(it){
   if (it.status === 'Closed') return `<span class="muted" style="font-size:13px;">—</span>`;
   const lastUpdStr = it.lastUpdated ? formatDateTime(it.lastUpdated) : 'No updates yet';
   const byLine = it.lastUpdatedBy ? `<span class="upd-by">${escapeHtml(it.lastUpdatedBy)}</span>` : '';
-  if (!requiresDailyUpdate(it)){
-    return `<button class="upd-btn" data-action="open-update" data-id="${it.id}"><span class="upd-label">Update →</span><span class="upd-sub">Last: ${lastUpdStr}</span>${byLine}</button>`;
+  const state = updateStatusInfo(it);
+  if (state === 'updated'){
+    return `<button class="upd-btn upd-ok" data-action="open-update" data-id="${it.id}"><span class="upd-label">✓ Updated</span><span class="upd-sub">${formatTime(it.lastUpdated)}</span>${byLine}</button>`;
   }
-  return it.updatedToday
-    ? `<button class="upd-btn upd-ok" data-action="open-update" data-id="${it.id}"><span class="upd-label">✓ Updated</span><span class="upd-sub">${formatTime(it.lastUpdated)}</span>${byLine}</button>`
-    : `<button class="upd-btn upd-warn" data-action="open-update" data-id="${it.id}"><span class="upd-label">Needs Update →</span><span class="upd-sub">Last: ${lastUpdStr}</span>${byLine}</button>`;
+  if (state === 'update'){
+    return `<button class="upd-btn upd-update" data-action="open-update" data-id="${it.id}"><span class="upd-label">Update →</span><span class="upd-sub">Last: ${lastUpdStr}</span>${byLine}</button>`;
+  }
+  return `<button class="upd-btn upd-warn" data-action="open-update" data-id="${it.id}"><span class="upd-label">Needs Update →</span><span class="upd-sub">Last: ${lastUpdStr}</span>${byLine}</button>`;
 }
 
 // One update button for a single department of a cross-department item.
@@ -2089,12 +2117,14 @@ function deptUpdBtnHtml(it, dept){
   const du = (it.deptUpdates && it.deptUpdates[dept]) || { t:'', by:'', updatedToday:false };
   const lastStr = du.t ? formatDateTime(du.t) : 'No updates yet';
   const byLine = du.by ? `<span class="upd-by">${escapeHtml(du.by)}</span>` : '';
-  if (!requiresDailyUpdate(it)){
-    return `<button class="upd-btn" data-action="open-update" data-id="${it.id}" data-dept="${escapeHtml(dept)}"><span class="upd-label">Update →</span><span class="upd-sub">Last: ${lastStr}</span>${byLine}</button>`;
+  const state = deptUpdateStatusInfo(it, du);
+  if (state === 'updated'){
+    return `<button class="upd-btn upd-ok" data-action="open-update" data-id="${it.id}" data-dept="${escapeHtml(dept)}"><span class="upd-label">✓ Updated</span><span class="upd-sub">${formatTime(du.t)}</span>${byLine}</button>`;
   }
-  return du.updatedToday
-    ? `<button class="upd-btn upd-ok" data-action="open-update" data-id="${it.id}" data-dept="${escapeHtml(dept)}"><span class="upd-label">✓ Updated</span><span class="upd-sub">${formatTime(du.t)}</span>${byLine}</button>`
-    : `<button class="upd-btn upd-warn" data-action="open-update" data-id="${it.id}" data-dept="${escapeHtml(dept)}"><span class="upd-label">Needs Update →</span><span class="upd-sub">Last: ${lastStr}</span>${byLine}</button>`;
+  if (state === 'update'){
+    return `<button class="upd-btn upd-update" data-action="open-update" data-id="${it.id}" data-dept="${escapeHtml(dept)}"><span class="upd-label">Update →</span><span class="upd-sub">Last: ${lastStr}</span>${byLine}</button>`;
+  }
+  return `<button class="upd-btn upd-warn" data-action="open-update" data-id="${it.id}" data-dept="${escapeHtml(dept)}"><span class="upd-label">Needs Update →</span><span class="upd-sub">Last: ${lastStr}</span>${byLine}</button>`;
 }
 
 // Stacks one row per department (Department column and Updated Today column use the same
@@ -2169,11 +2199,9 @@ function computeToolbarStats(){
   const pct = n => Math.round(n/total*100);
   const onTrack = items.filter(i=>getStatusBucket(i)==='On Track').length;
   const overdue = items.filter(i=>getStatusBucket(i)==='Overdue').length;
-  const dueItems = items.filter(requiresDailyUpdate);
-  const updated = dueItems.filter(i=>i.updatedToday).length;
-  const updatedPct = dueItems.length ? Math.round(updated/dueItems.length*100) : 0;
+  const updated = items.filter(i=>i.updatedToday).length;
 
-  return { updatedToday: updatedPct, onTrack: pct(onTrack), overdue: pct(overdue) };
+  return { updatedToday: pct(updated), onTrack: pct(onTrack), overdue: pct(overdue) };
 }
 
 function renderStatsStrip(){
@@ -2288,7 +2316,7 @@ function render(){
 // SGS pulses red whenever at least one active (non-closed) "SGS Correction" item hasn't been
 // updated today; it turns to a steady red once every active item is caught up (or there are none).
 function computeSgsNeedsAttention(){
-  return state.items.some(i => isSgsItem(i) && requiresDailyUpdate(i) && !i.updatedToday);
+  return state.items.some(i => isSgsItem(i) && updateStatusInfo(i) === 'needs');
 }
 
 function updateTabCounts(){
@@ -2390,7 +2418,7 @@ function openPreview(id){
         ${departmentPillHtml(it.department)}
       </div>
       <div class="preview-meta-right">
-        ${(it.status!=='Closed' && !(it.deptList && it.deptList.length)) ? (!requiresDailyUpdate(it) ? `<span class="upd-btn" style="cursor:default; width:auto;">Last: ${lastUpdStr}</span>` : (it.updatedToday ? `<span class="upd-btn upd-ok" style="cursor:default; width:auto;">✓ Updated Today${it.lastUpdatedBy?' · '+escapeHtml(it.lastUpdatedBy):''}</span>` : `<span class="upd-btn upd-warn" style="cursor:default; width:auto;">Needs Update · Last: ${lastUpdStr}</span>`)) : ''}
+        ${(it.status!=='Closed' && !(it.deptList && it.deptList.length)) ? updateStatusBadgeHtml(it, lastUpdStr, true) : ''}
         ${statusCellHtml(it)}
       </div>
     </div>
@@ -3174,8 +3202,7 @@ function computeNoUpdateReport(){
   state.items.forEach(it=>{
     if (getStatusBucket(it) === 'Closed') return;
     if (!isMbuMeeting(it)) return; // only MBU 1.5 / MBU 2 items
-    if (!requiresDailyUpdate(it)) return;
-    if (it.updatedToday) return;
+    if (updateStatusInfo(it) !== 'needs') return;
     const raw = (it.owner||'').trim();
     if (!raw || raw.toLowerCase() === 'all') return;
     const parts = raw.split(',').map(s=>s.trim()).filter(Boolean);
@@ -3295,7 +3322,7 @@ function renderPresentCard(){
             ${departmentPillHtml(it.department)}
           </div>
           <div class="present-meta-right">
-            ${(it.deptList && it.deptList.length) ? '' : (!requiresDailyUpdate(it) ? `<span class="upd-btn" style="cursor:default;">Last: ${lastUpdStr}</span>` : `<span class="${it.updatedToday?'upd-btn upd-ok':'upd-btn upd-warn'}" style="cursor:default;">${it.updatedToday? '✓ Updated Today'+(it.lastUpdatedBy?' · '+escapeHtml(it.lastUpdatedBy):'') : 'Needs Update · Last: '+lastUpdStr}</span>`)}
+            ${(it.deptList && it.deptList.length) ? '' : updateStatusBadgeHtml(it, lastUpdStr, false)}
             ${statusCellHtml(it)}
           </div>
         </div>
