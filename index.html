@@ -2917,6 +2917,20 @@ function openActionModal(id, mode, opts){
   document.getElementById('saveBtn').textContent = mode === 'update' ? 'Save Update' : 'Save Action';
   document.getElementById('editModeHint').hidden = (mode !== 'edit');
   document.getElementById('f_remarksLabel').classList.toggle('is-required', mode === 'update');
+  // Edit mode: the Update note becomes required only if this item already has an Update history.
+  state.editNeedsRemarks = false;
+  state.editHistoryPromise = null;
+  if (mode === 'edit' && id){
+    const reqId = id;
+    state.editHistoryPromise = run('getHistory', reqId).then(h=>{
+      const needs = Array.isArray(h) && h.length > 0;
+      if (state.editingId === reqId && state.modalMode === 'edit'){
+        state.editNeedsRemarks = needs;
+        document.getElementById('f_remarksLabel').classList.toggle('is-required', needs);
+      }
+      return needs;
+    }).catch(()=> false);
+  }
 
   if (mode === 'new'){
     document.getElementById('modalTitle').textContent = 'New Action';
@@ -3116,7 +3130,7 @@ function validateForm(mode){
   if (!vals.meeting) missing.push('meeting');
   if (!vals.issues) missing.push('issues');
   if (!vals.details) missing.push('details');
-  if (mode === 'update' && !vals.remarks) missing.push('remarks');
+  if ((mode === 'update' || (mode === 'edit' && state.editNeedsRemarks)) && !vals.remarks) missing.push('remarks');
   if (!ownerResolved) missing.push('owner');
   if (!deptResolved) missing.push('department');
   if (!vals.inputBy || !isValidChoice(vals.inputBy, CFG.allNameAliases)) missing.push('inputBy');
@@ -3178,6 +3192,7 @@ function computeChangedFieldLabels(payload, skipRemarks){
 
 async function saveAction(){
   const mode = state.modalMode;
+  if (mode === 'edit' && state.editHistoryPromise) await state.editHistoryPromise;
   const vals = validateForm(mode);
   if (!vals) return;
 
