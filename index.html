@@ -920,7 +920,7 @@ html[data-hween="on"] .present-overlay::before{
         <label id="f_remarksLabel">Update</label>
         <div id="updateDeptNote" class="dept-update-note" style="display:none; text-align:left; padding:0 0 6px;"></div>
         <div id="updateDeptPrevRemarks" class="prev-remarks-box" hidden><span class="prev-remarks-label">Previous note:</span> <span class="prev-remarks-text"></span></div>
-        <textarea id="f_remarks" placeholder="Write this update notes here (starts blank on purpose, so each update is its own dated entry in History)"></textarea>
+        <textarea id="f_remarks" placeholder="Write your update note here (an existing note is cleared when you click here)"></textarea>
         <span class="field-error-msg">Please write an update note before saving.</span>
       </div>
 
@@ -2261,7 +2261,7 @@ function deptUpdateBlocksHtml(it, actionName, valueClass){
       <div class="mcard-dept-row" data-action="${actionName}" data-dept="${escapeHtml(d)}" style="${it.status!=='Closed' ? 'cursor:pointer;' : ''}">
         ${singleDeptPillHtml(d)}${deptUpdBtnHtml(it, d)}
       </div>
-      <div class="${valueClass}" style="margin-top:8px; white-space:pre-wrap; overflow-wrap:break-word;">${remarksHtml}</div>
+      <div class="${valueClass}" ${(du && du.remarks) ? '' : 'data-lastnote="'+escapeHtml(d)+'"'} style="margin-top:8px; white-space:pre-wrap; overflow-wrap:break-word;">${remarksHtml}</div>
     </div>`;
   }).join('');
 }
@@ -2549,7 +2549,7 @@ function openPreview(id){
     </div>` : ''}
     <div class="preview-grid">
       <div class="preview-block"><span class="preview-label">Details</span><span class="preview-value">${escapeHtml(it.details)||'—'}</span></div>
-      ${(it.deptList && it.deptList.length) ? '' : `<div class="preview-block"><span class="preview-label">Update</span><span class="preview-value">${escapeHtml(it.remarks)||'—'}</span></div>`}
+      ${(it.deptList && it.deptList.length) ? '' : `<div class="preview-block"><span class="preview-label">Update</span><span class="preview-value" ${it.remarks ? '' : 'data-lastnote=""'}>${escapeHtml(it.remarks)||'—'}</span></div>`}
       <div class="preview-block"><span class="preview-label">Owner</span><span class="preview-value">${escapeHtml(it.owner)||'—'}</span></div>
       <div class="preview-block"><span class="preview-label">Input By</span><span class="preview-value">${escapeHtml(it.inputBy)||'—'}</span></div>
       <div class="preview-block"><span class="preview-label">Updated By</span><span class="preview-value">${escapeHtml(it.lastUpdatedBy)||'—'}</span></div>
@@ -2579,6 +2579,24 @@ function openPreview(id){
   document.getElementById('previewUpdateBtn').hidden = !!(it.deptList && it.deptList.length);
   document.getElementById('previewOverlay').hidden = false;
   document.getElementById('previewModal').scrollTop = 0;
+  fillLastNotes(it, document.getElementById('previewBody'));
+}
+// If an item's current note is blank (e.g. an older update saved without text), show the most
+// recent non-empty note from its History instead. Elements opt in with data-lastnote="" (whole
+// item) or data-lastnote="DEPT" (one department of a cross-department item).
+async function fillLastNotes(it, root){
+  const targets = root.querySelectorAll('[data-lastnote]');
+  if (!targets.length) return;
+  let hist;
+  try { hist = await run('getHistory', it.id); } catch (e) { return; }
+  if (!Array.isArray(hist)) return;
+  targets.forEach(el=>{
+    if (!el.isConnected) return;
+    const dept = el.getAttribute('data-lastnote');
+    const h = hist.find(x => (x.remarks||'').trim() && (dept ? x.updateDept === dept : !x.updateDept));
+    if (!h) return;
+    el.innerHTML = escapeHtml(h.remarks) + ' <span class="muted" style="font-size:12px;">(last note' + (h.timestamp ? ' · ' + formatDateTime(h.timestamp) : '') + ')</span>';
+  });
 }
 function closePreview(){ document.getElementById('previewOverlay').hidden = true; }
 
@@ -2984,9 +3002,8 @@ function openActionModal(id, mode, opts){
           note.style.display = 'none';
           prevText = it.remarks || '';
         }
-        document.getElementById('f_remarks').value = '';
-        if (prevText){ prevWrap.hidden = false; prevWrap.querySelector('.prev-remarks-text').textContent = prevText; }
-        else { prevWrap.hidden = true; }
+        document.getElementById('f_remarks').value = prevText;   // kept as-is unless the user clicks into the box
+        prevWrap.hidden = true;
       } else {
         // Edit mode still shows the current value, since editing corrects existing data.
         document.getElementById('f_remarksLabel').textContent = 'Update';
@@ -3028,6 +3045,8 @@ function openActionModal(id, mode, opts){
       dueDate: noDate ? '' : (it.dueDate || '')
     };
   }
+  state.remarksCleared = false;
+  state.remarksPrefilled = !!document.getElementById('f_remarks').value;
   document.getElementById('actionOverlay').hidden = false;
   document.getElementById('actionModal').scrollTop = 0;
 }
@@ -3471,7 +3490,7 @@ function renderPresentCard(){
         </div>` : ''}
         <div class="present-grid">
           <div><div class="present-label">Details</div><div class="present-value">${escapeHtml(it.details)||'—'}</div></div>
-          ${(it.deptList && it.deptList.length) ? '' : `<div><div class="present-label">Update</div><div class="present-value">${escapeHtml(it.remarks)||'—'}</div></div>`}
+          ${(it.deptList && it.deptList.length) ? '' : `<div><div class="present-label">Update</div><div class="present-value" ${it.remarks ? '' : 'data-lastnote=""'}>${escapeHtml(it.remarks)||'—'}</div></div>`}
           <div><div class="present-label">Owner</div><div class="present-value">${escapeHtml(it.owner)||'—'}</div></div>
           <div><div class="present-label">Updated By</div><div class="present-value">${escapeHtml(it.lastUpdatedBy)||'—'}</div></div>
           <div><div class="present-label">Meeting</div><div class="present-value">${escapeHtml(it.meeting)||'—'}</div></div>
@@ -3497,6 +3516,7 @@ function renderPresentCard(){
     row.addEventListener('click', ()=> openActionModal(it.id, 'update', { updateDept: row.dataset.dept }));
   });
   document.getElementById('presentMarkUpdated').hidden = !!(it.deptList && it.deptList.length);
+  fillLastNotes(it, document.getElementById('presentBody'));
 }
 
 function presentNav(dir){
@@ -3524,6 +3544,10 @@ function bindEvents(){
   document.getElementById('closeModalBtn').addEventListener('click', closeActionModal);
   document.getElementById('cancelBtn').addEventListener('click', closeActionModal);
   document.getElementById('saveBtn').addEventListener('click', saveAction);
+  // Existing note stays if untouched; the first time the user clicks into the box it is cleared.
+  document.getElementById('f_remarks').addEventListener('focus', (e)=>{
+    if (state.remarksPrefilled && !state.remarksCleared){ e.target.value = ''; state.remarksCleared = true; }
+  });
   document.getElementById('deleteBtn').addEventListener('click', deleteCurrentAction);
   document.getElementById('previewHistoryBtn').addEventListener('click', ()=> openHistory(state.previewId));
   document.getElementById('presentHistoryBtn').addEventListener('click', ()=>{
