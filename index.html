@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -1765,7 +1765,7 @@ function buildStaticOptions(){
    THEME + MOBILE MODE
    ============================================================ */
 function applyStoredTheme(){
-  const saved = localStorage.getItem('AR_THEME') || 'light';
+  const saved = localStorage.getItem('AR_THEME') || 'dark';
   document.documentElement.setAttribute('data-theme', saved);
   document.getElementById('themeToggle').textContent = saved==='dark' ? '☀️' : '🌙';
 }
