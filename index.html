@@ -3922,7 +3922,7 @@ function setHween(on, quiet){
     root.style.removeProperty('--hween-bg-image');
   }
   try { localStorage.setItem(HWEEN_KEY, on ? 'on' : 'off'); } catch (e) {}
-  if (on) startHweenFx(); else stopHweenFx();
+  if (on){ startHweenFx(); startHweenMusic(); } else { stopHweenFx(); stopHweenMusic(); }
   if (!quiet) hweenToast(on ? '🎃 Happy Halloween!' : 'Halloween mode off');
 }
 
@@ -3971,7 +3971,7 @@ function startHweenFx(){
     W = window.innerWidth; H = window.innerHeight;
     canvas.width = W * dpr; canvas.height = H * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const n = W < 720 ? 16 : 26;
+    const n = W < 720 ? 30 : 50;
     while (bits.length < n) bits.push(make(true));
     bits.length = n;
   }
@@ -3980,7 +3980,7 @@ function startHweenFx(){
     return {
       x: Math.random() * W,
       y: isBat ? (initial ? Math.random() * H : -20 - Math.random() * 40) : (-10 - (initial ? Math.random() * H : Math.random() * 40)),
-      r: Math.random() * 8 + 12,
+      r: Math.random() * 18 + 26,
       s: Math.random() * 0.6 + (isBat ? 0.35 : 0.5),
       d: Math.random() * Math.PI * 2, w: Math.random() * 0.03 + 0.01,
       o: Math.random() * 0.3 + 0.65,
@@ -4022,6 +4022,161 @@ function startHweenFx(){
 
 function stopHweenFx(){
   if (_hweenFx){ _hweenFx.stop(); _hweenFx = null; }
+}
+
+/* ============================================================
+   HALLOWEEN MUSIC
+   - Plays only while the Halloween theme is on.
+   - Same shuffle-bag mechanism as the Christmas music: every track plays once in random
+     order before any repeats, and a round never starts with the track that just played.
+   - Files live in a "halloween" folder next to index.html (same hosting rule as the
+     Christmas "music" folder and the Halloween background image).
+   - EDIT THIS LIST to match the actual filenames you add to the "halloween" folder.
+   ============================================================ */
+// EDIT THIS if you fork the repo or rename it — points at the GitHub repo whose "halloween"
+// folder holds the music files. The folder is read live via the GitHub API, so any number of
+// files, with any filename, in any of the common audio formats, is picked up automatically —
+// nothing else needs to change when you add or remove tracks.
+const HWEEN_REPO = 'ci-kltfruits/Action-Register2026';
+const HWEEN_FOLDER = 'halloween';
+const HWEEN_AUDIO_EXT = /\.(mp3|wav|ogg|oga|m4a|aac|flac|webm|opus)$/i;
+const HWEEN_TRACKLIST_CACHE_KEY = 'AR_HWEEN_TRACKS_CACHE';
+const HWEEN_TRACKLIST_CACHE_MS = 60 * 60 * 1000;   // re-check the folder at most once an hour
+
+async function fetchHweenTrackList(){
+  try {
+    const cached = sessionStorage.getItem(HWEEN_TRACKLIST_CACHE_KEY);
+    if (cached){
+      const obj = JSON.parse(cached);
+      if (obj && Array.isArray(obj.urls) && (Date.now() - obj.t) < HWEEN_TRACKLIST_CACHE_MS) return obj.urls;
+    }
+  } catch (e) {}
+  try {
+    const res = await fetch('https://api.github.com/repos/' + HWEEN_REPO + '/contents/' + HWEEN_FOLDER);
+    if (!res.ok) throw new Error('GitHub API responded ' + res.status);
+    const data = await res.json();
+    const urls = (Array.isArray(data) ? data : [])
+      .filter(f => f && f.type === 'file' && HWEEN_AUDIO_EXT.test(f.name))
+      .map(f => f.download_url);
+    try { sessionStorage.setItem(HWEEN_TRACKLIST_CACHE_KEY, JSON.stringify({ t: Date.now(), urls: urls })); } catch (e) {}
+    return urls;
+  } catch (err) {
+    console.warn('Halloween music: could not list files in the "' + HWEEN_FOLDER + '" folder.', err);
+    return [];
+  }
+}
+
+const HWEEN_MUTE_KEY = 'AR_HWEEN_MUTE';
+const _hweenMusic = { audio: null, queue: [], last: null, current: null, tracks: null, active: false, errors: 0, waiting: false };
+
+function _refillHweenQueue(){
+  const q = _shuffle((_hweenMusic.tracks || []).slice());
+  if (_hweenMusic.last && q.length > 1 && q[0] === _hweenMusic.last){
+    const k = 1 + Math.floor(Math.random() * (q.length - 1));
+    [q[0], q[k]] = [q[k], q[0]];
+  }
+  _hweenMusic.queue = q;
+}
+
+function _playHweenCurrent(){
+  const a = _hweenMusic.audio;
+  if (!a || !_hweenMusic.active || !_hweenMusic.current) return;
+  const p = a.play();
+  if (p && p.catch){
+    p.catch(err=>{
+      if (!_hweenMusic.active) return;
+      if (err && err.name === 'NotAllowedError') _waitForHweenGesture();
+      else if (err && err.name !== 'AbortError') _onHweenTrackError();
+    });
+  }
+}
+
+function _playNextHweenTrack(){
+  if (!_hweenMusic.active) return;
+  if (!_hweenMusic.queue.length) _refillHweenQueue();
+  if (!_hweenMusic.queue.length) { _hweenMusic.active = false; return; }   // folder had no playable files
+  const track = _hweenMusic.queue.shift();
+  _hweenMusic.current = track;
+  _hweenMusic.last = track;
+  _hweenMusic.audio.src = track;   // already a full, direct download URL
+  _playHweenCurrent();
+}
+
+function _onHweenTrackError(){
+  _hweenMusic.errors++;
+  console.warn('Halloween music: could not play', _hweenMusic.current);
+  const trackCount = (_hweenMusic.tracks || []).length || 1;
+  if (_hweenMusic.errors >= trackCount * 2){ _hweenMusic.active = false; return; }
+  _playNextHweenTrack();
+}
+
+function _waitForHweenGesture(){
+  if (_hweenMusic.waiting) return;
+  _hweenMusic.waiting = true;
+  const evs = ['pointerdown', 'keydown', 'touchstart'];
+  const go = ()=>{
+    evs.forEach(ev => document.removeEventListener(ev, go, true));
+    _hweenMusic.waiting = false;
+    _playHweenCurrent();
+  };
+  evs.forEach(ev => document.addEventListener(ev, go, true));
+}
+
+function _ensureHweenMuteButton(){
+  if (document.getElementById('hweenMuteBtn')) return;
+  const b = document.createElement('button');
+  b.id = 'hweenMuteBtn';
+  b.type = 'button';
+  b.title = 'Mute / unmute Halloween music';
+  b.style.cssText = 'position:fixed; left:50%; bottom:20px; transform:translateX(-50%); z-index:60; width:36px; height:36px; border-radius:50%; border:2px solid var(--hween-orange, #D9660B); background:var(--surface); color:var(--ink); font-size:16px; cursor:pointer; box-shadow:var(--shadow); padding:0;';
+  b.addEventListener('click', ()=>{
+    const muted = !(_hweenMusic.audio && _hweenMusic.audio.muted);
+    if (_hweenMusic.audio) _hweenMusic.audio.muted = muted;
+    try { localStorage.setItem(HWEEN_MUTE_KEY, muted ? '1' : '0'); } catch (e) {}
+    b.textContent = muted ? '🔇' : '🔊';
+  });
+  document.body.appendChild(b);
+  b.textContent = (_hweenMusic.audio && _hweenMusic.audio.muted) ? '🔇' : '🔊';
+}
+
+async function startHweenMusic(){
+  if (_hweenMusic.active) return;
+  _hweenMusic.active = true;   // mark intent immediately so a fast toggle-off still stops cleanly
+  if (!_hweenMusic.tracks){
+    _hweenMusic.tracks = await fetchHweenTrackList();
+  }
+  if (!_hweenMusic.active) return;   // theme was turned off again while the folder was loading
+  if (!_hweenMusic.tracks.length){ _hweenMusic.active = false; return; }   // no audio files found — skip silently
+  if (!_hweenMusic.audio){
+    const a = new Audio();
+    a.preload = 'auto';
+    a.volume = 0.5;
+    a.addEventListener('ended', _playNextHweenTrack);
+    a.addEventListener('error', ()=>{ if (_hweenMusic.active) _onHweenTrackError(); });
+    a.addEventListener('playing', ()=>{ _hweenMusic.errors = 0; });
+    _hweenMusic.audio = a;
+  }
+  let muted = false;
+  try { muted = localStorage.getItem(HWEEN_MUTE_KEY) === '1'; } catch (e) {}
+  _hweenMusic.audio.muted = muted;
+  _hweenMusic.errors = 0;
+  _refillHweenQueue();
+  _ensureHweenMuteButton();
+  _playNextHweenTrack();
+}
+
+function stopHweenMusic(){
+  _hweenMusic.active = false;
+  _hweenMusic.waiting = false;
+  _hweenMusic.queue = [];
+  _hweenMusic.current = null;
+  if (_hweenMusic.audio){
+    _hweenMusic.audio.pause();
+    _hweenMusic.audio.removeAttribute('src');
+    _hweenMusic.audio.load();
+  }
+  const b = document.getElementById('hweenMuteBtn');
+  if (b) b.remove();
 }
 
 init();
