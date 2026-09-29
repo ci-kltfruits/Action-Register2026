@@ -3627,6 +3627,7 @@ function loadXmasBackground(){
 }
 
 function setXmas(on, quiet){
+  if (on && isHweenOn()) setHween(false, true);
   const root = document.documentElement;
   if (on && isHweenOn()) setHween(false, true);   // themes are exclusive — turn the other one off first
   if (on){
@@ -3913,6 +3914,7 @@ function loadHweenBackground(){
 }
 
 function setHween(on, quiet){
+  if (on && isXmasOn()) setXmas(false, true);
   const root = document.documentElement;
   if (on && isXmasOn()) setXmas(false, true);   // themes are exclusive — turn the other one off first
   if (on){
@@ -3957,7 +3959,8 @@ function bindHalloweenEgg(){
   });
 }
 
-// Falling bats + drifting leaves, mirroring startSnow()'s canvas approach.
+// Falling bats + drifting leaves. Emoji are pre-rendered once into sprites, then blitted with
+// drawImage each frame (much cheaper than calling fillText on color emoji every frame).
 function startHweenFx(){
   if (_hweenFx) return;
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -3966,14 +3969,26 @@ function startHweenFx(){
   canvas.style.cssText = 'position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:9999;';
   document.body.appendChild(canvas);
   const ctx = canvas.getContext('2d');
-  let W = 0, H = 0, bits = [], raf = 0;
+  let W = 0, H = 0, dpr = 1, bits = [], raf = 0;
+
+  function makeSprite(ch){
+    const c = document.createElement('canvas');
+    c.width = c.height = 64;
+    const g = c.getContext('2d');
+    g.font = '52px sans-serif';
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillText(ch, 32, 34);
+    return c;
+  }
+  const batImg = makeSprite('\u{1F987}');
+  const leafImg = makeSprite('\u{1F342}');
 
   function resize(){
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
     W = window.innerWidth; H = window.innerHeight;
     canvas.width = W * dpr; canvas.height = H * dpr;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const n = W < 720 ? 46 : 78;
+    const n = W < 720 ? 60 : 110;
     while (bits.length < n) bits.push(make(true));
     bits.length = n;
   }
@@ -3982,8 +3997,8 @@ function startHweenFx(){
     return {
       x: Math.random() * W,
       y: isBat ? (initial ? Math.random() * H : -20 - Math.random() * 40) : (-10 - (initial ? Math.random() * H : Math.random() * 40)),
-      r: Math.random() * 7 + 9,
-      s: Math.random() * 0.6 + (isBat ? 0.35 : 0.5),
+      r: Math.random() * 8 + 13,
+      s: Math.random() * 0.6 + (isBat ? 0.55 : 0.8),
       d: Math.random() * Math.PI * 2, w: Math.random() * 0.03 + 0.01,
       o: Math.random() * 0.3 + 0.65,
       bat: isBat, rot: 0, rotSpeed: isBat ? 0 : (Math.random() * 0.02 - 0.01)
@@ -3992,11 +4007,12 @@ function startHweenFx(){
   function frame(){
     raf = requestAnimationFrame(frame);
     if (document.hidden) return;
-    ctx.clearRect(0, 0, W, H);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     for (const b of bits){
       if (b.bat){
         b.x += Math.sin(b.d) * 1.1;
-        b.y += b.s * 0.6;
+        b.y += b.s * 0.75;
         b.d += b.w * 2;
       } else {
         b.y += b.s;
@@ -4006,15 +4022,19 @@ function startHweenFx(){
       }
       if (b.y > H + 20){ Object.assign(b, make(false)); b.x = Math.random() * W; }
       if (b.x > W + 20) b.x = -20; else if (b.x < -20) b.x = W + 20;
-      ctx.save();
-      ctx.translate(b.x, b.y);
-      if (!b.bat) ctx.rotate(b.rot);
+
+      const size = b.r * 1.2;
       ctx.globalAlpha = b.o;
-      ctx.font = b.r + 'px sans-serif';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(b.bat ? '🦇' : '🍂', 0, 0);
-      ctx.restore();
+      if (b.bat){
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.drawImage(batImg, b.x - size / 2, b.y - size / 2, size, size);
+      } else {
+        const c = Math.cos(b.rot) * dpr, sn = Math.sin(b.rot) * dpr;
+        ctx.setTransform(c, sn, -sn, c, b.x * dpr, b.y * dpr);
+        ctx.drawImage(leafImg, -size / 2, -size / 2, size, size);
+      }
     }
+    ctx.globalAlpha = 1;
   }
   window.addEventListener('resize', resize);
   resize();
