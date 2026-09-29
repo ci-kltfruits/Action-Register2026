@@ -285,6 +285,7 @@ tbody tr.tr-multidept td{ height:auto; max-height:none; vertical-align:top; padd
 .field{ display:grid; gap:6px; position:relative; }
 .field label{ font-size:12.5px; font-weight:700; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.3px; }
 .field label .req{ color:var(--bad); }
+.field label.is-required::after{ content:" *"; color:var(--bad); }
 .field input[type=text], .field input[type=date], .field textarea, .field select, .field input[type=file]{ border:1px solid var(--border); background:var(--bg); color:var(--ink); padding:10px 11px; border-radius:8px; font-size:14.5px; width:100%; }
 .field textarea{ min-height:66px; resize:vertical; }
 .field.field-error input[type=text], .field.field-error input[type=date], .field.field-error textarea, .field.field-error select{ border-color:var(--bad); background:var(--bad-soft); }
@@ -915,11 +916,12 @@ html[data-hween="on"] .present-overlay::before{
         <textarea id="f_details" placeholder="Context, scope, background"></textarea>
         <span class="field-error-msg">Details are required.</span>
       </div>
-      <div class="field">
+      <div class="field" data-field="remarks">
         <label id="f_remarksLabel">Update</label>
         <div id="updateDeptNote" class="dept-update-note" style="display:none; text-align:left; padding:0 0 6px;"></div>
         <div id="updateDeptPrevRemarks" class="prev-remarks-box" hidden><span class="prev-remarks-label">Previous note:</span> <span class="prev-remarks-text"></span></div>
         <textarea id="f_remarks" placeholder="Write this update notes here (starts blank on purpose, so each update is its own dated entry in History)"></textarea>
+        <span class="field-error-msg">Please write an update note before saving.</span>
       </div>
 
       <div class="row2">
@@ -2914,6 +2916,7 @@ function openActionModal(id, mode, opts){
   document.getElementById('f_updatedBy').value = '';
   document.getElementById('saveBtn').textContent = mode === 'update' ? 'Save Update' : 'Save Action';
   document.getElementById('editModeHint').hidden = (mode !== 'edit');
+  document.getElementById('f_remarksLabel').classList.toggle('is-required', mode === 'update');
 
   if (mode === 'new'){
     document.getElementById('modalTitle').textContent = 'New Action';
@@ -3099,7 +3102,8 @@ function validateForm(mode){
     status: document.getElementById('f_status').value,
     noDateYet: document.getElementById('f_noDateYet').checked,
     dueDate: document.getElementById('f_dueDate').value,
-    updatedBy: document.getElementById('f_updatedBy').value.trim()
+    updatedBy: document.getElementById('f_updatedBy').value.trim(),
+    remarks: document.getElementById('f_remarks').value.trim()
   };
 
   const ownerResolved = resolveMultiNameField(vals.owner);
@@ -3112,6 +3116,7 @@ function validateForm(mode){
   if (!vals.meeting) missing.push('meeting');
   if (!vals.issues) missing.push('issues');
   if (!vals.details) missing.push('details');
+  if (mode === 'update' && !vals.remarks) missing.push('remarks');
   if (!ownerResolved) missing.push('owner');
   if (!deptResolved) missing.push('department');
   if (!vals.inputBy || !isValidChoice(vals.inputBy, CFG.allNameAliases)) missing.push('inputBy');
