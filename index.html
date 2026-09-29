@@ -651,6 +651,119 @@ html[data-xmas="on"] .present-overlay::before{
   background:repeating-linear-gradient(135deg,#C62F3B 0 12px,#FFFFFF 12px 24px,#1E7B45 24px 36px,#FFFFFF 36px 48px);
 }
 
+/* ============================================================
+   HALLOWEEN THEME (hidden easter egg — type "halloween" in the All view)
+   Jack-o'-lantern orange, midnight purple/black, and a sickly green accent.
+   ============================================================ */
+html[data-hween="on"][data-theme="light"]{
+  --bg:#EDE6F4; --surface:#FBF8FD; --surface-2:#E4D9EE; --border:#CBB8DE;
+  --ink:#241732; --ink-dim:#6E5A85;
+  --accent:#D9660B; --accent-ink:#FFFFFF; --accent-soft:#F8DFC4;
+  --good:#5C8A3A; --good-soft:#E5EEDA; --good-strong:#3E5F26;
+  --shadow:0 1px 2px rgba(40,15,60,.10), 0 10px 26px rgba(60,20,90,.16);
+  --hween-orange:#D9660B; --hween-purple:#5B2A8C; --hween-black:#1A1220; --hween-green:#7CB93B;
+}
+html[data-hween="on"][data-theme="dark"]{
+  --bg:#0D0812; --surface:#181026; --surface-2:#221733; --border:#3A2650;
+  --ink:#F2ECFB; --ink-dim:#B29ECC;
+  --accent:#FF8A2B; --accent-ink:#1A1220; --accent-soft:#3A2410;
+  --good:#9BE55B; --good-soft:#1C3312; --good-strong:#C4F98A;
+  --shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 26px rgba(0,0,0,.55);
+  --hween-orange:#FF8A2B; --hween-purple:#B57BFF; --hween-black:#0D0812; --hween-green:#9BE55B;
+}
+html[data-hween="on"]{ --radius:14px; }
+html[data-hween="on"] ::selection{ background:color-mix(in srgb, var(--hween-orange) 45%, transparent); }
+html[data-hween="on"] ::-webkit-scrollbar-thumb{ background:color-mix(in srgb, var(--hween-orange) 40%, var(--border)); }
+
+/* Background: dark fog gradient by default; images/halloween-bg.jpg (if it loads) replaces it. */
+html[data-hween="on"]{ --hween-veil:linear-gradient(180deg, rgba(10,4,16,.55), rgba(10,4,16,.75)); }
+html[data-hween="on"][data-theme="light"]{ --hween-veil:linear-gradient(180deg, rgba(237,230,244,.55), rgba(237,230,244,.76)); }
+
+html[data-hween="on"] body,
+html[data-hween="on"] .present-overlay{
+  background:
+    radial-gradient(ellipse at 20% 110%, rgba(217,102,11,.20), transparent 55%),
+    radial-gradient(ellipse at 85% 0%, color-mix(in srgb, var(--hween-purple) 22%, transparent), transparent 50%),
+    linear-gradient(180deg, #0D0812 0%, var(--bg) 45%, #241332 100%);
+}
+html[data-hween="on"][data-theme="light"] body,
+html[data-hween="on"][data-theme="light"] .present-overlay{
+  background:
+    radial-gradient(ellipse at 20% 110%, rgba(217,102,11,.16), transparent 55%),
+    linear-gradient(180deg, #D9CBE8 0%, var(--bg) 50%, #F3E8D8 100%);
+}
+html[data-hween="on"][data-hween-bg="photo"] body,
+html[data-hween="on"][data-hween-bg="photo"] .present-overlay{
+  background:var(--hween-veil), var(--hween-bg-image, none) center / cover no-repeat fixed, var(--bg);
+}
+
+html[data-hween="on"] .table-wrap{ background:transparent; }
+html[data-hween="on"] table{ background:color-mix(in srgb, var(--surface) 80%, transparent); -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); }
+html[data-hween="on"] .mcard{ background:color-mix(in srgb, var(--surface) 82%, transparent); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); }
+
+/* header/toolbar/tabs: midnight purple-black */
+html[data-hween="on"] .topbar{ border-bottom:none; position:relative; background:linear-gradient(180deg,#2B1440,#160A24); padding-bottom:4px; }
+html[data-hween="on"] .topbar::after{
+  content:''; position:absolute; left:0; right:0; bottom:0; height:4px;
+  background:repeating-linear-gradient(135deg,var(--hween-orange) 0 10px, var(--hween-black) 10px 20px);
+}
+html[data-hween="on"] .titles h1{ color:#F5EEDD; }
+html[data-hween="on"] .titles h1::before{ content:'🎃 '; }
+html[data-hween="on"] .titles .tagline{ color:var(--hween-green); font-weight:600; }
+html[data-hween="on"] .titles .tagline::after{ content:' • Happy Halloween! 🕸️'; }
+html[data-hween="on"] .topbar .sort-wrap label{ color:#D8C7EA; }
+html[data-hween="on"] .topbar .btn-ghost{ color:#F5EEDD; border-color:rgba(245,238,221,.35); }
+html[data-hween="on"] .topbar .btn-ghost:hover{ background:rgba(245,238,221,.14); }
+html[data-hween="on"] .logo{ position:relative; overflow:visible; box-shadow:0 0 0 2px var(--hween-orange) inset, 0 0 12px color-mix(in srgb, var(--hween-orange) 55%, transparent); }
+html[data-hween="on"] .logo::after{ content:'🦇'; position:absolute; top:-10px; right:-9px; font-size:13px; }
+html[data-hween="on"] #newActionBtn::before{ content:'🎃'; }
+
+html[data-hween="on"] .toolbar{ background:#1E0F32; border-bottom:1px solid rgba(255,255,255,.12); }
+html[data-hween="on"] .toolbar .btn-ghost{ color:#F5EEDD; border-color:rgba(245,238,221,.35); }
+html[data-hween="on"] .toolbar .stat-chip{ color:#D8C7EA; }
+html[data-hween="on"] .toolbar .stat-chip b{ color:#FFFFFF; }
+html[data-hween="on"] .toolbar .stat-chip.stat-updated b{ color:var(--hween-green); }
+html[data-hween="on"] .toolbar .stat-chip.stat-ontrack b{ color:var(--hween-orange); }
+html[data-hween="on"] .toolbar .stat-chip.stat-overdue b{ color:#FF6B6B; }
+html[data-hween="on"] .tabs{ background:#190C29; border-bottom:2px dashed var(--hween-orange); }
+html[data-hween="on"] .tabs .tab:not(.dept-tab){ color:#D8C7EA; }
+html[data-hween="on"] .tabs .tab:not(.dept-tab):hover{ background:rgba(255,255,255,.14); color:#FFFFFF; }
+html[data-hween="on"] .tabs .tab.active:not(.dept-tab){ background:var(--accent); color:var(--accent-ink); }
+
+/* table: jagged "torn" dashed lines, cobweb corner on rows, pumpkin ribbon marker */
+html[data-hween="on"] thead th{
+  background:color-mix(in srgb, var(--hween-purple) 16%, var(--surface-2));
+  border-bottom:2px dashed var(--hween-orange);
+}
+html[data-hween="on"] tbody td{ border-bottom:1px dashed color-mix(in srgb, var(--hween-purple) 35%, var(--border)); }
+html[data-hween="on"] tbody tr:nth-child(even){ background:color-mix(in srgb, var(--hween-purple) 8%, transparent); }
+html[data-hween="on"] tbody tr:hover{ background:color-mix(in srgb, var(--hween-orange) 16%, transparent); }
+html[data-hween="on"] tbody tr td:first-child{ position:relative; }
+html[data-hween="on"] tbody tr td:first-child::before,
+html[data-hween="on"] .mcard::before{
+  content:''; position:absolute; left:0; top:0; bottom:0; width:6px; pointer-events:none;
+  background:repeating-linear-gradient(45deg,var(--hween-orange) 0 6px, var(--hween-black) 6px 12px);
+}
+html[data-hween="on"] .mcard{ position:relative; overflow:hidden; border-radius:14px; outline:1.5px dashed color-mix(in srgb, var(--hween-orange) 40%, transparent); outline-offset:-5px; }
+html[data-hween="on"] .empty-state h3::before{ content:'🎃 '; }
+
+/* modals + dashboard cards */
+html[data-hween="on"] .modal{ border-radius:18px; outline:2px dashed color-mix(in srgb, var(--hween-orange) 45%, transparent); outline-offset:-8px; }
+html[data-hween="on"] .modal-head{
+  border-bottom-width:4px; border-bottom-style:solid;
+  border-image:repeating-linear-gradient(135deg,var(--hween-orange) 0 10px, var(--hween-black) 10px 20px) 1;
+}
+html[data-hween="on"] .dash-card{ border-top:3px solid var(--hween-orange); border-radius:12px; outline:1.5px dashed color-mix(in srgb, var(--hween-purple) 40%, transparent); outline-offset:-5px; }
+html[data-hween="on"] .dash-card:nth-child(4n+2){ border-top-color:var(--hween-purple); }
+html[data-hween="on"] .dash-card:nth-child(4n+3){ border-top-color:var(--hween-green); }
+html[data-hween="on"] .dash-card:nth-child(4n){ border-top-color:var(--hween-black); }
+
+/* present mode gets the pumpkin-stripe top edge too */
+html[data-hween="on"] .present-overlay::before{
+  content:''; flex:none; height:7px;
+  background:repeating-linear-gradient(135deg,var(--hween-orange) 0 12px, var(--hween-black) 12px 24px);
+}
+
 </style>
 </head>
 <body>
@@ -1495,6 +1608,8 @@ async function init(){
   applyStoredTheme();
   applyStoredXmas();
   bindChristmasEgg();
+  applyStoredHween();
+  bindHalloweenEgg();
   applyStoredMobileMode();
   // Bind controls FIRST so the UI stays interactive even if loading fails.
   bindEvents();
@@ -3419,6 +3534,7 @@ function bindEvents(){
 
   document.getElementById('searchInput').addEventListener('input', (e)=>{
     if (tryXmasTrigger(e.target.value)){ e.target.value = ''; state.search = ''; render(); return; }
+    if (tryHweenTrigger(e.target.value)){ e.target.value = ''; state.search = ''; render(); return; }
     state.search = e.target.value; render();
   });
   document.getElementById('sortOrderSelect').addEventListener('change', (e)=>{ state.sortOrder = e.target.value; render(); });
@@ -3753,6 +3869,159 @@ function startSnow(){
 
 function stopSnow(){
   if (_snow){ _snow.stop(); _snow = null; }
+}
+
+/* ============================================================
+   HALLOWEEN THEME — hidden toggle + falling bats/leaves
+   Turn on/off by typing "halloween" while on the All tab
+   (either anywhere on the page, or into the search box).
+   ============================================================ */
+const HWEEN_KEY = 'AR_HWEEN';
+let _hweenBuf = '';
+let _hweenFx = null;
+
+function isHweenOn(){ return document.documentElement.getAttribute('data-hween') === 'on'; }
+
+function hweenToast(msg){
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed; left:50%; top:70px; transform:translateX(-50%); background:var(--surface); color:var(--ink); border:2px solid #D9660B; padding:8px 18px; border-radius:999px; font-weight:700; z-index:10000; box-shadow:var(--shadow);';
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 2200);
+}
+
+// Uses a spooky village/pumpkin-patch picture only if images/halloween-bg.jpg actually loads;
+// otherwise the fog gradient stays. Same hosting rule as the Christmas background.
+const HWEEN_BG_URL = /github\.io$/i.test(location.hostname)
+  ? 'images/halloween-bg.jpg'
+  : 'https://ci-kltfruits.github.io/Action-Register2026/images/halloween-bg.jpg';
+
+function loadHweenBackground(){
+  const root = document.documentElement;
+  const img = new Image();
+  img.onload = ()=>{
+    if (!isHweenOn()) return;
+    root.style.setProperty('--hween-bg-image', 'url("' + HWEEN_BG_URL + '")');
+    root.setAttribute('data-hween-bg', 'photo');
+  };
+  img.onerror = ()=>{
+    root.removeAttribute('data-hween-bg');
+    root.style.removeProperty('--hween-bg-image');
+  };
+  img.src = HWEEN_BG_URL;
+}
+
+function setHween(on, quiet){
+  const root = document.documentElement;
+  if (on){
+    root.setAttribute('data-hween', 'on');
+    loadHweenBackground();
+  } else {
+    root.removeAttribute('data-hween');
+    root.removeAttribute('data-hween-bg');
+    root.style.removeProperty('--hween-bg-image');
+  }
+  try { localStorage.setItem(HWEEN_KEY, on ? 'on' : 'off'); } catch (e) {}
+  if (on) startHweenFx(); else stopHweenFx();
+  if (!quiet) hweenToast(on ? '🎃 Happy Halloween!' : 'Halloween mode off');
+}
+
+function applyStoredHween(){
+  let saved = null;
+  try { saved = localStorage.getItem(HWEEN_KEY); } catch (e) {}
+  if (saved === 'on') setHween(true, true);
+}
+
+// Returns true if the text was the secret word (and the theme was toggled).
+function tryHweenTrigger(text){
+  if (state.activeTab !== 'All') return false;
+  if ((text || '').trim().toLowerCase() !== 'halloween') return false;
+  setHween(!isHweenOn());
+  return true;
+}
+
+function bindHalloweenEgg(){
+  document.addEventListener('keydown', (e)=>{
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const t = e.target;
+    const tag = t && t.tagName ? t.tagName.toLowerCase() : '';
+    if (tag === 'input' || tag === 'textarea' || tag === 'select' || (t && t.isContentEditable)) return;
+    if (!e.key || e.key.length !== 1) return;
+    _hweenBuf = (_hweenBuf + e.key.toLowerCase()).slice(-9);
+    if (_hweenBuf === 'halloween'){
+      _hweenBuf = '';
+      tryHweenTrigger('halloween');
+    }
+  });
+}
+
+// Falling bats + drifting leaves, mirroring startSnow()'s canvas approach.
+function startHweenFx(){
+  if (_hweenFx) return;
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const canvas = document.createElement('canvas');
+  canvas.id = 'hweenCanvas';
+  canvas.style.cssText = 'position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:9999;';
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  let W = 0, H = 0, bits = [], raf = 0;
+
+  function resize(){
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const n = W < 720 ? 16 : 26;
+    while (bits.length < n) bits.push(make(true));
+    bits.length = n;
+  }
+  function make(initial){
+    const isBat = Math.random() < 0.4;
+    return {
+      x: Math.random() * W,
+      y: isBat ? (initial ? Math.random() * H : -20 - Math.random() * 40) : (-10 - (initial ? Math.random() * H : Math.random() * 40)),
+      r: Math.random() * 8 + 12,
+      s: Math.random() * 0.6 + (isBat ? 0.35 : 0.5),
+      d: Math.random() * Math.PI * 2, w: Math.random() * 0.03 + 0.01,
+      o: Math.random() * 0.3 + 0.65,
+      bat: isBat, rot: 0, rotSpeed: isBat ? 0 : (Math.random() * 0.02 - 0.01)
+    };
+  }
+  function frame(){
+    raf = requestAnimationFrame(frame);
+    if (document.hidden) return;
+    ctx.clearRect(0, 0, W, H);
+    for (const b of bits){
+      if (b.bat){
+        b.x += Math.sin(b.d) * 1.1;
+        b.y += b.s * 0.6;
+        b.d += b.w * 2;
+      } else {
+        b.y += b.s;
+        b.d += b.w;
+        b.x += Math.sin(b.d) * 0.6;
+        b.rot += b.rotSpeed;
+      }
+      if (b.y > H + 20){ Object.assign(b, make(false)); b.x = Math.random() * W; }
+      if (b.x > W + 20) b.x = -20; else if (b.x < -20) b.x = W + 20;
+      ctx.save();
+      ctx.translate(b.x, b.y);
+      if (!b.bat) ctx.rotate(b.rot);
+      ctx.globalAlpha = b.o;
+      ctx.font = b.r + 'px sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(b.bat ? '🦇' : '🍂', 0, 0);
+      ctx.restore();
+    }
+  }
+  window.addEventListener('resize', resize);
+  resize();
+  frame();
+  _hweenFx = { stop(){ cancelAnimationFrame(raf); window.removeEventListener('resize', resize); canvas.remove(); } };
+}
+
+function stopHweenFx(){
+  if (_hweenFx){ _hweenFx.stop(); _hweenFx = null; }
 }
 
 init();
