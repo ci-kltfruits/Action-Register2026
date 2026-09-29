@@ -3629,7 +3629,6 @@ function loadXmasBackground(){
 function setXmas(on, quiet){
   if (on && isHweenOn()) setHween(false, true);
   const root = document.documentElement;
-  if (on && isHweenOn()) setHween(false, true);   // themes are exclusive — turn the other one off first
   if (on){
     root.setAttribute('data-xmas', 'on');      // night-sky background shows right away
     loadXmasBackground();                       // ...and switches to the picture only if it exists
@@ -3916,7 +3915,6 @@ function loadHweenBackground(){
 function setHween(on, quiet){
   if (on && isXmasOn()) setXmas(false, true);
   const root = document.documentElement;
-  if (on && isXmasOn()) setXmas(false, true);   // themes are exclusive — turn the other one off first
   if (on){
     root.setAttribute('data-hween', 'on');
     loadHweenBackground();
@@ -3988,7 +3986,7 @@ function startHweenFx(){
     dpr = Math.min(window.devicePixelRatio || 1, 2);
     W = window.innerWidth; H = window.innerHeight;
     canvas.width = W * dpr; canvas.height = H * dpr;
-    const n = W < 720 ? 60 : 110;
+    const n = W < 720 ? 38 : 70;
     while (bits.length < n) bits.push(make(true));
     bits.length = n;
   }
@@ -3996,7 +3994,7 @@ function startHweenFx(){
     const isBat = Math.random() < 0.4;
     return {
       x: Math.random() * W,
-      y: isBat ? (initial ? Math.random() * H : -20 - Math.random() * 40) : (-10 - (initial ? Math.random() * H : Math.random() * 40)),
+      y: -20 - (initial ? Math.random() * H : Math.random() * 40),
       r: Math.random() * 8 + 13,
       s: Math.random() * 0.6 + (isBat ? 0.55 : 0.8),
       d: Math.random() * Math.PI * 2, w: Math.random() * 0.03 + 0.01,
