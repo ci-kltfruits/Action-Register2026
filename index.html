@@ -873,6 +873,7 @@ html[data-hween="on"] .present-overlay::before{
     <div class="modal-foot">
       <div style="display:flex; align-items:center; gap:12px;">
         <button class="btn" id="previewHistoryBtn">🕒 History</button>
+        <button class="btn" id="previewPresentBtn">▶ Present Mode</button>
         <div style="font-size:12.5px; color:var(--ink-dim);" id="previewFolderWrap"></div>
       </div>
       <div style="margin-left:auto; display:flex; gap:8px;">
@@ -2201,6 +2202,7 @@ function updateStatusInfo(it){
 function updateStatusBadgeHtml(it, lastUpdStr, widthAuto){
   const style = widthAuto ? 'cursor:default; width:auto;' : 'cursor:default;';
   const state = updateStatusInfo(it);
+  if (!state) return '';
   if (state === 'updated') return `<span class="upd-btn upd-ok" style="${style}">✓ Updated Today${it.lastUpdatedBy?' · '+escapeHtml(it.lastUpdatedBy):''}</span>`;
   if (state === 'update') return `<span class="upd-btn upd-update" style="${style}">Update · Last: ${lastUpdStr}</span>`;
   return `<span class="upd-btn upd-warn" style="${style}">Needs Update · Last: ${lastUpdStr}</span>`;
@@ -3439,6 +3441,21 @@ function openPresentMode(){
   document.getElementById('presentOverlay').hidden = false;
   renderPresentCard();
 }
+// Present Mode started from the Item Preview: opens on the previewed item, and the arrows then
+// step through the other items in the current list (same tab / filters / sort you were viewing).
+function openPresentFromPreview(){
+  const id = state.previewId;
+  const it = state.items.find(i=>i.id===id);
+  if (!it) return;
+  const queue = getFiltered().filter(i=> i.status!=='Closed' || i.id===id);
+  let idx = queue.findIndex(i=>i.id===id);
+  if (idx === -1){ queue.unshift(it); idx = 0; }
+  closePreview();
+  state.presentQueue = queue;
+  state.presentIndex = idx;
+  document.getElementById('presentOverlay').hidden = false;
+  renderPresentCard();
+}
 function closePresentMode(){ document.getElementById('presentOverlay').hidden = true; }
 
 function presentPhotoHalfHtml(label, media, bin){
@@ -3515,7 +3532,7 @@ function renderPresentCard(){
   document.getElementById('presentBody').querySelectorAll('[data-action="present-open-update"]').forEach(row=>{
     row.addEventListener('click', ()=> openActionModal(it.id, 'update', { updateDept: row.dataset.dept }));
   });
-  document.getElementById('presentMarkUpdated').hidden = !!(it.deptList && it.deptList.length);
+  document.getElementById('presentMarkUpdated').hidden = !!(it.deptList && it.deptList.length) || it.status === 'Closed';
   fillLastNotes(it, document.getElementById('presentBody'));
 }
 
@@ -3550,6 +3567,7 @@ function bindEvents(){
   });
   document.getElementById('deleteBtn').addEventListener('click', deleteCurrentAction);
   document.getElementById('previewHistoryBtn').addEventListener('click', ()=> openHistory(state.previewId));
+  document.getElementById('previewPresentBtn').addEventListener('click', openPresentFromPreview);
   document.getElementById('presentHistoryBtn').addEventListener('click', ()=>{
     const it = state.presentQueue[state.presentIndex];
     if (it) openHistory(it.id);
