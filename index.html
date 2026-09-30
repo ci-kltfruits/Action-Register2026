@@ -1151,13 +1151,14 @@ function itemMatchesDeptTab(it, tab){
 const FILTER_DEFS = [
   { key:'dateDiscussed', label:'Date Discussed', kind:'value', dateLike:true, sortDesc:true, getValue: it=> it.dateDiscussed || null },
   { key:'meeting', label:'Meeting', kind:'value', sortDesc:false, getValue: it=> it.meeting || null },
-  { key:'updatedToday', label:'Updated Today', kind:'fixed', optionsFn: ()=>['Updated','Update','Needs Update','Closed Today'],
+  { key:'updatedToday', label:'Updated Today', kind:'fixed', multi:true, optionsFn: ()=>['Updated','Update','Needs Update','Closed Today'],
     getValue: it => {
-      if (getStatusBucket(it)==='Closed') return it.updatedToday ? 'Closed Today' : null;
+      if (getStatusBucket(it)==='Closed') return it.updatedToday ? ['Closed Today'] : [];
       const s = updateStatusInfo(it);
-      if (s === 'updated') return 'Updated';
-      if (s === 'update') return 'Update';
-      return 'Needs Update';
+      const out = [ s === 'updated' ? 'Updated' : (s === 'update' ? 'Update' : 'Needs Update') ];
+      // Cross-department item: if at least one department has updated today, it also counts as "Updated".
+      if (out[0] !== 'Updated' && it.deptUpdates && Object.values(it.deptUpdates).some(du => du.updatedToday)) out.push('Updated');
+      return out;
     } },
   { key:'owner', label:'Owner', kind:'value', multi:true, sortDesc:false, getValue: itemOwnerList },
   { key:'department', label:'Department', kind:'value', multi:true, sortDesc:false, getValue: itemDeptList,
@@ -1907,7 +1908,7 @@ function defMatchesValue(def, it, v){
 function getFilterOptions(key){
   const def = FILTER_DEFS.find(d=>d.key===key);
   if (def.kind === 'fixed'){
-    return def.optionsFn().map(v=>({ value:v, count: state.items.filter(it=>def.getValue(it)===v).length }));
+    return def.optionsFn().map(v=>({ value:v, count: state.items.filter(it=>defMatchesValue(def,it,v)).length }));
   }
   let vals;
   if (def.multi){
