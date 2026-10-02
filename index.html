@@ -285,6 +285,7 @@ tbody tr.tr-multidept td{ height:auto; max-height:none; vertical-align:top; padd
 .field{ display:grid; gap:6px; position:relative; }
 .field label{ font-size:12.5px; font-weight:700; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.3px; }
 .field label .req{ color:var(--bad); }
+.field input[type=password]{ border:1px solid var(--border); background:var(--bg); color:var(--ink); padding:10px 11px; border-radius:8px; font-size:14.5px; width:100%; letter-spacing:4px; }
 .field label.is-required::after{ content:" *"; color:var(--bad); }
 .field input[type=text], .field input[type=date], .field textarea, .field select, .field input[type=file]{ border:1px solid var(--border); background:var(--bg); color:var(--ink); padding:10px 11px; border-radius:8px; font-size:14.5px; width:100%; }
 .field textarea{ min-height:66px; resize:vertical; }
@@ -798,6 +799,7 @@ html[data-hween="on"] .present-overlay::before{
     </div>
     <button class="btn btn-accent" id="presentModeBtn">▶ Present Mode</button>
     <button class="btn btn-ghost" id="dashboardBtn">📊 Dashboard</button>
+    <button class="theme-toggle" id="authBtn" title="Sign in" style="width:auto; padding:0 10px; font-size:13px; font-weight:700;">Sign in</button>
     <button class="theme-toggle" id="themeToggle" title="Toggle light/dark">🌙</button>
     <button class="theme-toggle" id="noUpdateBtn" title="No-update tracker">🚩</button>
     <button class="theme-toggle" id="mobileToggle" title="Toggle mobile view">📱</button>
@@ -965,12 +967,6 @@ html[data-hween="on"] .present-overlay::before{
           <span class="field-error-msg">Select at least one department (or "All").</span>
         </div>
       </div>
-      <div class="field" data-field="inputBy">
-        <label>Input By <span class="req">*</span></label>
-        <input type="text" id="f_inputBy" placeholder="Who is logging this action" autocomplete="off">
-        <div class="name-autocomplete" id="f_inputBy_ac" hidden></div>
-        <span class="field-error-msg">Input By is required and must match the roster (or "All").</span>
-      </div>
       <div class="row2">
         <div class="field" data-field="dueDate">
           <label>Due Date <span class="req">*</span></label>
@@ -988,12 +984,7 @@ html[data-hween="on"] .present-overlay::before{
         </div>
       </div>
 
-      <div class="update-by-box field" id="updatedByWrap" data-field="updatedBy" hidden>
-        <label>Updated By <span class="req">*</span></label>
-        <input type="text" id="f_updatedBy" placeholder="Who is making this update" autocomplete="off">
-        <div class="name-autocomplete" id="f_updatedBy_ac" hidden></div>
-        <span class="field-error-msg">Updated By is required and must match the roster (or "All").</span>
-      </div>
+      <div class="muted" id="actingAs" style="font-size:12.5px; font-weight:600;"></div>
       <span class="muted" style="font-size:12px;" id="editModeHint" hidden>✏️ This is for correcting details — use the <b>Update</b> button on the item to log a dated progress update.</span>
 
     </div>
@@ -1070,6 +1061,20 @@ html[data-hween="on"] .present-overlay::before{
   </div>
 </div>
 
+<!-- Login -->
+<div class="overlay" id="loginOverlay" hidden style="z-index:200;">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-head"><h2>Sign in</h2><button class="close-x" id="closeLoginBtn">✕</button></div>
+    <div class="modal-body">
+      <p class="muted" style="margin:0; font-size:13px;">Sign in to add or change items. Your name is recorded on every change you make.</p>
+      <div class="field"><label>Your name</label><input type="text" id="f_loginName" placeholder="Type your name" autocomplete="off"><div class="name-autocomplete" id="f_loginName_ac" hidden></div></div>
+      <div class="field"><label>4-digit PIN</label><input type="password" id="f_loginPin" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••"></div>
+      <div id="loginError" class="field-error-msg" style="display:none;"></div>
+    </div>
+    <div class="modal-foot"><button class="btn" id="loginCancelBtn">Cancel</button><button class="btn btn-primary" id="loginSubmitBtn">Sign in</button></div>
+  </div>
+</div>
+
 <!-- Lightbox -->
 <div class="lightbox-overlay" id="lightboxOverlay" hidden>
   <button class="lightbox-close" id="lightboxClose">✕</button>
@@ -1129,7 +1134,7 @@ const NO_DUE_DATE_VALUE = '__no_due_date__';   // sentinel: lets "No date yet" b
 // These two may record ANY department's per-department update on a cross-department item,
 // bypassing the "must belong to that department" rule — they're the usual meeting facilitators.
 // Keep this in sync with CROSS_DEPT_FACILITATORS in Code.gs (the server enforces this too).
-const CROSS_DEPT_FACILITATORS = ['G. Tagotong', 'C. Lim'];
+const CROSS_DEPT_FACILITATORS = ['G. Tagotong', 'N. Lim'];
 
 // Cross-department = spans 2+ distinct departments (or "All").
 function isCrossDeptItem(it){
@@ -1319,7 +1324,7 @@ async function fetchWithRetry(url, options, retries = 2, delay = 800) {
 function run(fnName, ...args){
   return new Promise(async (resolve, reject) => {
     if (isAppsScript) {
-      google.script.run.withSuccessHandler(resolve).withFailureHandler(err => reject(err))[fnName](...args);
+      google.script.run.withSuccessHandler(resolve).withFailureHandler(err => reject(err)).apiCall({ fn: fnName, args: args, auth: AUTH });
       return;
     }
     // Local demo fallback if no real URL is set.
@@ -1331,11 +1336,15 @@ function run(fnName, ...args){
       // No Content-Type header on purpose: avoids a CORS preflight Apps Script can't answer.
       const res = await fetchWithRetry(API_URL, {
         method: 'POST',
-        body: JSON.stringify({ fn: fnName, args: args })
+        body: JSON.stringify({ fn: fnName, args: args, auth: AUTH })
       }, READ_FNS.indexOf(fnName) !== -1 ? 2 : 1);
       const data = await res.json();
       if (data.ok) resolve(data.result);
-      else reject(new Error(data.error || 'Server error'));
+      else {
+        let msg = data.error || 'Server error';
+        if (/^AUTH:/.test(msg)){ msg = msg.replace(/^AUTH:\s*/, ''); if (fnName !== 'login') setAuth(null); }
+        reject(new Error(msg));
+      }
     } catch (err) {
       reject(err);
     }
@@ -1346,14 +1355,14 @@ function run(fnName, ...args){
 const DEMO_KEY = 'AR_DEMO_DATA_V5';
 const DEMO_HISTORY_KEY = 'AR_DEMO_HISTORY_V5';
 const DEMO_ROSTER = [
-  { full: 'Merlwin Ren Pugay', disp: 'M. Pugay', dept: 'ACCTG', color: 'Gold' },
+  { full: 'Merlwin Ren Pugay', disp: 'R. Pugay', dept: 'ACCTG', color: 'Gold' },
   { full: 'Minerva Carrascal', disp: 'M. Carrascal', dept: 'ACCTG', color: 'Gold' },
   { full: 'Shaira Marie Gatdula', disp: 'S. Gatdula', dept: 'ACCTG', color: 'Gold' },
-  { full: 'Cathalene Dominique Lim', disp: 'C. Lim', dept: 'CI', color: 'iridescent' },
+  { full: 'Cathalene Dominique Lim', disp: 'N. Lim', dept: 'CI', color: 'iridescent' },
   { full: 'Glen Tagotong', disp: 'G. Tagotong', dept: 'CI', color: 'iridescent' },
   { full: 'Alyssa Vicente', disp: 'A. Vicente', dept: 'EHS', color: 'green' },
   { full: 'Maricar Antonette Alegado', disp: 'M. Alegado', dept: 'EHS', color: 'green' },
-  { full: 'Romy Jane Aque', disp: 'R. Aque', dept: 'EHS', color: 'green' },
+  { full: 'Romy Jane Aque', disp: 'J. Aque', dept: 'EHS', color: 'green' },
   { full: 'Charles Darwin Victoriano', disp: 'C. Victoriano', dept: 'EMD', color: 'Red' },
   { full: 'Jaen Dereck Anthony Arabia', disp: 'J. Arabia', dept: 'EMD', color: 'Red' },
   { full: 'Rey Neypes', disp: 'R. Neypes', dept: 'EMD', color: 'Red' },
@@ -1364,40 +1373,40 @@ const DEMO_ROSTER = [
   { full: 'Maria Nenuka Anthea Gonzales', disp: 'Thea G.', dept: 'HRAD', color: '#F77E2D' },
   { full: 'Richard Pescador', disp: 'R. Pescador', dept: 'HRAD', color: '#F77E2D' },
   { full: 'Kristine Deomampo', disp: 'K. Deomampo', dept: 'IMPEX', color: 'maroon' },
-  { full: 'Maria Teena Campo', disp: 'M. Campo', dept: 'IMPEX', color: 'maroon' },
+  { full: 'Maria Teena Campo', disp: 'T. Campo', dept: 'IMPEX', color: 'maroon' },
   { full: 'Michael John Monteza', disp: 'M. Monteza', dept: 'FLEET', color: '' },
-  { full: 'Reina Catherina Romero', disp: 'R. Romero', dept: 'MS', color: 'dark blue' },
+  { full: 'Reina Catherina Romero', disp: 'C. Romero', dept: 'MS', color: 'dark blue' },
   { full: 'Nestor Bonifacio Jr', disp: 'N. Bonifacio', dept: 'PPIC', color: 'pink' },
   { full: 'Shekinah Shannon  Daduya', disp: 'S. Daduya', dept: 'PPIC', color: 'pink' },
   { full: 'Ej Diaz', disp: 'E. Diaz', dept: 'PROD', color: 'yellow, light blue, brown, purple' },
   { full: 'Gilbert Odi', disp: 'G. Odi', dept: 'PROD', color: 'yellow, light blue, brown, purple' },
   { full: 'Jocelyn Barnachea', disp: 'J. Barnachea', dept: 'PROD', color: 'yellow, light blue, brown, purple' },
-  { full: 'Maria Carmina De Guzman', disp: 'M. De Guzman', dept: 'PROD', color: 'yellow, light blue, brown, purple' },
+  { full: 'Maria Carmina De Guzman', disp: 'C. De Guzman', dept: 'PROD', color: 'yellow, light blue, brown, purple' },
   { full: 'Marianne Del Rosario', disp: 'M. Del Rosario', dept: 'PROD', color: 'yellow, light blue, brown, purple' },
   { full: 'Neressa Buenaflor', disp: 'N. Buenaflor', dept: 'PROD', color: 'yellow, light blue, brown, purple' },
   { full: 'Reniel Badanoy', disp: 'R. Badanoy', dept: 'PROD', color: 'yellow, light blue, brown, purple' },
   { full: 'Jenesis Carlo Sy', disp: 'J. Sy', dept: 'PROD', color: 'mustard' },
   { full: 'Ryan Avelino', disp: 'R. Avelino', dept: 'PROD', color: 'mustard' },
   { full: 'Benedict Ella', disp: 'B. Ella', dept: 'PURCH - Fruits', color: 'emerald' },
-  { full: 'Diana Shane Agdeppa', disp: 'D. Agdeppa', dept: 'PURCH - Fruits', color: 'emerald' },
+  { full: 'Diana Shane Agdeppa', disp: 'S. Agdeppa', dept: 'PURCH - Fruits', color: 'emerald' },
   { full: 'Jerome Magadia', disp: 'J. Magadia', dept: 'PURCH - Fruits', color: 'emerald' },
   { full: 'Cindy Jalayahay', disp: 'C. Jalayahay', dept: 'PURCH - NF', color: 'gunmetal black' },
   { full: 'Mark Junald David Diamante', disp: 'M. Diamante', dept: 'PURCH - NF', color: 'gunmetal black' },
   { full: 'Wilma Escaros', disp: 'W. Escaros', dept: 'PURCH - NF', color: 'gunmetal black' },
   { full: 'Joanna Marie Torregosa', disp: 'J. Torregosa', dept: 'QA/QC', color: 'blue' },
-  { full: 'Juvillan Casabuena', disp: 'J. Casabuena', dept: 'QA/QC', color: 'blue' },
+  { full: 'Juvillan Casabuena', disp: 'L. Casabuena', dept: 'QA/QC', color: 'blue' },
   { full: 'Marina Benipayo', disp: 'M. Benipayo', dept: 'QA/QC', color: 'blue' },
   { full: 'Pia Rose Arellano', disp: 'P. Arellano', dept: 'QA/QC', color: 'blue' },
-  { full: 'Czar Augusto Miguel Sabido', disp: 'C. Sabido', dept: 'R&D', color: 'violet' },
+  { full: 'Czar Augusto Miguel Sabido', disp: 'M. Sabido', dept: 'R&D', color: 'violet' },
   { full: 'Pamela Samantha Mallari', disp: 'P. Mallari', dept: 'R&D', color: 'violet' },
   { full: 'Sherwin Teves', disp: 'S. Teves', dept: 'R&D', color: 'violet' },
   { full: 'Edelyn Eleccion', disp: 'E. Eleccion', dept: 'RF', color: 'brown' },
   { full: 'Emelia Guerrero', disp: 'E. Guerrero', dept: 'RF', color: 'brown' },
-  { full: 'Luis Jance Que', disp: 'L. Que', dept: 'RF', color: 'brown' },
+  { full: 'Luis Jance Que', disp: 'J. Que', dept: 'RF', color: 'brown' },
   { full: 'Jennifer Potante', disp: 'J. Potante', dept: 'SLT', color: 'Silver' },
   { full: 'Jojo Villanueva', disp: 'J. Villanueva', dept: 'SLT', color: 'Silver' },
   { full: 'Wilson Dichaves', disp: 'W. Dichaves', dept: 'SLT', color: 'Silver' },
-  { full: 'JM Martillano', disp: 'JM. Martillano', dept: 'WHSE', color: 'Gray' }
+  { full: 'JM Martillano', disp: 'J. Martillano', dept: 'WHSE', color: 'Gray' }
 ];
 const DEMO_DEPARTMENT_ORDER = [
   'ACCTG', 'CI', 'EHS', 'EMD', 'HRAD', 'IMPEX', 'FLEET', 'MS', 'PPIC',
@@ -2596,7 +2605,7 @@ async function fillLastNotes(it, root){
   targets.forEach(el=>{
     if (!el.isConnected) return;
     const dept = el.getAttribute('data-lastnote');
-    const h = hist.find(x => (x.remarks||'').trim() && (dept ? x.updateDept === dept : !x.updateDept));
+    const h = hist.find(x => x.entryType !== 'Edit' && (x.remarks||'').trim() && (dept ? x.updateDept === dept : !x.updateDept));
     if (!h) return;
     el.innerHTML = escapeHtml(h.remarks) + ' <span class="muted" style="font-size:12px;">(last note' + (h.timestamp ? ' · ' + formatDateTime(h.timestamp) : '') + ')</span>';
   });
@@ -2920,7 +2929,53 @@ function attachNameAutocomplete(inputId, listId, opts){
   input.addEventListener('blur', ()=>{ setTimeout(()=>{ list.hidden = true; }, 120); });
 }
 
+/* ---------- Sign in (PIN) ---------- */
+let AUTH = null;
+try { AUTH = JSON.parse(localStorage.getItem('AR_AUTH') || 'null'); } catch (e) {}
+let _afterLogin = null;
+function renderAuthBtn(){
+  const b = document.getElementById('authBtn');
+  b.textContent = AUTH ? '👤 ' + AUTH.name : 'Sign in';
+  b.title = AUTH ? 'Signed in as ' + AUTH.name + ' (click to sign out)' : 'Sign in';
+}
+function setAuth(a){
+  AUTH = a;
+  try { if (a) localStorage.setItem('AR_AUTH', JSON.stringify(a)); else localStorage.removeItem('AR_AUTH'); } catch (e) {}
+  renderAuthBtn();
+}
+function openLogin(after){
+  _afterLogin = after || null;
+  document.getElementById('f_loginName').value = '';
+  document.getElementById('f_loginPin').value = '';
+  document.getElementById('loginError').style.display = 'none';
+  document.getElementById('loginOverlay').hidden = false;
+  document.getElementById('f_loginName').focus();
+}
+function closeLogin(){ document.getElementById('loginOverlay').hidden = true; _afterLogin = null; }
+async function submitLogin(){
+  const err = document.getElementById('loginError');
+  const disp = CFG.nameToDisp[document.getElementById('f_loginName').value.trim().toLowerCase()];
+  const pin = document.getElementById('f_loginPin').value.trim();
+  const fail = (m)=>{ err.textContent = m; err.style.display = 'block'; };
+  if (!disp) return fail('Please pick your name from the list.');
+  if (!/^\d{4}$/.test(pin)) return fail('Enter your 4-digit PIN.');
+  const btn = document.getElementById('loginSubmitBtn');
+  btn.disabled = true;
+  AUTH = { name: disp, pin: pin };
+  try {
+    const r = await run('login');
+    setAuth({ name: (r && r.name) || disp, pin: pin });
+    const next = _afterLogin;
+    document.getElementById('loginOverlay').hidden = true; _afterLogin = null;
+    if (next) next();
+  } catch (e) {
+    AUTH = null; renderAuthBtn();
+    fail(e && e.message ? e.message : 'Could not sign in.');
+  } finally { btn.disabled = false; }
+}
+
 function openActionModal(id, mode, opts){
+  if (!AUTH){ openLogin(()=>openActionModal(id, mode, opts)); return; }
   opts = opts || {};
   state.editingId = id || null;
   state.modalMode = mode;
@@ -2933,8 +2988,7 @@ function openActionModal(id, mode, opts){
   const it = id ? state.items.find(i=>i.id===id) : null;
 
   document.getElementById('deleteBtn').hidden = (mode !== 'edit');
-  document.getElementById('updatedByWrap').hidden = (mode !== 'update');
-  document.getElementById('f_updatedBy').value = '';
+  document.getElementById('actingAs').textContent = 'Saving as ' + AUTH.name;
   document.getElementById('saveBtn').textContent = mode === 'update' ? 'Save Update' : 'Save Action';
   document.getElementById('editModeHint').hidden = (mode !== 'edit');
   document.getElementById('f_remarksLabel').classList.toggle('is-required', mode === 'update');
@@ -2962,7 +3016,6 @@ function openActionModal(id, mode, opts){
     document.getElementById('f_details').value = '';
     document.getElementById('f_remarks').value = '';
     document.getElementById('updateDeptPrevRemarks').hidden = true;
-    document.getElementById('f_inputBy').value = '';
     state.deptSelection = (state.activeTab !== 'All' && state.activeTab !== CROSS_DEPT_LABEL) ? new Set([state.activeTab]) : new Set();
     document.getElementById('deptSelectSearch').value = '';
     closeDeptSelectPanel();
@@ -3015,7 +3068,6 @@ function openActionModal(id, mode, opts){
         prevWrap.hidden = true;
       }
     }
-    document.getElementById('f_inputBy').value = it.inputBy || '';
     state.deptSelection = parseDeptFieldToSelection(it.department);
     document.getElementById('deptSelectSearch').value = '';
     closeDeptSelectPanel();
@@ -3134,18 +3186,14 @@ function validateForm(mode){
     details: document.getElementById('f_details').value.trim(),
     owner: document.getElementById('f_owner').value.trim(),
     department: document.getElementById('f_department').value.trim(),
-    inputBy: document.getElementById('f_inputBy').value.trim(),
     status: document.getElementById('f_status').value,
     noDateYet: document.getElementById('f_noDateYet').checked,
     dueDate: document.getElementById('f_dueDate').value,
-    updatedBy: document.getElementById('f_updatedBy').value.trim(),
     remarks: document.getElementById('f_remarks').value.trim()
   };
 
   const ownerResolved = resolveMultiNameField(vals.owner);
   const deptResolved = resolveMultiDeptField(vals.department);
-  const inputByResolved = resolveDisplayName(vals.inputBy);
-  const updatedByResolved = mode === 'update' ? resolveDisplayName(vals.updatedBy) : null;
 
   const missing = [];
   if (!vals.dateDiscussed) missing.push('dateDiscussed');
@@ -3155,29 +3203,13 @@ function validateForm(mode){
   if ((mode === 'update' || (mode === 'edit' && state.editNeedsRemarks)) && !vals.remarks) missing.push('remarks');
   if (!ownerResolved) missing.push('owner');
   if (!deptResolved) missing.push('department');
-  if (!vals.inputBy || !isValidChoice(vals.inputBy, CFG.allNameAliases)) missing.push('inputBy');
   if (!vals.status) missing.push('status');
   if (!vals.noDateYet && !vals.dueDate) missing.push('dueDate');
-  if (mode === 'update' && (!vals.updatedBy || !isValidChoice(vals.updatedBy, CFG.allNameAliases))) missing.push('updatedBy');
-  let updatedByDeptError = '';
-  if (mode === 'update' && state.updateDept && vals.updatedBy && isValidChoice(vals.updatedBy, CFG.allNameAliases) && vals.updatedBy.toLowerCase() !== 'all'){
-    const resolvedUpdater = resolveDisplayName(vals.updatedBy);
-    const isFacilitator = CROSS_DEPT_FACILITATORS.some(n => n.toLowerCase() === resolvedUpdater.toLowerCase());
-    const belongDept = CFG.nameToDept[resolvedUpdater.toLowerCase()];
-    if (!isFacilitator && belongDept !== state.updateDept){
-      missing.push('updatedBy');
-      updatedByDeptError = 'Updated By must be someone from ' + state.updateDept + '.';
-    }
-  }
 
   missing.forEach(key=>{
     const wrap = document.querySelector(`#actionOverlay [data-field="${key}"]`);
     if (wrap) wrap.classList.add('field-error');
   });
-  if (updatedByDeptError){
-    const msgEl = document.querySelector('#actionOverlay [data-field="updatedBy"] .field-error-msg');
-    if (msgEl) msgEl.textContent = updatedByDeptError;
-  }
 
   if (missing.length){
     const first = document.querySelector(`#actionOverlay [data-field="${missing[0]}"]`);
@@ -3186,8 +3218,6 @@ function validateForm(mode){
   }
   vals.owner = ownerResolved;
   vals.department = deptResolved;
-  vals.inputBy = inputByResolved;
-  if (mode === 'update') vals.updatedBy = updatedByResolved;
   return vals;
 }
 
@@ -3217,17 +3247,26 @@ async function saveAction(){
   if (mode === 'edit' && state.editHistoryPromise) await state.editHistoryPromise;
   const vals = validateForm(mode);
   if (!vals) return;
+  if (mode === 'update' && state.updateDept){
+    const me = AUTH.name;
+    const isFac = CROSS_DEPT_FACILITATORS.some(n => n.toLowerCase() === me.toLowerCase());
+    if (!isFac && CFG.nameToDept[me.toLowerCase()] !== state.updateDept){
+      alert('Only someone from ' + state.updateDept + ' (or a facilitator) can record this department\'s update. You are signed in as ' + me + '.');
+      return;
+    }
+  }
 
   const saveBtn = document.getElementById('saveBtn');
   saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
   try{
     const payload = {
       dateDiscussed: vals.dateDiscussed, meeting: vals.meeting, issues: vals.issues, details: vals.details,
-      remarks: document.getElementById('f_remarks').value, owner: vals.owner, inputBy: vals.inputBy,
+      remarks: document.getElementById('f_remarks').value, owner: vals.owner,
       department: vals.department, noDateYet: vals.noDateYet, dueDate: vals.dueDate, status: vals.status
     };
 
     if (mode === 'new'){
+      payload.inputBy = AUTH.name;
       payload.beforePhotos = state.pendingBefore;
       payload.currentPhotos = state.pendingCurrent;
       const created = await run('addAction', payload);
@@ -3237,7 +3276,7 @@ async function saveAction(){
       const idx = state.items.findIndex(i=>i.id===state.editingId);
       if (idx>-1) state.items[idx] = updated;
     } else {
-      payload.updatedBy = vals.updatedBy;
+      payload.updatedBy = AUTH.name;
       if (state.updateDept) payload.updateDept = state.updateDept;
       const labels = computeChangedFieldLabels(payload, !!state.updateDept);
       if (state.updateDept) labels.push('Update (' + state.updateDept + ')');
@@ -3323,7 +3362,7 @@ async function openHistory(id){
         </div>
         <div class="history-time">${h.timestamp ? formatDateTime(h.timestamp) : ''}</div>
       </div>
-      ${statusBadgeHtml(h.status||'')}${h.updateDept ? ` <span class="history-changed-tag" style="margin-left:6px;">🏷 ${escapeHtml(h.updateDept)}</span>` : ''}
+      <span class="history-changed-tag" style="margin-right:6px;">${h.entryType === 'Edit' ? '✏️ Edit' : '✓ Update'}</span>${statusBadgeHtml(h.status||'')}${h.updateDept ? ` <span class="history-changed-tag" style="margin-left:6px;">🏷 ${escapeHtml(h.updateDept)}</span>` : ''}
       ${changedTags.length ? `<div class="history-changed"><span class="history-changed-label">Changed:</span> ${changedTags.map(t=>`<span class="history-changed-tag">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
       <div class="history-detail">${historyEntryDetailHtml(h)}</div>
     </div>
@@ -3562,6 +3601,15 @@ function bindEvents(){
   document.getElementById('closeModalBtn').addEventListener('click', closeActionModal);
   document.getElementById('cancelBtn').addEventListener('click', closeActionModal);
   document.getElementById('saveBtn').addEventListener('click', saveAction);
+  attachNameAutocomplete('f_loginName', 'f_loginName_ac', {});
+  document.getElementById('authBtn').addEventListener('click', ()=>{
+    if (AUTH){ if (confirm('Sign out ' + AUTH.name + '?')) setAuth(null); } else openLogin();
+  });
+  document.getElementById('loginSubmitBtn').addEventListener('click', submitLogin);
+  document.getElementById('loginCancelBtn').addEventListener('click', closeLogin);
+  document.getElementById('closeLoginBtn').addEventListener('click', closeLogin);
+  document.getElementById('f_loginPin').addEventListener('keydown', (e)=>{ if (e.key === 'Enter') submitLogin(); });
+  renderAuthBtn();
   // Existing note stays if untouched; the first time the user clicks into the box it is cleared.
   document.getElementById('f_remarks').addEventListener('focus', (e)=>{
     if (state.remarksPrefilled && !state.remarksCleared){ e.target.value = ''; state.remarksCleared = true; }
@@ -3578,8 +3626,6 @@ function bindEvents(){
     document.getElementById('f_dueDate').disabled = e.target.checked;
     if (e.target.checked) document.getElementById('f_dueDate').value = '';
   });
-  attachNameAutocomplete('f_inputBy', 'f_inputBy_ac', {});
-  attachNameAutocomplete('f_updatedBy', 'f_updatedBy_ac', {});
   document.getElementById('ownerSelectBtn').addEventListener('click', (e)=>{ e.stopPropagation(); toggleOwnerSelectPanel(); });
   document.getElementById('ownerSelectSearch').addEventListener('input', (e)=> renderOwnerSelectList(e.target.value));
   document.getElementById('ownerSelectSearch').addEventListener('click', (e)=> e.stopPropagation());
