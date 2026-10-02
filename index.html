@@ -1061,17 +1061,16 @@ html[data-hween="on"] .present-overlay::before{
   </div>
 </div>
 
-<!-- Login -->
-<div class="overlay" id="loginOverlay" hidden style="z-index:200;">
-  <div class="modal" style="max-width:380px;">
-    <div class="modal-head"><h2>Sign in</h2><button class="close-x" id="closeLoginBtn">✕</button></div>
+<!-- Login gate (PIN only) -->
+<div class="overlay" id="loginOverlay" hidden style="z-index:200; background:var(--bg);">
+  <div class="modal" style="max-width:360px;">
+    <div class="modal-head"><h2>🔒 Enter your PIN</h2></div>
     <div class="modal-body">
-      <p class="muted" style="margin:0; font-size:13px;">Sign in to add or change items. Your name is recorded on every change you make.</p>
-      <div class="field"><label>Your name</label><input type="text" id="f_loginName" placeholder="Type your name" autocomplete="off"><div class="name-autocomplete" id="f_loginName_ac" hidden></div></div>
-      <div class="field"><label>4-digit PIN</label><input type="password" id="f_loginPin" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••"></div>
+      <p class="muted" style="margin:0; font-size:13px;">Your PIN identifies you. Every change you make in this session is recorded under your name.</p>
+      <div class="field"><label>4-digit PIN</label><input type="password" id="f_loginPin" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••" style="text-align:center; font-size:22px;"></div>
       <div id="loginError" class="field-error-msg" style="display:none;"></div>
     </div>
-    <div class="modal-foot"><button class="btn" id="loginCancelBtn">Cancel</button><button class="btn btn-primary" id="loginSubmitBtn">Sign in</button></div>
+    <div class="modal-foot"><span class="muted" style="font-size:12px;">Closing this browser tab signs you out.</span><button class="btn btn-primary" id="loginSubmitBtn">Continue</button></div>
   </div>
 </div>
 
@@ -1626,6 +1625,7 @@ async function init(){
   applyStoredMobileMode();
   // Bind controls FIRST so the UI stays interactive even if loading fails.
   bindEvents();
+  if (!AUTH) openLogin();   // PIN gate: first visit, or a new browser session
 
   try {
     // Roster/config is static and already in this page (DEMO_ROSTER) — no server round trip.
@@ -2931,7 +2931,8 @@ function attachNameAutocomplete(inputId, listId, opts){
 
 /* ---------- Sign in (PIN) ---------- */
 let AUTH = null;
-try { AUTH = JSON.parse(localStorage.getItem('AR_AUTH') || 'null'); } catch (e) {}
+try { localStorage.removeItem('AR_AUTH'); } catch (e) {}   // old persistent sign-in no longer used
+try { AUTH = JSON.parse(sessionStorage.getItem('AR_AUTH') || 'null'); } catch (e) {}
 let _afterLogin = null;
 function renderAuthBtn(){
   const b = document.getElementById('authBtn');
@@ -2940,31 +2941,29 @@ function renderAuthBtn(){
 }
 function setAuth(a){
   AUTH = a;
-  try { if (a) localStorage.setItem('AR_AUTH', JSON.stringify(a)); else localStorage.removeItem('AR_AUTH'); } catch (e) {}
+  try { if (a) sessionStorage.setItem('AR_AUTH', JSON.stringify(a)); else sessionStorage.removeItem('AR_AUTH'); } catch (e) {}
   renderAuthBtn();
+  if (!a) openLogin();   // signed out -> gate comes back
 }
 function openLogin(after){
   _afterLogin = after || null;
-  document.getElementById('f_loginName').value = '';
   document.getElementById('f_loginPin').value = '';
   document.getElementById('loginError').style.display = 'none';
   document.getElementById('loginOverlay').hidden = false;
-  document.getElementById('f_loginName').focus();
+  setTimeout(()=>document.getElementById('f_loginPin').focus(), 50);
 }
 function closeLogin(){ document.getElementById('loginOverlay').hidden = true; _afterLogin = null; }
 async function submitLogin(){
   const err = document.getElementById('loginError');
-  const disp = CFG.nameToDisp[document.getElementById('f_loginName').value.trim().toLowerCase()];
   const pin = document.getElementById('f_loginPin').value.trim();
-  const fail = (m)=>{ err.textContent = m; err.style.display = 'block'; };
-  if (!disp) return fail('Please pick your name from the list.');
+  const fail = (m)=>{ err.textContent = m; err.style.display = 'block'; document.getElementById('f_loginPin').value = ''; };
   if (!/^\d{4}$/.test(pin)) return fail('Enter your 4-digit PIN.');
   const btn = document.getElementById('loginSubmitBtn');
   btn.disabled = true;
-  AUTH = { name: disp, pin: pin };
+  AUTH = { pin: pin };
   try {
     const r = await run('login');
-    setAuth({ name: (r && r.name) || disp, pin: pin });
+    setAuth({ name: r.name, pin: pin });          // identity comes from the PIN, verified by the server
     const next = _afterLogin;
     document.getElementById('loginOverlay').hidden = true; _afterLogin = null;
     if (next) next();
@@ -3601,13 +3600,10 @@ function bindEvents(){
   document.getElementById('closeModalBtn').addEventListener('click', closeActionModal);
   document.getElementById('cancelBtn').addEventListener('click', closeActionModal);
   document.getElementById('saveBtn').addEventListener('click', saveAction);
-  attachNameAutocomplete('f_loginName', 'f_loginName_ac', {});
   document.getElementById('authBtn').addEventListener('click', ()=>{
     if (AUTH){ if (confirm('Sign out ' + AUTH.name + '?')) setAuth(null); } else openLogin();
   });
   document.getElementById('loginSubmitBtn').addEventListener('click', submitLogin);
-  document.getElementById('loginCancelBtn').addEventListener('click', closeLogin);
-  document.getElementById('closeLoginBtn').addEventListener('click', closeLogin);
   document.getElementById('f_loginPin').addEventListener('keydown', (e)=>{ if (e.key === 'Enter') submitLogin(); });
   renderAuthBtn();
   // Existing note stays if untouched; the first time the user clicks into the box it is cleared.
