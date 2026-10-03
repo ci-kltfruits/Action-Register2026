@@ -1071,7 +1071,7 @@ html[data-hween="on"] .present-overlay::before{
       <div class="field"><label>4-digit PIN</label><input type="password" id="f_loginPin" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••" style="text-align:center; font-size:22px;"></div>
       <div id="loginError" class="field-error-msg" style="display:none;"></div>
     </div>
-    <div class="modal-foot"><span class="muted" style="font-size:12px;">Closing this browser tab signs you out.</span><button class="btn" id="loginCancelBtn" hidden>Cancel</button><button class="btn btn-primary" id="loginSubmitBtn">Continue</button></div>
+    <div class="modal-foot"><span class="muted" style="font-size:12px;">Closing this browser tab signs you out.</span><button class="btn" id="loginCancelBtn" hidden>Cancel</button></div>
   </div>
 </div>
 
@@ -2936,6 +2936,7 @@ let AUTH = null;
 try { localStorage.removeItem('AR_AUTH'); } catch (e) {}   // old persistent sign-in no longer used
 try { AUTH = JSON.parse(sessionStorage.getItem('AR_AUTH') || 'null'); } catch (e) {}
 let _afterLogin = null;
+let _loggingIn = false;
 let GATE_ON = true;                 // admin can switch the arrival gate off (see toggleGate)
 const ADMIN_NAME = 'G. Tagotong';   // UI only; the server enforces who may change the setting
 function renderAuthBtn(){
@@ -2992,12 +2993,12 @@ async function toggleGate(){
   } catch (e) { alert('Could not change the setting. ' + (e && e.message ? e.message : '')); }
 }
 async function submitLogin(){
+  if (_loggingIn) return;   // already signing in
   const err = document.getElementById('loginError');
   const pin = document.getElementById('f_loginPin').value.trim();
   const fail = (m)=>{ err.textContent = m; err.style.display = 'block'; document.getElementById('f_loginPin').value = ''; };
   if (!/^\d{4}$/.test(pin)) return fail('Enter your 4-digit PIN.');
-  const btn = document.getElementById('loginSubmitBtn');
-  btn.disabled = true;
+  _loggingIn = true;
   AUTH = { pin: pin };
   try {
     const r = await run('login');
@@ -3008,7 +3009,7 @@ async function submitLogin(){
   } catch (e) {
     AUTH = null; renderAuthBtn();
     fail(e && e.message ? e.message : 'Could not sign in.');
-  } finally { btn.disabled = false; }
+  } finally { _loggingIn = false; }
 }
 
 function openActionModal(id, mode, opts){
@@ -3641,10 +3642,14 @@ function bindEvents(){
   document.getElementById('authBtn').addEventListener('click', ()=>{
     if (AUTH){ if (confirm('Sign out ' + AUTH.name + '?')) setAuth(null); } else openLogin();
   });
-  document.getElementById('loginSubmitBtn').addEventListener('click', submitLogin);
   document.getElementById('loginCancelBtn').addEventListener('click', closeLogin);
   document.getElementById('gateBtn').addEventListener('click', toggleGate);
   document.getElementById('f_loginPin').addEventListener('keydown', (e)=>{ if (e.key === 'Enter') submitLogin(); });
+  // Sign in automatically as soon as the 4th digit is typed (no need to press Continue).
+  document.getElementById('f_loginPin').addEventListener('input', (e)=>{
+    e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4);
+    if (e.target.value.length === 4) submitLogin();
+  });
   renderAuthBtn();
   // Existing note stays if untouched; the first time the user clicks into the box it is cleared.
   document.getElementById('f_remarks').addEventListener('focus', (e)=>{
