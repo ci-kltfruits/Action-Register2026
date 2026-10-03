@@ -285,6 +285,27 @@ tbody tr.tr-multidept td{ height:auto; max-height:none; vertical-align:top; padd
 .field{ display:grid; gap:6px; position:relative; }
 .field label{ font-size:12.5px; font-weight:700; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.3px; }
 .field label .req{ color:var(--bad); }
+/* LOGIN GATE (full page, always dark) */
+.gate-page{ position:fixed; inset:0; z-index:200; display:flex; align-items:center; justify-content:center; padding:24px; background:radial-gradient(ellipse at 50% 0%, #1E2540 0%, #0E1118 62%); color:#EDEEF2; }
+.gate-inner{ width:100%; max-width:360px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:12px; transition:opacity .2s ease; }
+.gate-logo{ width:58px; height:58px; border-radius:15px; background:#4C5FD5; color:#fff; display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:20px; letter-spacing:.5px; box-shadow:0 8px 28px rgba(76,95,213,.45); }
+.gate-title{ font-size:32px; font-weight:700; margin:6px 0 0; letter-spacing:.3px; }
+.gate-sub{ margin:0 0 14px; color:#9399A6; font-size:15px; }
+.pin-dots{ position:relative; display:flex; gap:24px; padding:12px 16px; cursor:pointer; }
+.pin-dot{ width:22px; height:22px; border-radius:50%; background:#3A404C; transition:background .12s ease, transform .12s ease; }
+.pin-dot.on{ background:#FFFFFF; transform:scale(1.1); }
+.pin-dots input{ position:absolute; inset:0; width:100%; height:100%; opacity:0; border:0; padding:0; background:transparent; color:transparent; caret-color:transparent; font-size:16px; cursor:pointer; outline:none; }
+.gate-status{ min-height:22px; font-size:14px; font-weight:600; color:#F87171; }
+.gate-status.loading{ color:#C9CEDA; display:flex; align-items:center; justify-content:center; gap:8px; }
+.gate-spinner{ width:14px; height:14px; border:2px solid #4A5160; border-top-color:#FFFFFF; border-radius:50%; animation:logo-spin .7s linear infinite; }
+.gate-cancel{ margin-top:8px; background:none; border:1px solid #3A404C; color:#C9CEDA; padding:8px 20px; border-radius:8px; font-weight:600; font-size:14px; cursor:pointer; }
+.gate-cancel:hover{ background:rgba(255,255,255,.08); }
+.gate-page.is-loading .gate-inner{ opacity:.78; pointer-events:none; }
+.gate-page.is-loading .pin-dots{ animation:gate-pulse 1s ease-in-out infinite; }
+@keyframes gate-pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.4; } }
+.pin-dots.shake{ animation:gate-shake .35s ease; }
+@keyframes gate-shake{ 0%,100%{ transform:translateX(0); } 20%{ transform:translateX(-9px); } 40%{ transform:translateX(9px); } 60%{ transform:translateX(-6px); } 80%{ transform:translateX(6px); } }
+@media (prefers-reduced-motion: reduce){ .gate-page.is-loading .pin-dots, .pin-dots.shake, .gate-spinner{ animation:none; } }
 .field input[type=password]{ border:1px solid var(--border); background:var(--bg); color:var(--ink); padding:10px 11px; border-radius:8px; font-size:14.5px; width:100%; letter-spacing:4px; }
 .field label.is-required::after{ content:" *"; color:var(--bad); }
 .field input[type=text], .field input[type=date], .field textarea, .field select, .field input[type=file]{ border:1px solid var(--border); background:var(--bg); color:var(--ink); padding:10px 11px; border-radius:8px; font-size:14.5px; width:100%; }
@@ -1062,16 +1083,18 @@ html[data-hween="on"] .present-overlay::before{
   </div>
 </div>
 
-<!-- Login gate (PIN only) -->
-<div class="overlay" id="loginOverlay" hidden style="z-index:200; background:var(--bg);">
-  <div class="modal" style="max-width:360px;">
-    <div class="modal-head"><h2>🔒 Enter your PIN</h2></div>
-    <div class="modal-body">
-      <p class="muted" style="margin:0; font-size:13px;">Your PIN identifies you. Every change you make in this session is recorded under your name.</p>
-      <div class="field"><label>4-digit PIN</label><input type="password" id="f_loginPin" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••" style="text-align:center; font-size:22px;"></div>
-      <div id="loginError" class="field-error-msg" style="display:none;"></div>
+<!-- Login gate (full page) -->
+<div class="gate-page" id="loginOverlay" hidden>
+  <div class="gate-inner">
+    <div class="gate-logo">AR</div>
+    <h1 class="gate-title">Action Register</h1>
+    <p class="gate-sub">Enter your PIN</p>
+    <div class="pin-dots" id="pinDots">
+      <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
+      <input type="tel" id="f_loginPin" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="PIN">
     </div>
-    <div class="modal-foot"><span class="muted" style="font-size:12px;">Closing this browser tab signs you out.</span><button class="btn" id="loginCancelBtn" hidden>Cancel</button></div>
+    <div class="gate-status" id="loginError"></div>
+    <button class="gate-cancel" id="loginCancelBtn" hidden>Cancel</button>
   </div>
 </div>
 
@@ -1646,6 +1669,18 @@ async function init(){
     showLoadError('Could not build page controls. ' + errMsg(err));
   }
 
+  // Nothing (not even the saved copy) is shown until we know who is using the app:
+  //  - signed in this session -> use the saved copy + refresh right away
+  //  - not signed in          -> loadGate() asks the server: gate ON = PIN screen, gate OFF = start then
+  state.loading = true;
+  render();
+  if (AUTH) startData();
+}
+
+let dataStarted = false;
+async function startData(){
+  if (dataStarted) return;
+  dataStarted = true;
   // Show the last saved copy instantly (if any), then refresh from the server in the background.
   const saved = readItemsCache();
   if (saved){
@@ -1656,7 +1691,6 @@ async function init(){
     state.loading = true;
   }
   render();
-
   try {
     await loadItems(true);
   } catch (err) {
@@ -2938,7 +2972,7 @@ try { AUTH = JSON.parse(sessionStorage.getItem('AR_AUTH') || 'null'); } catch (e
 let _afterLogin = null;
 let _loggingIn = false;
 let GATE_ON = true;                 // admin can switch the arrival gate off (see toggleGate)
-const ADMIN_NAME = 'G. Tagotong';   // UI only; the server enforces who may change the setting
+const ADMIN_NAMES = ['G. Tagotong', 'N. Lim'];   // UI only; the server enforces who may change the setting
 function renderAuthBtn(){
   const b = document.getElementById('authBtn');
   b.textContent = AUTH ? '👤 ' + AUTH.name : 'Sign in';
@@ -2949,17 +2983,32 @@ function setAuth(a){
   AUTH = a;
   try { if (a) sessionStorage.setItem('AR_AUTH', JSON.stringify(a)); else sessionStorage.removeItem('AR_AUTH'); } catch (e) {}
   renderAuthBtn();
-  if (!a && GATE_ON) openLogin();   // signed out -> gate comes back
+  if (!a){
+    dataStarted = false;
+    if (GATE_ON){ state.items = []; state.loading = true; render(); openLogin(); }   // signed out -> gate comes back, data hidden
+  }
+}
+function updatePinDots(){
+  const n = document.getElementById('f_loginPin').value.length;
+  document.querySelectorAll('#pinDots .pin-dot').forEach((d,i)=> d.classList.toggle('on', i < n));
+}
+// Frozen "signing in" look: dots pulse, page dims, nothing can be clicked or typed.
+function setLoginLoading(on){
+  document.getElementById('loginOverlay').classList.toggle('is-loading', on);
+  document.getElementById('f_loginPin').disabled = on;
+  const st = document.getElementById('loginError');
+  if (on){ st.className = 'gate-status loading'; st.innerHTML = '<span class="gate-spinner"></span>Signing in…'; }
 }
 function openLogin(after){
   _afterLogin = after || null;
-  document.getElementById('f_loginPin').value = '';
-  document.getElementById('loginError').style.display = 'none';
-  const ov = document.getElementById('loginOverlay');
-  ov.style.background = GATE_ON ? 'var(--bg)' : '';              // full cover when the gate is on
+  const inp = document.getElementById('f_loginPin');
+  inp.value = '';
+  updatePinDots();
+  setLoginLoading(false);
+  const st = document.getElementById('loginError'); st.className = 'gate-status'; st.textContent = '';
   document.getElementById('loginCancelBtn').hidden = GATE_ON;    // can cancel only when the gate is off
-  ov.hidden = false;
-  setTimeout(()=>document.getElementById('f_loginPin').focus(), 50);
+  document.getElementById('loginOverlay').hidden = false;
+  setTimeout(()=>inp.focus(), 50);
 }
 function closeLogin(){ document.getElementById('loginOverlay').hidden = true; _afterLogin = null; }
 
@@ -2967,7 +3016,7 @@ function closeLogin(){ document.getElementById('loginOverlay').hidden = true; _a
 function renderGateBtn(){
   const b = document.getElementById('gateBtn');
   if (!b) return;
-  b.hidden = !(AUTH && AUTH.name === ADMIN_NAME);
+  b.hidden = !(AUTH && ADMIN_NAMES.indexOf(AUTH.name) !== -1);
   b.textContent = GATE_ON ? '🔒 Gate: ON' : '🔓 Gate: OFF';
 }
 function rememberGate(){ try { localStorage.setItem('AR_GATE_OFF', GATE_ON ? '0' : '1'); } catch (e) {} }
@@ -2977,11 +3026,11 @@ async function loadGate(){
   renderGateBtn();
   if (!AUTH){
     if (GATE_ON && document.getElementById('loginOverlay').hidden) openLogin();
-    else if (!GATE_ON) closeLogin();
+    else if (!GATE_ON){ closeLogin(); startData(); }
   }
 }
 async function toggleGate(){
-  if (!AUTH || AUTH.name !== ADMIN_NAME) return;
+  if (!AUTH || ADMIN_NAMES.indexOf(AUTH.name) === -1) return;
   const next = !GATE_ON;
   const msg = next ? 'Turn the PIN login gate ON for everyone?'
                    : 'Turn the PIN login gate OFF? People can then open the app without a PIN (a PIN is still needed to make any change).';
@@ -2994,21 +3043,29 @@ async function toggleGate(){
 }
 async function submitLogin(){
   if (_loggingIn) return;   // already signing in
-  const err = document.getElementById('loginError');
-  const pin = document.getElementById('f_loginPin').value.trim();
-  const fail = (m)=>{ err.textContent = m; err.style.display = 'block'; document.getElementById('f_loginPin').value = ''; };
-  if (!/^\d{4}$/.test(pin)) return fail('Enter your 4-digit PIN.');
+  const inp = document.getElementById('f_loginPin');
+  const pin = inp.value.trim();
+  if (!/^\d{4}$/.test(pin)) return;
   _loggingIn = true;
+  setLoginLoading(true);
   AUTH = { pin: pin };
   try {
     const r = await run('login');
     setAuth({ name: r.name, pin: pin });          // identity comes from the PIN, verified by the server
+    startData();                                   // only now is the saved copy used
     const next = _afterLogin;
     document.getElementById('loginOverlay').hidden = true; _afterLogin = null;
+    setLoginLoading(false);
     if (next) next();
   } catch (e) {
     AUTH = null; renderAuthBtn();
-    fail(e && e.message ? e.message : 'Could not sign in.');
+    setLoginLoading(false);
+    inp.value = ''; updatePinDots();
+    const st = document.getElementById('loginError');
+    st.className = 'gate-status'; st.textContent = e && e.message ? e.message : 'Could not sign in.';
+    const dots = document.getElementById('pinDots');
+    dots.classList.remove('shake'); void dots.offsetWidth; dots.classList.add('shake');
+    setTimeout(()=>inp.focus(), 50);
   } finally { _loggingIn = false; }
 }
 
@@ -3285,14 +3342,6 @@ async function saveAction(){
   if (mode === 'edit' && state.editHistoryPromise) await state.editHistoryPromise;
   const vals = validateForm(mode);
   if (!vals) return;
-  if (mode === 'update' && state.updateDept && AUTH){   // (guests skip this check; the gate is off)
-    const me = AUTH.name;
-    const isFac = CROSS_DEPT_FACILITATORS.some(n => n.toLowerCase() === me.toLowerCase());
-    if (!isFac && CFG.nameToDept[me.toLowerCase()] !== state.updateDept){
-      alert('Only someone from ' + state.updateDept + ' (or a facilitator) can record this department\'s update. You are signed in as ' + me + '.');
-      return;
-    }
-  }
 
   const saveBtn = document.getElementById('saveBtn');
   saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
@@ -3643,11 +3692,14 @@ function bindEvents(){
     if (AUTH){ if (confirm('Sign out ' + AUTH.name + '?')) setAuth(null); } else openLogin();
   });
   document.getElementById('loginCancelBtn').addEventListener('click', closeLogin);
+  document.getElementById('loginOverlay').addEventListener('click', ()=>{ const i = document.getElementById('f_loginPin'); if (!i.disabled) i.focus(); });
   document.getElementById('gateBtn').addEventListener('click', toggleGate);
   document.getElementById('f_loginPin').addEventListener('keydown', (e)=>{ if (e.key === 'Enter') submitLogin(); });
   // Sign in automatically as soon as the 4th digit is typed (no need to press Continue).
   document.getElementById('f_loginPin').addEventListener('input', (e)=>{
     e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4);
+    updatePinDots();
+    if (e.target.value.length) document.getElementById('loginError').textContent = '';
     if (e.target.value.length === 4) submitLogin();
   });
   renderAuthBtn();
@@ -3730,11 +3782,11 @@ function bindEvents(){
   // Auto-refresh every 10 min, but never in a hidden tab; catch up when the tab is shown again.
   const AUTO_REFRESH_MS = 10 * 60 * 1000;
   setInterval(async ()=>{
-    if (document.hidden) return;
+    if (document.hidden || !dataStarted) return;
     try { await loadItems(); } catch (e) { console.error(e); }
   }, AUTO_REFRESH_MS);
   document.addEventListener('visibilitychange', async ()=>{
-    if (!document.hidden && Date.now() - lastLoadAt > AUTO_REFRESH_MS){
+    if (dataStarted && !document.hidden && Date.now() - lastLoadAt > AUTO_REFRESH_MS){
       try { await loadItems(); } catch (e) { console.error(e); }
     }
   });
