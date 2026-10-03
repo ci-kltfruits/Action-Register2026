@@ -787,6 +787,132 @@ html[data-hween="on"] .present-overlay::before{
   background:repeating-linear-gradient(135deg,var(--hween-orange) 0 12px, var(--hween-black) 12px 24px);
 }
 
+/* ============================================================
+   PREMIUM POLISH
+   ============================================================ */
+:root{ --radius:16px; --shadow: 0 1px 2px rgba(15,18,40,.05), 0 10px 30px rgba(15,18,40,.08); --row-h:84px; }
+html[data-theme="dark"]{ --shadow: 0 1px 2px rgba(0,0,0,.35), 0 14px 34px rgba(0,0,0,.42); }
+body{ font-variant-numeric:tabular-nums; }
+.titles h1{ letter-spacing:-.3px; }
+.ic{ width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; vertical-align:-3px; flex:none; }
+.btn .ic, .theme-toggle .ic{ margin-right:0; }
+.theme-toggle .lbl{ margin-left:6px; }
+.topbar{ background:linear-gradient(180deg,var(--surface),color-mix(in srgb,var(--surface) 90%,var(--bg))); box-shadow:0 1px 0 var(--border), 0 8px 24px rgba(10,12,30,.05); }
+.btn{ position:relative; overflow:hidden; transition:background .15s ease, transform .1s ease, box-shadow .15s ease, filter .15s ease; }
+.btn:active{ transform:scale(.97); }
+.btn-primary{ background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 86%,#fff),var(--accent)); box-shadow:0 4px 14px color-mix(in srgb,var(--accent) 35%,transparent); }
+.btn-primary:hover{ box-shadow:0 6px 20px color-mix(in srgb,var(--accent) 45%,transparent); }
+.ripple{ position:absolute; border-radius:50%; background:rgba(255,255,255,.35); transform:scale(0); animation:ripple .5s ease-out forwards; pointer-events:none; }
+@keyframes ripple{ to{ transform:scale(2.6); opacity:0; } }
+.tab{ transition:background .15s ease, color .15s ease, transform .15s ease, box-shadow .15s ease; }
+.tab:hover{ transform:translateY(-1px); }
+.tabs{ scrollbar-width:thin; }
+.tabs::-webkit-scrollbar{ height:5px; }
+.tabs.fade-r{ -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 48px),transparent); mask-image:linear-gradient(90deg,#000 calc(100% - 48px),transparent); }
+
+/* table */
+thead th:nth-child(1){ width:4%; } thead th:nth-child(2){ width:6%; } thead th:nth-child(3){ width:7%; }
+thead th:nth-child(4){ width:10%; } thead th:nth-child(5){ width:23%; } thead th:nth-child(6){ width:7%; }
+thead th:nth-child(7){ width:9%; } thead th:nth-child(8){ width:9%; } thead th:nth-child(9){ width:8%; }
+thead th:nth-child(10){ width:10%; } thead th:nth-child(11){ width:7%; }
+thead th{ background:color-mix(in srgb,var(--surface-2) 88%,transparent); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); }
+tbody td{ max-height:none; }
+tbody tr{ transition:background .15s ease; }
+tbody tr:hover td:first-child{ box-shadow:inset 3px 0 0 var(--accent); }
+.upd-btn{ max-height:none; padding:8px 10px; border-radius:10px; line-height:1.35; }
+.upd-by{ margin-top:2px; }
+.upd-warn{ animation:none; }
+tr.row-overdue .upd-warn{ animation:upd-warn-pulse 2s ease-in-out infinite; }
+.badge-3line .line1{ font-size:11px; } .badge-3line .line2{ font-size:14px; font-weight:800; } .badge-3line .line3{ font-size:9.5px; }
+.badge-2line .line1{ font-size:12px; } .badge-2line .line2{ font-size:11.5px; }
+.media-add{ display:inline-flex; align-items:center; gap:4px; padding:6px 11px; border:1px dashed var(--border); border-radius:999px; font-size:12px; font-weight:600; color:var(--ink-dim); cursor:pointer; transition:.15s ease; }
+.media-add:hover{ border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
+
+/* present mode: fit one screen */
+.present-text-col{ padding:34px 48px; }
+.present-title{ font-size:clamp(28px,4.2vw,46px); margin-bottom:16px; }
+.present-grid{ gap:16px; margin:14px 0; }
+.present-label{ font-size:13px; }
+.present-value{ font-size:clamp(15px,1.5vw,19px); padding:10px 14px; border-radius:12px; }
+.present-value .muted{ font-size:14px; }
+.dept-blocks{ display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:12px; }
+.dept-blocks .dept-update-block + .dept-update-block{ margin-top:0; }
+.present-card.slide-next{ animation:slide-next .38s cubic-bezier(.2,.8,.2,1); }
+.present-card.slide-prev{ animation:slide-prev .38s cubic-bezier(.2,.8,.2,1); }
+@keyframes slide-next{ from{ opacity:0; transform:translateX(44px); } }
+@keyframes slide-prev{ from{ opacity:0; transform:translateX(-44px); } }
+
+/* mobile header: title never covered, buttons become icon chips */
+body.mobile-mode .topbar{ gap:8px; }
+body.mobile-mode .topbar-controls{ gap:6px; flex-wrap:nowrap; }
+body.mobile-mode .topbar-controls .lbl{ display:none; }
+body.mobile-mode .topbar-controls .theme-toggle{ width:38px; padding:0 !important; }
+body.mobile-mode #syncStatus{ display:none; }
+body.mobile-mode .titles h1{ font-size:16px; }
+body.mobile-mode .brand{ flex:1 1 auto; }
+
+/* dashboard */
+.dash-donut-wrap{ display:flex; align-items:center; gap:22px; flex-wrap:wrap; }
+.donut{ width:150px; height:150px; border-radius:50%; position:relative; animation:donut-in .7s cubic-bezier(.2,.8,.2,1); flex:none; }
+.donut-hole{ position:absolute; inset:24px; border-radius:50%; background:var(--surface); display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.donut-hole b{ font-family:'IBM Plex Mono'; font-size:24px; } .donut-hole span{ font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.3px; }
+.donut-legend{ display:grid; gap:6px; font-size:13.5px; }
+.donut-legend i{ display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:8px; }
+@keyframes donut-in{ from{ opacity:0; transform:rotate(-120deg) scale(.7); } }
+.dept-bar-fill{ transition:width .8s cubic-bezier(.2,.8,.2,1); }
+
+/* toast */
+.toast{ position:fixed; left:50%; bottom:28px; transform:translateX(-50%); z-index:400; display:flex; align-items:center; gap:8px; padding:11px 18px; border-radius:999px; background:var(--ink); color:var(--bg); font-weight:700; font-size:14px; box-shadow:var(--shadow); animation:toast-in .3s cubic-bezier(.2,.8,.2,1); }
+.toast .ic{ color:var(--good); }
+.toast.out{ opacity:0; transform:translate(-50%,10px); transition:.35s ease; }
+@keyframes toast-in{ from{ opacity:0; transform:translate(-50%,16px); } }
+
+/* login page */
+.gate-page{ background:radial-gradient(ellipse at 30% 0%,#26305A 0%,transparent 55%),radial-gradient(ellipse at 80% 100%,#2A1F4A 0%,transparent 50%),#0E1118; background-size:140% 140%,140% 140%,auto; animation:gate-bg 18s ease-in-out infinite alternate; }
+@keyframes gate-bg{ from{ background-position:0% 0%,100% 100%,0 0; } to{ background-position:100% 30%,0% 70%,0 0; } }
+.gate-inner{ animation:gate-in .55s cubic-bezier(.2,.8,.2,1) backwards; }
+@keyframes gate-in{ from{ opacity:0; transform:translateY(16px) scale(.98); } }
+
+/* entrance animations */
+@keyframes row-in{ from{ opacity:0; transform:translateY(8px); } }
+tbody.animate tr, .mobile-card-list.animate .mcard{ animation:row-in .38s cubic-bezier(.2,.8,.2,1) backwards; }
+.overlay:not([hidden]){ animation:fade-in .2s ease; }
+.overlay:not([hidden]) .modal{ animation:modal-in .26s cubic-bezier(.2,.8,.2,1); }
+@keyframes fade-in{ from{ opacity:0; } }
+@keyframes modal-in{ from{ opacity:0; transform:translateY(16px) scale(.97); } }
+tbody.animate tr:nth-child(1){ animation-delay:22ms; }
+.mobile-card-list.animate .mcard:nth-child(1){ animation-delay:30ms; }
+tbody.animate tr:nth-child(2){ animation-delay:44ms; }
+.mobile-card-list.animate .mcard:nth-child(2){ animation-delay:60ms; }
+tbody.animate tr:nth-child(3){ animation-delay:66ms; }
+.mobile-card-list.animate .mcard:nth-child(3){ animation-delay:90ms; }
+tbody.animate tr:nth-child(4){ animation-delay:88ms; }
+.mobile-card-list.animate .mcard:nth-child(4){ animation-delay:120ms; }
+tbody.animate tr:nth-child(5){ animation-delay:110ms; }
+.mobile-card-list.animate .mcard:nth-child(5){ animation-delay:150ms; }
+tbody.animate tr:nth-child(6){ animation-delay:132ms; }
+.mobile-card-list.animate .mcard:nth-child(6){ animation-delay:180ms; }
+tbody.animate tr:nth-child(7){ animation-delay:154ms; }
+.mobile-card-list.animate .mcard:nth-child(7){ animation-delay:210ms; }
+tbody.animate tr:nth-child(8){ animation-delay:176ms; }
+.mobile-card-list.animate .mcard:nth-child(8){ animation-delay:240ms; }
+tbody.animate tr:nth-child(9){ animation-delay:198ms; }
+.mobile-card-list.animate .mcard:nth-child(9){ animation-delay:270ms; }
+tbody.animate tr:nth-child(10){ animation-delay:220ms; }
+.mobile-card-list.animate .mcard:nth-child(10){ animation-delay:300ms; }
+tbody.animate tr:nth-child(11){ animation-delay:242ms; }
+.mobile-card-list.animate .mcard:nth-child(11){ animation-delay:330ms; }
+tbody.animate tr:nth-child(12){ animation-delay:264ms; }
+.mobile-card-list.animate .mcard:nth-child(12){ animation-delay:360ms; }
+tbody.animate tr:nth-child(13){ animation-delay:286ms; }
+.mobile-card-list.animate .mcard:nth-child(13){ animation-delay:390ms; }
+tbody.animate tr:nth-child(14){ animation-delay:308ms; }
+.mobile-card-list.animate .mcard:nth-child(14){ animation-delay:420ms; }
+tbody.animate tr:nth-child(15){ animation-delay:330ms; }
+.mobile-card-list.animate .mcard:nth-child(15){ animation-delay:450ms; }
+
+@media (prefers-reduced-motion: reduce){ *, *::before, *::after{ animation:none !important; transition:none !important; } }
+
 </style>
 </head>
 <body>
@@ -1042,6 +1168,7 @@ html[data-hween="on"] .present-overlay::before{
     </div>
     <div class="modal-body">
       <div class="dash-grid" id="dashCards"></div>
+      <div id="dashDonut" class="dash-donut-wrap"></div>
       <div>
         <div class="present-label" style="margin-bottom:10px;">Open items by department</div>
         <div id="dashDeptBars"></div>
@@ -1663,6 +1790,7 @@ async function init(){
 
   try {
     buildTabs();
+    setupTabsFade();
     buildStaticOptions();
     buildFilterBar();
   } catch (err) {
@@ -1800,6 +1928,7 @@ function buildTabs(){
       tabsEl.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
       applyDepartmentTheme(state.activeTab);
+      _animNext = true;
       render();
     });
   });
@@ -1816,14 +1945,14 @@ function buildStaticOptions(){
 function applyStoredTheme(){
   const saved = localStorage.getItem('AR_THEME') || 'dark';
   document.documentElement.setAttribute('data-theme', saved);
-  document.getElementById('themeToggle').textContent = saved==='dark' ? '☀️' : '🌙';
+  setIconBtn('themeToggle', saved==='dark' ? 'sun' : 'moon');
 }
 function toggleTheme(){
   const cur = document.documentElement.getAttribute('data-theme');
   const next = cur === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', next);
   localStorage.setItem('AR_THEME', next);
-  document.getElementById('themeToggle').textContent = next==='dark' ? '☀️' : '🌙';
+  setIconBtn('themeToggle', next==='dark' ? 'sun' : 'moon');
 }
 
 // Controls physically moved into the mobile sidebar (and back), so listeners keep working.
@@ -1857,7 +1986,7 @@ function detectShouldAutoEnableMobile(){
 function setMobileMode(on){
   document.body.classList.toggle('mobile-mode', on);
   if (on) moveControlsIntoSidebar(); else restoreControlsFromSidebar();
-  document.getElementById('mobileToggle').textContent = on ? '💻' : '📱';
+  setIconBtn('mobileToggle', on ? 'monitor' : 'phone');
   document.getElementById('mobileToggle').title = on ? 'Switch to desktop view' : 'Switch to mobile view';
   document.getElementById('mobileSidebarBtn').hidden = !on;
   if (!on) closeMobileSidebar();
@@ -2323,6 +2452,7 @@ function mcardDeptListHtml(it){
 function mediaBinCellHtml(it){
   const before = it.beforePhotos || [];
   const current = it.currentPhotos || [];
+  if (!before.length && !current.length) return `<div class="media-add" data-action="open-edit-for-photo" data-id="${it.id}" title="Add media">＋ Media</div>`;
   const col = (label, media, bin) => {
     if (!media.length){
       return `<div class="mediabin-col">
@@ -2407,7 +2537,7 @@ function render(){
     const isMultiDept = it.deptList && it.deptList.length > 0;
 
     tableRows.push(`
-    <tr data-id="${it.id}"${isMultiDept ? ' class="tr-multidept"' : ''}>
+    <tr data-id="${it.id}" class="${isMultiDept ? 'tr-multidept ' : ''}${getStatusBucket(it) === 'Overdue' ? 'row-overdue' : ''}">
       <td class="id-cell nowrap" style="text-align:center;">${it.id}</td>
       <td class="nowrap" style="text-align:center;">${formatShortDate(it.dateDiscussed)}</td>
       <td style="text-align:center;"><span class="ellipsis" title="${escapeHtml(it.meeting)}">${escapeHtml(it.meeting)}</span></td>
@@ -2438,12 +2568,13 @@ function render(){
         <span><b>Due:</b> ${dueDateCellHtml(it)}</span>
       </div>
       ${hasMedia ? `<div class="mcard-media" data-noopen="1">${mediaBinCellHtml(it)}</div>` : ''}
-      <div class="mcard-bottom" data-noopen="1">${isMultiDept ? mcardDeptListHtml(it) : updCellHtml}</div>
+      ${it.status === 'Closed' ? '' : `<div class="mcard-bottom" data-noopen="1">${isMultiDept ? mcardDeptListHtml(it) : updCellHtml}</div>`}
     </div>`);
   });
 
   tbody.innerHTML = tableRows.join('');
   cardList.innerHTML = cards.join('');
+  tbody.classList.toggle('animate', _animNext); cardList.classList.toggle('animate', _animNext); _animNext = false;
 
   [tbody, cardList].forEach(container=>{
     container.querySelectorAll('[data-action="open-update"]').forEach(btn=>{
@@ -2975,7 +3106,7 @@ let GATE_ON = true;                 // admin can switch the arrival gate off (se
 const ADMIN_NAMES = ['G. Tagotong', 'N. Lim'];   // UI only; the server enforces who may change the setting
 function renderAuthBtn(){
   const b = document.getElementById('authBtn');
-  b.textContent = AUTH ? '👤 ' + AUTH.name : 'Sign in';
+  b.innerHTML = icon('user') + '<span class="lbl">' + escapeHtml(AUTH ? AUTH.name : 'Sign in') + '</span>';
   b.title = AUTH ? 'Signed in as ' + AUTH.name + ' (click to sign out)' : 'Sign in';
   renderGateBtn();
 }
@@ -3017,7 +3148,7 @@ function renderGateBtn(){
   const b = document.getElementById('gateBtn');
   if (!b) return;
   b.hidden = !(AUTH && ADMIN_NAMES.indexOf(AUTH.name) !== -1);
-  b.textContent = GATE_ON ? '🔒 Gate: ON' : '🔓 Gate: OFF';
+  b.innerHTML = icon(GATE_ON ? 'lock' : 'unlock') + '<span class="lbl">Gate: ' + (GATE_ON ? 'ON' : 'OFF') + '</span>';
 }
 function rememberGate(){ try { localStorage.setItem('AR_GATE_OFF', GATE_ON ? '0' : '1'); } catch (e) {} }
 async function loadGate(){
@@ -3376,6 +3507,7 @@ async function saveAction(){
     }
     closeActionModal();
     render();
+    toast(mode === 'update' ? 'Update saved' : mode === 'new' ? 'Action added' : 'Changes saved');
     if (!document.getElementById('presentOverlay').hidden) renderPresentCard();
   } catch(err){
     alert('Something went wrong saving this action. ' + (err && err.message ? err.message : ''));
@@ -3540,6 +3672,15 @@ function openDashboard(){
   document.getElementById('dashCards').innerHTML = cards.map(([lbl,num])=>`
     <div class="dash-card"><div class="dash-num">${num}</div><div class="dash-lbl">${lbl}</div></div>
   `).join('');
+  animateCounts(document.getElementById('dashCards'));
+  {
+    const segs = [['On Track','#B7791F',bucket('On Track')],['Overdue','#D64545',bucket('Overdue')],['On Hold','#C2570B',bucket('On Hold')],['Closed','#1F9254',closedOnTime],['Closed Late','#7A8191',closedLate]].filter(x=>x[2]>0);
+    const sum = segs.reduce((a,x)=>a+x[2],0) || 1;
+    let acc = 0;
+    const stops = segs.map(x=>{ const a = acc/sum*100; acc += x[2]; return x[1] + ' ' + a + '% ' + (acc/sum*100) + '%'; }).join(', ');
+    document.getElementById('dashDonut').innerHTML = `<div class="donut" style="background:conic-gradient(${stops || 'var(--surface-2) 0 100%'});"><div class="donut-hole"><b>${total}</b><span>items</span></div></div>
+      <div class="donut-legend">${segs.map(x=>`<div><i style="background:${x[1]}"></i>${x[0]} <b class="mono">${x[2]}</b></div>`).join('')}</div>`;
+  }
 
   const maxCount = Math.max(1, ...CFG.departments.map(d=>items.filter(i=>itemMatchesDeptTab(i, d) && i.status!=='Closed').length));
   document.getElementById('dashDeptBars').innerHTML = CFG.departments.map(d=>{
@@ -3628,7 +3769,7 @@ function renderPresentCard(){
         ${(it.deptList && it.deptList.length) ? `
         <div style="margin:0 0 22px;">
           <div class="present-label">Per-Department Updates</div>
-          <div style="margin-top:8px;">
+          <div class="dept-blocks" style="margin-top:8px;">
             ${deptUpdateBlocksHtml(it, 'present-open-update', 'present-value')}
           </div>
         </div>` : ''}
@@ -3661,9 +3802,13 @@ function renderPresentCard(){
   });
   document.getElementById('presentMarkUpdated').hidden = !!(it.deptList && it.deptList.length) || it.status === 'Closed';
   fillLastNotes(it, document.getElementById('presentBody'));
+  const pc = document.querySelector('#presentBody .present-card');
+  if (pc && _presentDir) pc.classList.add(_presentDir > 0 ? 'slide-next' : 'slide-prev');
+  _presentDir = 0;
 }
 
 function presentNav(dir){
+  _presentDir = dir;
   state.presentIndex = (state.presentIndex + dir + state.presentQueue.length) % state.presentQueue.length;
   renderPresentCard();
 }
@@ -3672,6 +3817,8 @@ function presentNav(dir){
    EVENTS
    ============================================================ */
 function bindEvents(){
+  setIconBtn('noUpdateBtn', 'flag');
+  setIconBtn('dashboardBtn', 'chart', 'Dashboard');
   document.getElementById('themeToggle').addEventListener('click', toggleTheme);
   document.getElementById('noUpdateBtn').addEventListener('click', ()=>{ closeMobileSidebar(); openNoUpdateReport(); });
   document.getElementById('closeNoUpdateBtn').addEventListener('click', closeNoUpdateReport);
@@ -4400,6 +4547,58 @@ function stopHweenMusic(){
   const b = document.getElementById('hweenMuteBtn');
   if (b) b.remove();
 }
+
+/* ---------- polish helpers ---------- */
+const _IC = {
+  lock:'<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+  unlock:'<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
+  flag:'<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',
+  phone:'<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>',
+  monitor:'<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',
+  chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  check:'<path d="M20 6 9 17l-5-5"/>'
+};
+function icon(n){ return '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">' + (_IC[n] || '') + '</svg>'; }
+function setIconBtn(id, n, label){ const el = document.getElementById(id); if (el) el.innerHTML = icon(n) + (label ? '<span class="lbl">' + label + '</span>' : ''); }
+let _animNext = true, _presentDir = 0;
+function toast(msg){
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = icon('check') + escapeHtml(msg);
+  document.body.appendChild(t);
+  setTimeout(()=>t.classList.add('out'), 1900);
+  setTimeout(()=>t.remove(), 2400);
+}
+function animateCounts(root){
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  root.querySelectorAll('.dash-num').forEach(el=>{
+    const to = parseInt(el.textContent, 10);
+    if (isNaN(to)) return;
+    const t0 = performance.now(), dur = 650;
+    const step = now=>{ const p = Math.min(1, (now - t0) / dur); el.textContent = Math.round(to * (1 - Math.pow(1 - p, 3))); if (p < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  });
+}
+function setupTabsFade(){
+  const el = document.getElementById('tabs');
+  const upd = ()=> el.classList.toggle('fade-r', el.scrollLeft + el.clientWidth < el.scrollWidth - 6);
+  el.addEventListener('scroll', upd, { passive:true });
+  window.addEventListener('resize', upd);
+  setTimeout(upd, 0);
+}
+document.addEventListener('click', (e)=>{
+  const b = e.target.closest('.btn');
+  if (!b || b.disabled) return;
+  const r = b.getBoundingClientRect(), d = Math.max(r.width, r.height);
+  const s = document.createElement('span');
+  s.className = 'ripple';
+  s.style.cssText = 'width:' + d + 'px;height:' + d + 'px;left:' + (e.clientX - r.left - d/2) + 'px;top:' + (e.clientY - r.top - d/2) + 'px;';
+  b.appendChild(s);
+  setTimeout(()=>s.remove(), 520);
+});
 
 init();
 </script>
