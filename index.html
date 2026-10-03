@@ -806,7 +806,7 @@ body{ font-variant-numeric:tabular-nums; }
 @keyframes ripple{ to{ transform:scale(2.6); opacity:0; } }
 .tab{ transition:background .15s ease, color .15s ease, transform .15s ease, box-shadow .15s ease; }
 .tab:hover{ transform:translateY(-1px); }
-.tabs{ scrollbar-width:thin; }
+.tabs{ scrollbar-width:thin; scrollbar-color:color-mix(in srgb,var(--ink-dim) 45%,transparent) transparent; }
 .tabs::-webkit-scrollbar{ height:5px; }
 .tabs.fade-r{ -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 48px),transparent); mask-image:linear-gradient(90deg,#000 calc(100% - 48px),transparent); }
 
