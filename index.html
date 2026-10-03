@@ -1342,7 +1342,7 @@ function run(fnName, ...args){
       if (data.ok) resolve(data.result);
       else {
         let msg = data.error || 'Server error';
-        if (/^AUTH:/.test(msg)){ msg = msg.replace(/^AUTH:\s*/, ''); if (fnName !== 'login') setAuth(null); }
+        if (/^AUTH:/.test(msg)){ msg = msg.replace(/^AUTH:\s*/, ''); if (fnName !== 'login'){ if (!AUTH){ GATE_ON = true; rememberGate(); } setAuth(null); } }
         reject(new Error(msg));
       }
     } catch (err) {
@@ -3013,7 +3013,7 @@ async function submitLogin(){
 }
 
 function openActionModal(id, mode, opts){
-  if (!AUTH){ openLogin(()=>openActionModal(id, mode, opts)); return; }
+  if (!AUTH && GATE_ON){ openLogin(()=>openActionModal(id, mode, opts)); return; }   // gate OFF = open without a PIN
   opts = opts || {};
   state.editingId = id || null;
   state.modalMode = mode;
@@ -3026,7 +3026,7 @@ function openActionModal(id, mode, opts){
   const it = id ? state.items.find(i=>i.id===id) : null;
 
   document.getElementById('deleteBtn').hidden = (mode !== 'edit');
-  document.getElementById('actingAs').textContent = 'Saving as ' + AUTH.name;
+  document.getElementById('actingAs').textContent = 'Saving as ' + (AUTH ? AUTH.name : 'Guest (no PIN)');
   document.getElementById('saveBtn').textContent = mode === 'update' ? 'Save Update' : 'Save Action';
   document.getElementById('editModeHint').hidden = (mode !== 'edit');
   document.getElementById('f_remarksLabel').classList.toggle('is-required', mode === 'update');
@@ -3285,7 +3285,7 @@ async function saveAction(){
   if (mode === 'edit' && state.editHistoryPromise) await state.editHistoryPromise;
   const vals = validateForm(mode);
   if (!vals) return;
-  if (mode === 'update' && state.updateDept){
+  if (mode === 'update' && state.updateDept && AUTH){   // (guests skip this check; the gate is off)
     const me = AUTH.name;
     const isFac = CROSS_DEPT_FACILITATORS.some(n => n.toLowerCase() === me.toLowerCase());
     if (!isFac && CFG.nameToDept[me.toLowerCase()] !== state.updateDept){
@@ -3304,7 +3304,7 @@ async function saveAction(){
     };
 
     if (mode === 'new'){
-      payload.inputBy = AUTH.name;
+      payload.inputBy = (AUTH ? AUTH.name : 'Guest (no PIN)');
       payload.beforePhotos = state.pendingBefore;
       payload.currentPhotos = state.pendingCurrent;
       const created = await run('addAction', payload);
@@ -3314,7 +3314,7 @@ async function saveAction(){
       const idx = state.items.findIndex(i=>i.id===state.editingId);
       if (idx>-1) state.items[idx] = updated;
     } else {
-      payload.updatedBy = AUTH.name;
+      payload.updatedBy = (AUTH ? AUTH.name : 'Guest (no PIN)');
       if (state.updateDept) payload.updateDept = state.updateDept;
       const labels = computeChangedFieldLabels(payload, !!state.updateDept);
       if (state.updateDept) labels.push('Update (' + state.updateDept + ')');
