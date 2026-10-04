@@ -986,6 +986,73 @@ body.mobile-mode .pm-body{ grid-template-columns:1fr; }
 .present-bottom .present-count{ font-size:13px; font-weight:600; min-width:64px; text-align:right; }
 @media (max-width:600px){ .present-bottom .pm-progress{ display:none; } .present-bottom .present-count{ flex:1; } }
 
+/* ============================================================
+   ITEM WINDOWS (preview / edit / update): wider, grouped, uncluttered
+   ============================================================ */
+#previewModal{ max-width:min(1100px,95vw); }
+#actionModal{ max-width:min(1000px,95vw); }
+#actionModal.theme-update{ max-width:min(880px,95vw); }
+#actionModal .modal-body, #previewBody{ padding:22px 26px; gap:18px; }
+#previewFolderWrap{ display:none; }
+.pv-top{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.pv-top-l{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.pv-sub{ color:var(--ink-dim); font-size:14px; margin-top:4px; }
+.preview-title{ font-size:24px; margin:0; }
+.pv-grid{ display:grid; grid-template-columns:minmax(0,1.7fr) minmax(0,1fr); gap:18px; align-items:start; }
+.pv-main, .pv-side{ display:grid; gap:14px; align-content:start; }
+.pv-card{ background:color-mix(in srgb,var(--surface-2) 55%,transparent); border:1px solid var(--border); border-radius:14px; padding:14px 16px; }
+.pv-label{ font-size:11.5px; text-transform:uppercase; letter-spacing:.5px; font-weight:700; color:var(--ink-dim); margin-bottom:6px; }
+.pv-head{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+.pv-head .pv-label{ margin:0; }
+.pv-by{ font-size:13px; color:var(--ink-dim); font-weight:600; }
+.pv-text{ font-size:16px; line-height:1.55; white-space:pre-wrap; overflow-wrap:anywhere; }
+.pv-facts{ display:grid; gap:14px; }
+.pv-val{ font-size:18px; font-weight:600; overflow-wrap:anywhere; }
+.preview-photo-box img, .preview-photo-box .none, .preview-photo-box .video-placeholder{ height:110px; }
+
+/* edit / update form */
+.fm-grp{ display:grid; gap:12px; align-content:start; }
+.fm-h{ font-size:12px; text-transform:uppercase; letter-spacing:.5px; font-weight:700; color:var(--ink-dim); margin:0; padding-bottom:6px; border-bottom:1px solid var(--border); }
+.grp-note .fm-h{ display:none; }
+.grp-media{ grid-column:1 / -1; }
+#actingAs, #editModeHint{ grid-column:1 / -1; order:9; }
+.fm-more-btn{ display:none; grid-column:1 / -1; justify-content:center; }
+#actionModal.theme-new .modal-body, #actionModal.theme-edit .modal-body{ grid-template-columns:minmax(0,1fr) minmax(0,1fr); column-gap:26px; align-items:start; }
+#actionModal.theme-update .modal-body{ grid-template-columns:minmax(0,1fr); }
+#actionModal.theme-update .grp-note{ order:1; } #actionModal.theme-update .grp-sched{ order:2; }
+#actionModal.theme-update .grp-media{ order:3; } #actionModal.theme-update .fm-more-btn{ order:4; display:inline-flex; }
+#actionModal.theme-update .grp-basics{ order:5; } #actionModal.theme-update .grp-people{ order:6; }
+#actionModal.theme-update:not(.show-more) .grp-basics, #actionModal.theme-update:not(.show-more) .grp-people, #actionModal.theme-update:not(.show-more) .sch-extra{ display:none; }
+#actionModal.theme-update:not(.show-photos) .fm-media-body{ display:none; }
+#actionModal.theme-update #photosToggle{ cursor:pointer; }
+#actionModal.theme-update #photosToggle::after{ content:' ▾'; }
+#actionModal.theme-update.show-photos #photosToggle::after{ content:' ▴'; }
+#actionModal.theme-update #f_remarks{ min-height:140px; font-size:16px; }
+#actionModal .photo-bin-box{ display:grid; gap:10px; }
+.add-photo{ display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:8px 14px; border:1px dashed var(--border); border-radius:10px; font-weight:600; font-size:13px; color:var(--ink-dim); cursor:pointer; transition:.15s ease; }
+.add-photo:hover{ border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
+.seg{ display:inline-flex; border:1px solid var(--border); border-radius:10px; overflow:hidden; background:var(--bg); }
+.seg-btn{ border:0; background:transparent; color:var(--ink); padding:9px 16px; font-weight:600; font-size:13.5px; cursor:pointer; font-family:inherit; }
+.seg-btn + .seg-btn{ border-left:1px solid var(--border); }
+.seg-btn.on{ background:var(--accent); color:var(--accent-ink); }
+.chip-s{ display:inline-block; padding:2px 10px; margin:2px 5px 2px 0; border-radius:999px; background:var(--surface-2); border:1px solid var(--border); font-size:13px; }
+@media (max-width:860px){ #actionModal .modal-body{ grid-template-columns:minmax(0,1fr) !important; } .pv-grid{ grid-template-columns:minmax(0,1fr); } #actionModal .modal-body, #previewBody{ padding:18px 16px; } }
+body.mobile-mode #actionModal .modal-body{ grid-template-columns:minmax(0,1fr) !important; }
+body.mobile-mode .pv-grid{ grid-template-columns:minmax(0,1fr); }
+
+/* IRIDESCENT (CI): holographic foil, layered sheen + hue sweep + fine grain, not plain stripes */
+:root{ --iri:
+  repeating-linear-gradient(115deg, rgba(255,255,255,.16) 0 1px, rgba(255,255,255,0) 1px 5px),
+  radial-gradient(130% 150% at 12% -10%, rgba(255,255,255,.85) 0%, rgba(255,255,255,0) 42%),
+  radial-gradient(90% 120% at 100% 115%, rgba(120,90,255,.32) 0%, rgba(120,90,255,0) 60%),
+  conic-gradient(from 200deg at 55% 135%, #ff8fd0, #8fc8ff, #6fecd0, #fff08a, #c19bff, #ff8fd0); }
+.tab.dept-tab.iridescent-fill, .tab.dept-tab.iridescent-fill:hover, .tab.dept-tab.iridescent-fill.active{
+  background:var(--iri); background-size:auto, 100% 100%, 100% 100%, 130% 130%; background-position:0 0, 0 0, 0 0, 50% 50%;
+  color:#2a2440; border-color:rgba(255,255,255,.7);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.85), inset 0 -7px 14px rgba(120,100,210,.18), 0 2px 10px rgba(150,120,255,.28); }
+.tab.dept-tab.iridescent-fill:hover{ filter:saturate(1.2) brightness(1.04); }
+.tab.dept-tab.iridescent-fill.active{ border-color:rgba(140,110,255,.7); box-shadow:inset 0 1px 0 rgba(255,255,255,.9), inset 0 -7px 14px rgba(120,100,210,.22), 0 4px 16px rgba(150,120,255,.5); }
+
 </style>
 </head>
 <body>
@@ -1117,56 +1184,21 @@ body.mobile-mode .pm-body{ grid-template-columns:1fr; }
       </div>
     </div>
     <div class="modal-body">
-      <div class="row2">
-        <div class="field" data-field="dateDiscussed">
-          <label>Date Discussed <span class="req">*</span></label>
-          <input type="date" id="f_dateDiscussed">
-          <span class="field-error-msg">Please select a date.</span>
+      <div class="fm-grp grp-basics">
+        <p class="fm-h">Basics</p>
+        <div class="field" data-field="issues">
+          <label>Issues/Concerns <span class="req">*</span></label>
+          <input type="text" id="f_issues" placeholder="What needs to happen">
+          <span class="field-error-msg">Issues/Concerns is required.</span>
         </div>
-        <div class="field" data-field="meeting">
-          <label>Meeting <span class="req">*</span></label>
-          <input type="text" id="f_meeting" list="meetingOptions" placeholder="e.g. MBU 1.5">
-          <datalist id="meetingOptions"></datalist>
-          <span class="field-error-msg">Meeting is required.</span>
-        </div>
-      </div>
-      <div class="field" data-field="issues">
-        <label>Issues/Concerns <span class="req">*</span></label>
-        <input type="text" id="f_issues" placeholder="What needs to happen">
-        <span class="field-error-msg">Issues/Concerns is required.</span>
-      </div>
-      <div class="field" data-field="details">
-        <label>Details <span class="req">*</span></label>
-        <textarea id="f_details" placeholder="Context, scope, background"></textarea>
-        <span class="field-error-msg">Details are required.</span>
-      </div>
-      <div class="field" data-field="remarks">
-        <label id="f_remarksLabel">Update</label>
-        <div id="updateDeptNote" class="dept-update-note" style="display:none; text-align:left; padding:0 0 6px;"></div>
-        <div id="updateDeptPrevRemarks" class="prev-remarks-box" hidden><span class="prev-remarks-label">Previous note:</span> <span class="prev-remarks-text"></span></div>
-        <textarea id="f_remarks" placeholder="Write your update note here (an existing note is cleared when you click here)"></textarea>
-        <span class="field-error-msg">Please write an update note before saving.</span>
-      </div>
-
-      <div class="row2">
-        <div class="field">
-          <label>Before Media</label>
-          <div class="photo-bin-box">
-            <div class="photo-grid" id="beforePhotoGrid"><span class="empty-hint">No before media yet</span></div>
-            <input type="file" id="f_beforePhotos" accept="image/*,video/*" multiple>
-          </div>
-        </div>
-        <div class="field">
-          <label>Currently Media</label>
-          <div class="photo-bin-box">
-            <div class="photo-grid" id="currentPhotoGrid"><span class="empty-hint">No current media yet</span></div>
-            <input type="file" id="f_currentPhotos" accept="image/*,video/*" multiple>
-          </div>
+        <div class="field" data-field="details">
+          <label>Details <span class="req">*</span></label>
+          <textarea id="f_details" placeholder="Context, scope, background"></textarea>
+          <span class="field-error-msg">Details are required.</span>
         </div>
       </div>
-      <div id="folderLinkWrap"></div>
-
-      <div class="row2">
+      <div class="fm-grp grp-people">
+        <p class="fm-h">People</p>
         <div class="field" data-field="owner">
           <label>Owner(s) <span class="req">*</span></label>
           <button type="button" class="btn owner-select-btn" id="ownerSelectBtn">Select owner(s)</button>
@@ -1188,7 +1220,22 @@ body.mobile-mode .pm-body{ grid-template-columns:1fr; }
           <span class="field-error-msg">Select at least one department (or "All").</span>
         </div>
       </div>
-      <div class="row2">
+      <div class="fm-grp grp-sched">
+        <p class="fm-h">Schedule and status</p>
+        <div class="row2 sch-extra">
+          <div class="field" data-field="dateDiscussed">
+            <label>Date Discussed <span class="req">*</span></label>
+            <input type="date" id="f_dateDiscussed">
+            <span class="field-error-msg">Please select a date.</span>
+          </div>
+          <div class="field" data-field="meeting">
+            <label>Meeting <span class="req">*</span></label>
+            <input type="text" id="f_meeting" list="meetingOptions" placeholder="e.g. MBU 1.5">
+            <datalist id="meetingOptions"></datalist>
+            <span class="field-error-msg">Meeting is required.</span>
+          </div>
+        </div>
+        <div class="row2 sch-core">
         <div class="field" data-field="dueDate">
           <label>Due Date <span class="req">*</span></label>
           <input type="date" id="f_dueDate">
@@ -1198,16 +1245,41 @@ body.mobile-mode .pm-body{ grid-template-columns:1fr; }
           </div>
           <span class="field-error-msg">Pick a due date, or check "No date yet".</span>
         </div>
-        <div class="field" data-field="status">
-          <label>Status <span class="req">*</span></label>
-          <select id="f_status"></select>
-          <span class="field-error-msg">Status is required.</span>
+          <div class="field" data-field="status">
+            <label>Status <span class="req">*</span></label>
+            <select id="f_status" hidden></select>
+            <div class="seg" id="statusSeg"></div>
+            <span class="field-error-msg">Status is required.</span>
+          </div>
         </div>
       </div>
-
+      <div class="fm-grp grp-note">
+        <p class="fm-h">Update</p>
+      <div class="field" data-field="remarks">
+        <label id="f_remarksLabel">Update</label>
+        <div id="updateDeptNote" class="dept-update-note" style="display:none; text-align:left; padding:0 0 6px;"></div>
+        <div id="updateDeptPrevRemarks" class="prev-remarks-box" hidden><span class="prev-remarks-label">Previous note:</span> <span class="prev-remarks-text"></span></div>
+        <textarea id="f_remarks" placeholder="Write your update note here (an existing note is cleared when you click here)"></textarea>
+        <span class="field-error-msg">Please write an update note before saving.</span>
+      </div>
+      </div>
+      <div class="fm-grp grp-media">
+        <p class="fm-h" id="photosToggle">Photos</p>
+        <div class="fm-media-body">
+          <div class="row2">
+            <div class="field"><label>Before media</label>
+              <div class="photo-bin-box"><div class="photo-grid" id="beforePhotoGrid"><span class="empty-hint">No before media yet</span></div>
+              <label class="add-photo">＋ Add photos or video<input type="file" id="f_beforePhotos" accept="image/*,video/*" multiple hidden></label></div></div>
+            <div class="field"><label>Currently media</label>
+              <div class="photo-bin-box"><div class="photo-grid" id="currentPhotoGrid"><span class="empty-hint">No current media yet</span></div>
+              <label class="add-photo">＋ Add photos or video<input type="file" id="f_currentPhotos" accept="image/*,video/*" multiple hidden></label></div></div>
+          </div>
+          <div id="folderLinkWrap"></div>
+        </div>
+      </div>
+      <button type="button" class="btn fm-more-btn" id="moreFieldsBtn">More fields (owners, departments, details)</button>
       <div class="muted" id="actingAs" style="font-size:12.5px; font-weight:600;"></div>
       <span class="muted" style="font-size:12px;" id="editModeHint" hidden>✏️ This is for correcting details — use the <b>Update</b> button on the item to log a dated progress update.</span>
-
     </div>
     <div class="modal-foot">
       <button class="btn btn-danger" id="deleteBtn" hidden>Delete</button>
@@ -2776,41 +2848,31 @@ function openPreview(id){
     return `<div class="preview-photo-box"><span class="tag">${label}</span>${inner}</div>`;
   };
 
+  const cross = !!(it.deptList && it.deptList.length);
+  const dueTxt = (it.dueDate === 'TBD' || !it.dueDate) ? 'No date yet' : formatShortDate(it.dueDate);
+  const ag = computeAging(it);
+  const hero = cross
+    ? `<div class="pv-card"><div class="pv-label">Per-department updates</div>${deptUpdateBlocksHtml(it, 'preview-open-update', 'preview-value')}</div>`
+    : `<div class="pv-card"><div class="pv-head"><span class="pv-label">Latest update</span><span class="pv-by">${it.lastUpdatedBy ? escapeHtml(it.lastUpdatedBy) + ' · ' : ''}${lastUpdStr}</span></div>
+        <div class="pv-text" ${it.remarks ? '' : 'data-lastnote=""'}>${escapeHtml(it.remarks) || '<span class="muted">No update logged yet.</span>'}</div>
+        ${it.status !== 'Closed' ? `<div style="margin-top:10px;">${updateStatusBadgeHtml(it, lastUpdStr, true)}</div>` : ''}</div>`;
   document.getElementById('previewBody').innerHTML = `
-    <div class="preview-meta-row">
-      <div class="preview-meta-left">
-        <span class="id-pill">Item ${it.id}</span>
-        ${departmentPillHtml(it.department)}
+    <div class="pv-top"><div class="pv-top-l"><span class="id-pill">Item ${it.id}</span>${departmentPillHtml(it.department)}</div><div>${statusCellHtml(it)}</div></div>
+    <div><h2 class="preview-title">${escapeHtml(it.issues)}</h2>
+      <div class="pv-sub">${escapeHtml(it.meeting || '—')} · discussed ${formatShortDate(it.dateDiscussed) || '—'}${ag ? ' · aging ' + ag.days + ' day' + (ag.days === 1 ? '' : 's') : ''}</div></div>
+    <div class="pv-grid">
+      <div class="pv-main">${hero}
+        <div class="pv-card"><div class="pv-label">Details</div><div class="pv-text">${escapeHtml(it.details) || '—'}</div></div></div>
+      <div class="pv-side">
+        <div class="pv-card pv-facts">
+          <div><div class="pv-label">Due</div><div class="pv-val">${dueTxt}</div></div>
+          <div><div class="pv-label">Owner</div><div class="pv-val">${escapeHtml(it.owner) || '—'}</div></div>
+          <div><div class="pv-label">Input by</div><div>${escapeHtml(it.inputBy) || '—'}</div></div>
+        </div>
+        <div class="preview-photos">${photoBox('Before', it.beforePhotos || [], 'before')}${photoBox('Currently', it.currentPhotos || [], 'current')}</div>
+        ${it.photoFolder ? `<a class="folder-link" href="${it.photoFolder}" target="_blank">Open photo folder in Drive →</a>` : ''}
       </div>
-      <div class="preview-meta-right">
-        ${(it.status!=='Closed' && !(it.deptList && it.deptList.length)) ? updateStatusBadgeHtml(it, lastUpdStr, true) : ''}
-        ${statusCellHtml(it)}
-      </div>
-    </div>
-    <h2 class="preview-title">${escapeHtml(it.issues)}</h2>
-    ${(it.deptList && it.deptList.length) ? `
-    <div class="preview-block">
-      <span class="preview-label">Per-Department Updates</span>
-      <div style="margin-top:4px;">
-        ${deptUpdateBlocksHtml(it, 'preview-open-update', 'preview-value')}
-      </div>
-    </div>` : ''}
-    <div class="preview-grid">
-      <div class="preview-block"><span class="preview-label">Details</span><span class="preview-value">${escapeHtml(it.details)||'—'}</span></div>
-      ${(it.deptList && it.deptList.length) ? '' : `<div class="preview-block"><span class="preview-label">Update</span><span class="preview-value" ${it.remarks ? '' : 'data-lastnote=""'}>${escapeHtml(it.remarks)||'—'}</span></div>`}
-      <div class="preview-block"><span class="preview-label">Owner</span><span class="preview-value">${escapeHtml(it.owner)||'—'}</span></div>
-      <div class="preview-block"><span class="preview-label">Input By</span><span class="preview-value">${escapeHtml(it.inputBy)||'—'}</span></div>
-      <div class="preview-block"><span class="preview-label">Updated By</span><span class="preview-value">${escapeHtml(it.lastUpdatedBy)||'—'}</span></div>
-      <div class="preview-block"><span class="preview-label">Meeting</span><span class="preview-value">${escapeHtml(it.meeting)||'—'}</span></div>
-      <div class="preview-block"><span class="preview-label">Date Discussed</span><span class="preview-value">${it.dateDiscussed||'—'}</span></div>
-      <div class="preview-block"><span class="preview-label">Due Date</span><span class="preview-value">${it.dueDate==='TBD'?'No date yet':it.dueDate}</span></div>
-      <div class="preview-block"><span class="preview-label">Aging</span><span class="preview-value">${(()=>{ const a=computeAging(it); return a ? (a.days+' day'+(a.days===1?'':'s')) : '—'; })()}</span></div>
-    </div>
-    <div class="preview-photos">
-      ${photoBox('Before', it.beforePhotos||[], 'before')}
-      ${photoBox('Currently', it.currentPhotos||[], 'current')}
-    </div>
-  `;
+    </div>`;
   document.getElementById('previewBody').querySelectorAll('[data-action="preview-open-update"]').forEach(row=>{
     if (it.status === 'Closed') return;
     row.addEventListener('click', ()=>{ closePreview(); openActionModal(it.id, 'update', { updateDept: row.dataset.dept }); });
@@ -2993,7 +3055,7 @@ function syncOwnerSelectUI(opts){
   const summary = ownerSelectionSummary();
   document.getElementById('f_owner').value = summary;
   const btn = document.getElementById('ownerSelectBtn');
-  btn.textContent = summary || 'Select owner(s)';
+  btn.innerHTML = summary ? (state.ownerSelection.has('All') ? '<span class="chip-s">All</span>' : Array.from(state.ownerSelection).map(n=>'<span class="chip-s">'+escapeHtml(n)+'</span>').join('')) : 'Select owner(s)';
   btn.classList.toggle('placeholder', !summary);
   if (!opts.skipDeptAutofill) autofillDeptSelectionFromOwners();
 }
@@ -3003,7 +3065,7 @@ function syncDeptSelectUI(opts){
   const summary = deptSelectionSummary();
   document.getElementById('f_department').value = summary;
   const btn = document.getElementById('deptSelectBtn');
-  btn.textContent = summary || 'Select department(s)';
+  btn.innerHTML = summary ? (state.deptSelection.has('All') ? '<span class="chip-s">All</span>' : Array.from(state.deptSelection).map(n=>'<span class="chip-s">'+escapeHtml(n)+'</span>').join('')) : 'Select department(s)';
   btn.classList.toggle('placeholder', !summary);
   if (!opts.skipOwnerAutofill) autofillOwnersFromDepartments();
 }
@@ -3395,12 +3457,22 @@ function openActionModal(id, mode, opts){
       dueDate: noDate ? '' : (it.dueDate || '')
     };
   }
+  {
+    const m = document.getElementById('actionModal');
+    m.classList.remove('show-more', 'show-photos');
+    document.getElementById('moreFieldsBtn').textContent = 'More fields (owners, departments, details)';
+    syncStatusSeg();
+  }
   state.remarksCleared = false;
   state.remarksPrefilled = !!document.getElementById('f_remarks').value;
   document.getElementById('actionOverlay').hidden = false;
   document.getElementById('actionModal').scrollTop = 0;
 }
 
+function syncStatusSeg(){
+  const sel = document.getElementById('f_status');
+  document.getElementById('statusSeg').innerHTML = Array.from(sel.options).map(o=>'<button type="button" class="seg-btn' + (o.value === sel.value ? ' on' : '') + '" data-v="' + escapeHtml(o.value) + '">' + escapeHtml(o.value) + '</button>').join('');
+}
 function closeActionModal(){ document.getElementById('actionOverlay').hidden = true; }
 
 function readFilesAsBase64(fileList){
@@ -3501,6 +3573,7 @@ function validateForm(mode){
   if (!vals.status) missing.push('status');
   if (!vals.noDateYet && !vals.dueDate) missing.push('dueDate');
 
+  if (missing.some(k=>['issues','details','owner','department','meeting','dateDiscussed'].indexOf(k) !== -1)) document.getElementById('actionModal').classList.add('show-more');
   missing.forEach(key=>{
     const wrap = document.querySelector(`#actionOverlay [data-field="${key}"]`);
     if (wrap) wrap.classList.add('field-error');
@@ -3793,6 +3866,29 @@ function openPresentFromPreview(){
   document.getElementById('presentOverlay').hidden = false;
   renderPresentCard();
 }
+// Esc closes whatever is on top: open dropdowns first, then windows from the highest layer down.
+function closeTopLayer(){
+  const op = document.getElementById('ownerSelectPanel'), dp = document.getElementById('deptSelectPanel');
+  if (op && !op.hidden){ closeOwnerSelectPanel(); return true; }
+  if (dp && !dp.hidden){ closeDeptSelectPanel(); return true; }
+  if (document.querySelector('.filter-panel:not([hidden])')){ document.querySelectorAll('.filter-panel').forEach(x=>x.hidden = true); return true; }
+  const layers = [
+    ['mobileSidebarOverlay', closeMobileSidebar],
+    ['lightboxOverlay', closeLightbox],
+    ['loginOverlay', ()=>{ if (!GATE_ON) closeLogin(); }],      // the PIN gate can't be dismissed while it is ON
+    ['historyOverlay', closeHistory],
+    ['actionOverlay', closeActionModal],
+    ['previewOverlay', closePreview],
+    ['presentOverlay', closePresentMode],
+    ['noUpdateOverlay', closeNoUpdateReport],
+    ['dashOverlay', ()=>{ document.getElementById('dashOverlay').hidden = true; }]
+  ];
+  for (const [id, fn] of layers){
+    const el = document.getElementById(id);
+    if (el && !el.hidden){ fn(); return true; }
+  }
+  return false;
+}
 function closePresentMode(){ document.getElementById('presentOverlay').hidden = true; }
 
 function presentPhotoHalfHtml(label, media, bin){
@@ -3912,6 +4008,15 @@ function bindEvents(){
   document.getElementById('closeModalBtn').addEventListener('click', closeActionModal);
   document.getElementById('cancelBtn').addEventListener('click', closeActionModal);
   document.getElementById('saveBtn').addEventListener('click', saveAction);
+  document.getElementById('statusSeg').addEventListener('click', (e)=>{
+    const b = e.target.closest('.seg-btn'); if (!b) return;
+    document.getElementById('f_status').value = b.dataset.v; syncStatusSeg();
+  });
+  document.getElementById('moreFieldsBtn').addEventListener('click', ()=>{
+    const m = document.getElementById('actionModal'); m.classList.toggle('show-more');
+    document.getElementById('moreFieldsBtn').textContent = m.classList.contains('show-more') ? 'Hide extra fields' : 'More fields (owners, departments, details)';
+  });
+  document.getElementById('photosToggle').addEventListener('click', ()=>{ document.getElementById('actionModal').classList.toggle('show-photos'); });
   document.getElementById('authBtn').addEventListener('click', ()=>{
     if (AUTH){ if (confirm('Sign out ' + AUTH.name + '?')) setAuth(null); } else openLogin();
   });
@@ -3988,6 +4093,7 @@ function bindEvents(){
   document.getElementById('lightboxOverlay').addEventListener('click', (e)=>{ if (e.target.id === 'lightboxOverlay') closeLightbox(); });
 
   document.addEventListener('keydown', (e)=>{
+    if (e.key === 'Escape' && closeTopLayer()){ e.preventDefault(); return; }
     if (!document.getElementById('lightboxOverlay').hidden){
       if (e.key === 'ArrowLeft') lightboxNav(-1);
       if (e.key === 'ArrowRight') lightboxNav(1);
