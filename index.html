@@ -1031,8 +1031,8 @@ body.mobile-mode .pm-body{ grid-template-columns:1fr; }
 #actionModal .photo-bin-box{ display:grid; gap:10px; }
 .add-photo{ display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:8px 14px; border:1px dashed var(--border); border-radius:10px; font-weight:600; font-size:13px; color:var(--ink-dim); cursor:pointer; transition:.15s ease; }
 .add-photo:hover{ border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
-.seg{ display:inline-flex; border:1px solid var(--border); border-radius:10px; overflow:hidden; background:var(--bg); }
-.seg-btn{ border:0; background:transparent; color:var(--ink); padding:9px 16px; font-weight:600; font-size:13.5px; cursor:pointer; font-family:inherit; }
+.seg{ display:flex; width:100%; border:1px solid var(--border); border-radius:10px; overflow:hidden; background:var(--bg); }
+.seg-btn{ flex:1 1 0; text-align:center; border:0; background:transparent; color:var(--ink); padding:9px 16px; font-weight:600; font-size:13.5px; cursor:pointer; font-family:inherit; }
 .seg-btn + .seg-btn{ border-left:1px solid var(--border); }
 .seg-btn.on{ background:var(--accent); color:var(--accent-ink); }
 .chip-s{ display:inline-block; padding:2px 10px; margin:2px 5px 2px 0; border-radius:999px; background:var(--surface-2); border:1px solid var(--border); font-size:13px; }
