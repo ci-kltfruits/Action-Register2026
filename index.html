@@ -936,6 +936,45 @@ html:not([data-xmas]):not([data-hween]) .modal{ background:color-mix(in srgb,var
 html:not([data-xmas]):not([data-hween]) .dash-card{ background:color-mix(in srgb,var(--surface-2) 65%,transparent); border-color:var(--hair); }
 html:not([data-xmas]):not([data-hween]) .present-overlay{ background:radial-gradient(ellipse at 30% 0%,var(--glow1) 0%,transparent 55%),radial-gradient(ellipse at 80% 100%,var(--glow2) 0%,transparent 50%),var(--bg); }
 
+/* ============================================================
+   PRESENT MODE REDESIGN (one screen: hero update + facts column)
+   ============================================================ */
+.present-card.pm{ display:block; overflow:auto; padding:26px 44px; }
+.pm-wrap{ max-width:1320px; margin:0 auto; display:flex; flex-direction:column; gap:16px; }
+.pm-top{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; color:var(--ink-dim); font-size:15px; }
+.pm-top-right{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.pm-title{ font-size:clamp(28px,3.6vw,46px); font-weight:700; margin:0; line-height:1.15; letter-spacing:-.4px; }
+.pm-body{ display:grid; grid-template-columns:minmax(0,1.7fr) minmax(0,1fr); gap:18px; align-items:start; }
+.pm-card{ background:color-mix(in srgb,var(--surface) 82%,transparent); border:1px solid var(--border); border-radius:16px; padding:16px 18px; }
+.pm-label{ font-size:12px; text-transform:uppercase; letter-spacing:.5px; font-weight:700; color:var(--ink-dim); margin-bottom:6px; }
+.pm-hero-head{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
+.pm-hero-by{ font-size:14px; color:var(--ink-dim); font-weight:600; }
+.pm-hero-text{ font-size:clamp(18px,1.9vw,26px); line-height:1.5; white-space:pre-wrap; overflow-wrap:anywhere; }
+.pm-hero-foot{ margin-top:14px; }
+.pm-side{ display:grid; gap:12px; }
+.pm-facts{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.pm-val{ font-size:clamp(16px,1.6vw,22px); font-weight:600; }
+.pm-clamp{ display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden; cursor:pointer; overflow-wrap:anywhere; }
+.pm-clamp.open{ -webkit-line-clamp:unset; }
+.pm-media{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.pm-thumb{ position:relative; height:112px; border-radius:12px; overflow:hidden; border:1px solid var(--border); background:var(--surface-2); cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--ink-dim); font-size:13px; }
+.pm-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+.pm-thumb.empty{ border-style:dashed; cursor:default; }
+.pm-thumb .tag, .pm-thumb .cnt{ position:absolute; background:rgba(10,12,20,.68); color:#fff; font-size:11px; font-weight:700; padding:3px 9px; border-radius:999px; }
+.pm-thumb .tag{ left:8px; top:8px; } .pm-thumb .cnt{ right:8px; bottom:8px; }
+.pm-dept-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:12px; }
+.pm-dept{ background:color-mix(in srgb,var(--surface) 82%,transparent); border:1px solid var(--border); border-radius:14px; padding:13px 15px; cursor:pointer; }
+.pm-dept.needs{ border-color:var(--bad); }
+.pm-dept-head{ display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px; }
+.pm-dept-status{ font-size:13px; font-weight:700; text-align:right; }
+.pm-s-needs{ color:var(--bad); } .pm-s-upd{ color:var(--warn); } .pm-s-ok{ color:var(--good); }
+.pm-dept-text{ font-size:clamp(15px,1.4vw,19px); line-height:1.45; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:4; overflow:hidden; white-space:pre-wrap; overflow-wrap:anywhere; }
+.pm-dept-text.open{ -webkit-line-clamp:unset; }
+.pm-progress{ width:120px; height:5px; border-radius:3px; background:var(--surface-2); overflow:hidden; flex:none; }
+#presentProgressFill{ height:100%; width:0; background:var(--accent); transition:width .3s ease; }
+@media (max-width:900px){ .present-card.pm{ padding:18px 16px; } .pm-body{ grid-template-columns:1fr; } }
+body.mobile-mode .pm-body{ grid-template-columns:1fr; }
+
 </style>
 </head>
 <body>
@@ -1220,7 +1259,7 @@ html:not([data-xmas]):not([data-hween]) .present-overlay{ background:radial-grad
   <div class="present-bottom">
     <div class="present-bottom-left">
       <button class="btn" id="presentHistoryBtn">🕒 History</button>
-      <span class="present-count" id="presentCount">0 of 0 pending</span>
+      <div class="pm-progress"><div id="presentProgressFill"></div></div><span class="present-count" id="presentCount">0</span>
     </div>
     <div class="present-bottom-center">
       <button class="nav-btn" id="presentPrev">‹</button>
@@ -3772,61 +3811,69 @@ function presentPhotoHalfHtml(label, media, bin){
 
 function renderPresentCard(){
   const it = state.presentQueue[state.presentIndex];
-  document.getElementById('presentCount').textContent = `${state.presentIndex+1} of ${state.presentQueue.length} pending`;
+  const total = state.presentQueue.length;
+  document.getElementById('presentCount').textContent = (state.presentIndex + 1) + ' / ' + total;
+  document.getElementById('presentProgressFill').style.width = ((state.presentIndex + 1) / total * 100) + '%';
+  const cross = !!(it.deptList && it.deptList.length);
+  const closed = it.status === 'Closed';
   const lastUpdStr = it.lastUpdated ? formatDateTime(it.lastUpdated) : 'No updates yet';
-  const hasPhotos = (it.beforePhotos && it.beforePhotos.length) || (it.currentPhotos && it.currentPhotos.length);
+  const ag = computeAging(it);
+  const metaLine = '#' + it.id + ' · ' + escapeHtml(it.meeting || '—') + ' · discussed ' + (formatShortDate(it.dateDiscussed) || '—') + (ag ? ' · aging ' + ag.days + ' day' + (ag.days === 1 ? '' : 's') : '');
+  const thumb = (label, media, bin) => {
+    if (!media.length) return '<div class="pm-thumb empty"><span class="tag">' + label + '</span>No photo</div>';
+    const idx = media.length - 1, m = media[idx];
+    const inner = m.isVideo ? '<span style="font-size:30px;">▶</span>' : '<img src="' + String(m.url).replace('sz=w1600', 'sz=w400') + '" alt="">';
+    return '<div class="pm-thumb" data-bin="' + bin + '" data-idx="' + idx + '"><span class="tag">' + label + '</span>' + inner + (media.length > 1 ? '<span class="cnt">' + media.length + ' photos</span>' : '') + '</div>';
+  };
 
-  document.getElementById('presentBody').innerHTML = `
-    <div class="present-card ${hasPhotos ? '' : 'single-col'}">
-      <div class="present-text-col">
-        <div class="present-meta">
-          <div class="present-meta-left">
-            <span class="id-cell mono">Item ${it.id}</span>
-            ${departmentPillHtml(it.department)}
-          </div>
-          <div class="present-meta-right">
-            ${(it.deptList && it.deptList.length) ? '' : updateStatusBadgeHtml(it, lastUpdStr, false)}
-            ${statusCellHtml(it)}
-          </div>
-        </div>
-        <h1 class="present-title">${escapeHtml(it.issues)}</h1>
-        ${(it.deptList && it.deptList.length) ? `
-        <div style="margin:0 0 22px;">
-          <div class="present-label">Per-Department Updates</div>
-          <div class="dept-blocks" style="margin-top:8px;">
-            ${deptUpdateBlocksHtml(it, 'present-open-update', 'present-value')}
-          </div>
-        </div>` : ''}
-        <div class="present-grid">
-          <div><div class="present-label">Details</div><div class="present-value">${escapeHtml(it.details)||'—'}</div></div>
-          ${(it.deptList && it.deptList.length) ? '' : `<div><div class="present-label">Update</div><div class="present-value" ${it.remarks ? '' : 'data-lastnote=""'}>${escapeHtml(it.remarks)||'—'}</div></div>`}
-          <div><div class="present-label">Owner</div><div class="present-value">${escapeHtml(it.owner)||'—'}</div></div>
-          <div><div class="present-label">Updated By</div><div class="present-value">${escapeHtml(it.lastUpdatedBy)||'—'}</div></div>
-          <div><div class="present-label">Meeting</div><div class="present-value">${escapeHtml(it.meeting)||'—'}</div></div>
-          <div><div class="present-label">Date Discussed</div><div class="present-value">${it.dateDiscussed||'—'}</div></div>
-          <div><div class="present-label">Due Date</div><div class="present-value">${it.dueDate==='TBD'?'No date yet':formatShortDate(it.dueDate)}</div></div>
-          <div><div class="present-label">Aging</div><div class="present-value">${(()=>{ const a=computeAging(it); return a ? (a.days+' day'+(a.days===1?'':'s')) : '—'; })()}</div></div>
-        </div>
-      </div>
-      ${hasPhotos ? `<div class="present-photos-col">
-        ${presentPhotoHalfHtml('Before', it.beforePhotos||[], 'before')}
-        ${presentPhotoHalfHtml('Currently', it.currentPhotos||[], 'current')}
-      </div>` : ''}
-    </div>
-  `;
-  document.getElementById('presentBody').querySelectorAll('.present-photo-half img, .present-photo-half .video-placeholder').forEach(node=>{
-    node.addEventListener('click', ()=>{
+  let main;
+  if (cross){
+    const order = { needs:0, update:1, updated:2 };
+    const cards = it.deptList.map((d, i) => {
+      const du = (it.deptUpdates && it.deptUpdates[d]) || { t:'', by:'', remarks:'' };
+      return { d, du, st: deptUpdateStatusInfo(it, du), i };
+    }).sort((x, y) => ((order[x.st] ?? 3) - (order[y.st] ?? 3)) || (x.i - y.i));
+    main = '<div class="pm-dept-grid">' + cards.map(c => {
+      const stCls = c.st === 'needs' ? 'pm-s-needs' : (c.st === 'update' ? 'pm-s-upd' : 'pm-s-ok');
+      const stTxt = c.st === 'needs' ? 'Needs update' : (c.du.t ? (c.du.by ? escapeHtml(c.du.by) + ' · ' : '') + formatDateTime(c.du.t) : (closed ? 'Closed' : 'No update'));
+      const body = c.du.remarks ? escapeHtml(c.du.remarks) : '<span class="muted">No update logged yet.</span>';
+      return '<div class="pm-dept ' + (c.st === 'needs' ? 'needs' : '') + '" ' + (closed ? '' : 'data-action="present-open-update" data-dept="' + escapeHtml(c.d) + '"') + '>' +
+        '<div class="pm-dept-head">' + singleDeptPillHtml(c.d) + '<span class="pm-dept-status ' + stCls + '">' + stTxt + '</span></div>' +
+        '<div class="pm-dept-text" ' + (c.du.remarks ? '' : 'data-lastnote="' + escapeHtml(c.d) + '"') + '>' + body + '</div></div>';
+    }).join('') + '</div>';
+  } else {
+    main = '<div class="pm-card"><div class="pm-hero-head"><span class="pm-label" style="margin:0;">Latest update</span>' +
+      '<span class="pm-hero-by">' + (it.lastUpdatedBy ? escapeHtml(it.lastUpdatedBy) + ' · ' : '') + lastUpdStr + '</span></div>' +
+      '<div class="pm-hero-text" ' + (it.remarks ? '' : 'data-lastnote=""') + '>' + (escapeHtml(it.remarks) || '<span class="muted">No update logged yet.</span>') + '</div>' +
+      (closed ? '' : '<div class="pm-hero-foot">' + updateStatusBadgeHtml(it, lastUpdStr, true) + '</div>') + '</div>';
+  }
+
+  const side = '<div class="pm-side">' +
+    '<div class="pm-card pm-facts"><div><div class="pm-label">Due</div><div class="pm-val">' + (it.dueDate === 'TBD' || !it.dueDate ? 'No date yet' : formatShortDate(it.dueDate)) + '</div></div>' +
+    '<div><div class="pm-label">Owner</div><div class="pm-val pm-clamp" style="-webkit-line-clamp:2;" title="' + escapeHtml(it.owner) + '">' + (escapeHtml(it.owner) || '—') + '</div></div></div>' +
+    '<div class="pm-card"><div class="pm-label">Details</div><div class="pm-clamp" style="font-size:clamp(15px,1.4vw,18px); line-height:1.45;">' + (escapeHtml(it.details) || '—') + '</div></div>' +
+    '<div class="pm-media">' + thumb('Before', it.beforePhotos || [], 'before') + thumb('Currently', it.currentPhotos || [], 'current') + '</div></div>';
+
+  document.getElementById('presentBody').innerHTML =
+    '<div class="present-card pm"><div class="pm-wrap">' +
+    '<div class="pm-top"><span>' + metaLine + '</span><span class="pm-top-right">' + departmentPillHtml(it.department) + statusCellHtml(it) + '</span></div>' +
+    '<h1 class="pm-title">' + escapeHtml(it.issues) + '</h1>' +
+    '<div class="pm-body">' + main + side + '</div></div></div>';
+
+  const root = document.getElementById('presentBody');
+  root.querySelectorAll('.pm-thumb[data-bin]').forEach(node => {
+    node.addEventListener('click', () => {
       const bin = node.dataset.bin;
-      const media = bin==='before' ? it.beforePhotos : it.currentPhotos;
-      openLightbox(media, parseInt(node.dataset.idx,10), (bin==='before'?'Before':'Currently') + ' — ' + it.issues);
+      openLightbox(bin === 'before' ? it.beforePhotos : it.currentPhotos, parseInt(node.dataset.idx, 10), (bin === 'before' ? 'Before' : 'Currently') + ' — ' + it.issues);
     });
   });
-  document.getElementById('presentBody').querySelectorAll('[data-action="present-open-update"]').forEach(row=>{
-    row.addEventListener('click', ()=> openActionModal(it.id, 'update', { updateDept: row.dataset.dept }));
+  root.querySelectorAll('.pm-clamp, .pm-dept-text').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); el.classList.toggle('open'); }));
+  root.querySelectorAll('[data-action="present-open-update"]').forEach(row => {
+    row.addEventListener('click', () => openActionModal(it.id, 'update', { updateDept: row.dataset.dept }));
   });
-  document.getElementById('presentMarkUpdated').hidden = !!(it.deptList && it.deptList.length) || it.status === 'Closed';
-  fillLastNotes(it, document.getElementById('presentBody'));
-  const pc = document.querySelector('#presentBody .present-card');
+  document.getElementById('presentMarkUpdated').hidden = cross || closed;
+  fillLastNotes(it, root);
+  const pc = root.querySelector('.present-card');
   if (pc && _presentDir) pc.classList.add(_presentDir > 0 ? 'slide-next' : 'slide-prev');
   _presentDir = 0;
 }
@@ -3948,6 +3995,13 @@ function bindEvents(){
     if (e.key === 'ArrowLeft') presentNav(-1);
     if (e.key === 'ArrowRight') presentNav(1);
     if (e.key === 'Escape') closePresentMode();
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const k = (e.key || '').toLowerCase();
+    const cur = state.presentQueue[state.presentIndex];
+    if (cur && k === 'h') openHistory(cur.id);
+    else if (cur && k === 'e') openActionModal(cur.id, 'edit');
+    else if (cur && k === 'u' && !(cur.deptList && cur.deptList.length) && cur.status !== 'Closed') openActionModal(cur.id, 'update', {});
+    else if (k === 'f'){ if (!document.fullscreenElement) { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); } else if (document.exitFullscreen) document.exitFullscreen(); }
   });
 
   // Auto-refresh every 10 min, but never in a hidden tab; catch up when the tab is shown again.
