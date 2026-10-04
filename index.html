@@ -866,8 +866,7 @@ body.mobile-mode .brand{ flex:1 1 auto; }
 @keyframes toast-in{ from{ opacity:0; transform:translate(-50%,16px); } }
 
 /* login page */
-.gate-page{ background:radial-gradient(ellipse at 30% 0%,#26305A 0%,transparent 55%),radial-gradient(ellipse at 80% 100%,#2A1F4A 0%,transparent 50%),#0E1118; background-size:140% 140%,140% 140%,auto; animation:gate-bg 18s ease-in-out infinite alternate; }
-@keyframes gate-bg{ from{ background-position:0% 0%,100% 100%,0 0; } to{ background-position:100% 30%,0% 70%,0 0; } }
+.gate-page{ background:radial-gradient(ellipse at 30% 0%,#26305A 0%,transparent 55%),radial-gradient(ellipse at 80% 100%,#2A1F4A 0%,transparent 50%),#0E1118; }
 .gate-inner{ animation:gate-in .55s cubic-bezier(.2,.8,.2,1) backwards; }
 @keyframes gate-in{ from{ opacity:0; transform:translateY(16px) scale(.98); } }
 
@@ -916,10 +915,8 @@ tbody.animate tr:nth-child(15){ animation-delay:330ms; }
    ============================================================ */
 html[data-theme="dark"]:not([data-xmas]):not([data-hween]){ --bg:#0E1118; --surface:#151A24; --surface-2:#1B2230; --border:#273042; --glass:color-mix(in srgb,#151A24 68%,transparent); --hair:rgba(255,255,255,.07); --glow1:#26305A; --glow2:#2A1F4A; }
 html[data-theme="light"]:not([data-xmas]):not([data-hween]){ --glass:rgba(255,255,255,.72); --hair:rgba(20,26,56,.08); --glow1:#D9E0FF; --glow2:#EBDDF8; }
-html:not([data-xmas]):not([data-hween]) body::before{ content:''; position:fixed; inset:-20%; z-index:-1; pointer-events:none; will-change:transform;
-  background:radial-gradient(ellipse at 30% 0%,var(--glow1) 0%,transparent 55%),radial-gradient(ellipse at 80% 100%,var(--glow2) 0%,transparent 50%);
-  animation:bg-drift 28s ease-in-out infinite alternate; }
-@keyframes bg-drift{ from{ transform:translate3d(-3%,-2%,0) scale(1.05); } to{ transform:translate3d(3%,2%,0) scale(1.15); } }
+html:not([data-xmas]):not([data-hween]) body::before{ content:''; position:fixed; inset:0; z-index:-1; pointer-events:none;
+  background:radial-gradient(ellipse at 30% 0%,var(--glow1) 0%,transparent 55%),radial-gradient(ellipse at 80% 100%,var(--glow2) 0%,transparent 50%); }
 html:not([data-xmas]):not([data-hween]) .table-wrap{ background:transparent; }
 html:not([data-xmas]):not([data-hween]) .topbar, html:not([data-xmas]):not([data-hween]) .toolbar, html:not([data-xmas]):not([data-hween]) .tabs{ background:var(--glass); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); border-color:var(--hair); }
 html:not([data-xmas]):not([data-hween]) .topbar{ position:relative; z-index:31; box-shadow:0 1px 0 var(--hair); }
@@ -938,19 +935,6 @@ html:not([data-xmas]):not([data-hween]) .overlay{ background:rgba(6,8,18,.6); -w
 html:not([data-xmas]):not([data-hween]) .modal{ background:color-mix(in srgb,var(--surface) 94%,transparent); -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); border-radius:20px; }
 html:not([data-xmas]):not([data-hween]) .dash-card{ background:color-mix(in srgb,var(--surface-2) 65%,transparent); border-color:var(--hair); }
 html:not([data-xmas]):not([data-hween]) .present-overlay{ background:radial-gradient(ellipse at 30% 0%,var(--glow1) 0%,transparent 55%),radial-gradient(ellipse at 80% 100%,var(--glow2) 0%,transparent 50%),var(--bg); }
-
-/* ============================================================
-   LITE MODE (slow devices): no blur, no animation, no shadows, solid backgrounds
-   ============================================================ */
-html.lite *, html.lite *::before, html.lite *::after{ animation:none !important; transition:none !important; -webkit-backdrop-filter:none !important; backdrop-filter:none !important; box-shadow:none !important; text-shadow:none !important; will-change:auto !important; }
-html.lite body::before{ display:none !important; }
-html.lite .topbar, html.lite .toolbar, html.lite .tabs, html.lite .modal, html.lite table, html.lite .mcard, html.lite thead th, html.lite .dash-card{ background:var(--surface) !important; }
-html.lite .present-overlay{ background:var(--bg) !important; }
-html.lite .overlay{ background:rgba(0,0,0,.55) !important; }
-html.lite .gate-page{ background:#0E1118 !important; }
-html.lite .tabs{ -webkit-mask-image:none !important; mask-image:none !important; }
-.more-row td{ text-align:center; padding:14px; height:auto; }
-.mobile-more{ text-align:center; padding:6px 0 14px; }
 
 </style>
 </head>
@@ -985,7 +969,6 @@ html.lite .tabs{ -webkit-mask-image:none !important; mask-image:none !important;
     </div>
     <button class="btn btn-accent" id="presentModeBtn">▶ Present Mode</button>
     <button class="btn btn-ghost" id="dashboardBtn">📊 Dashboard</button>
-    <button class="theme-toggle" id="perfBtn" title="Performance mode" style="width:auto; padding:0 10px; font-size:13px; font-weight:700;"></button>
     <button class="theme-toggle" id="gateBtn" hidden title="Turn the PIN login gate on/off (admin only)" style="width:auto; padding:0 10px; font-size:13px; font-weight:700;"></button>
     <button class="theme-toggle" id="authBtn" title="Sign in" style="width:auto; padding:0 10px; font-size:13px; font-weight:700;">Sign in</button>
     <button class="theme-toggle" id="themeToggle" title="Toggle light/dark">🌙</button>
@@ -1808,7 +1791,6 @@ function clearLoadError(){
 function setSync(msg){ document.getElementById('syncStatus').textContent = msg || ''; }
 
 async function init(){
-  applyPerf();
   applyStoredTheme();
   applyStoredXmas();
   bindChristmasEgg();
@@ -2552,10 +2534,7 @@ function renderStatsStrip(){
 }
 
 function render(){
-  const allRows = getFiltered();
-  const sig = [state.activeTab, state.search, state.sortOrder, Object.keys(state.filters).map(k=>Array.from(state.filters[k]).join('~')).join('|')].join('¦');
-  if (sig !== _rowSig){ _rowSig = sig; _rowLimit = 100; }
-  const rows = (LITE && allRows.length > _rowLimit) ? allRows.slice(0, _rowLimit) : allRows;   // Lite: draw 100 rows at a time
+  const rows = getFiltered();
   const tbody = document.getElementById('tableBody');
   const cardList = document.getElementById('mobileCardList');
   const empty = document.getElementById('emptyState');
@@ -2616,16 +2595,9 @@ function render(){
     </div>`);
   });
 
-  if (rows.length < allRows.length){
-    const left = allRows.length - rows.length;
-    const label = 'Show ' + Math.min(100, left) + ' more (' + left + ' hidden)';
-    tableRows.push('<tr class="more-row"><td colspan="11"><button class="btn show-more-btn">' + label + '</button></td></tr>');
-    cards.push('<div class="mobile-more"><button class="btn show-more-btn">' + label + '</button></div>');
-  }
   tbody.innerHTML = tableRows.join('');
   cardList.innerHTML = cards.join('');
   tbody.classList.toggle('animate', _animNext); cardList.classList.toggle('animate', _animNext); _animNext = false;
-  document.querySelectorAll('.show-more-btn').forEach(b=>b.addEventListener('click', ()=>{ _rowLimit += 100; render(); }));
 
   [tbody, cardList].forEach(container=>{
     container.querySelectorAll('[data-action="open-update"]').forEach(btn=>{
@@ -3869,7 +3841,6 @@ function presentNav(dir){
    EVENTS
    ============================================================ */
 function bindEvents(){
-  document.getElementById('perfBtn').addEventListener('click', cyclePerf);
   setIconBtn('noUpdateBtn', 'flag');
   setIconBtn('dashboardBtn', 'chart', 'Dashboard');
   document.getElementById('themeToggle').addEventListener('click', toggleTheme);
@@ -3937,7 +3908,7 @@ function bindEvents(){
   document.getElementById('searchInput').addEventListener('input', (e)=>{
     if (tryXmasTrigger(e.target.value)){ e.target.value = ''; state.search = ''; render(); return; }
     if (tryHweenTrigger(e.target.value)){ e.target.value = ''; state.search = ''; render(); return; }
-    state.search = e.target.value; clearTimeout(_searchT); _searchT = setTimeout(render, LITE ? 250 : 120);
+    state.search = e.target.value; clearTimeout(_searchT); _searchT = setTimeout(render, 120);
   });
   document.getElementById('sortOrderSelect').addEventListener('change', (e)=>{ state.sortOrder = e.target.value; render(); });
 
@@ -4210,7 +4181,6 @@ function stopMusic(){
 }
 
 function startSnow(){
-  if (LITE) return;
   if (_snow) return;
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const canvas = document.createElement('canvas');
@@ -4363,7 +4333,6 @@ function bindHalloweenEgg(){
 // Falling bats + drifting leaves. Emoji are pre-rendered once into sprites, then blitted with
 // drawImage each frame (much cheaper than calling fillText on color emoji every frame).
 function startHweenFx(){
-  if (LITE) return;
   if (_hweenFx) return;
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const canvas = document.createElement('canvas');
@@ -4614,13 +4583,12 @@ const _IC = {
   phone:'<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>',
   monitor:'<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',
   chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
-  check:'<path d="M20 6 9 17l-5-5"/>',
-  zap:'<path d="M13 2 3 14h9l-1 8 10-12h-9z"/>',
-  gauge:'<path d="M12 14l4-4"/><path d="M3.3 18a10 10 0 1 1 17.4 0"/>'
+  check:'<path d="M20 6 9 17l-5-5"/>'
 };
 function icon(n){ return '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">' + (_IC[n] || '') + '</svg>'; }
 function setIconBtn(id, n, label){ const el = document.getElementById(id); if (el) el.innerHTML = icon(n) + (label ? '<span class="lbl">' + label + '</span>' : ''); }
-let _animNext = true, _presentDir = 0;
+let _animNext = true, _presentDir = 0, _searchT = 0;
+function thumbUrl(u){ return String(u || '').replace('sz=w1600', 'sz=w200'); }   // small thumbnails for the table
 function toast(msg){
   const t = document.createElement('div');
   t.className = 'toast';
@@ -4657,56 +4625,7 @@ document.addEventListener('click', (e)=>{
   setTimeout(()=>s.remove(), 520);
 });
 
-/* ---------- performance mode: Auto / Lite / Full ---------- */
-let _searchT = 0, _rowLimit = 100, _rowSig = '', LITE = false;
-let PERF_MODE = 'auto', _autoLite = false;
-try { PERF_MODE = localStorage.getItem('AR_PERF') || 'auto'; _autoLite = localStorage.getItem('AR_AUTO_LITE') === '1'; } catch (e) {}
-function thumbUrl(u){ return String(u || '').replace('sz=w1600', 'sz=w200'); }   // tiny thumbnails for the table
-function looksLowEnd(){
-  const n = navigator, c = n.connection || {};
-  return !!((n.deviceMemory && n.deviceMemory <= 2) || (n.hardwareConcurrency && n.hardwareConcurrency <= 2) || c.saveData ||
-            (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches));
-}
-function applyPerf(){
-  const was = LITE;
-  LITE = PERF_MODE === 'lite' || (PERF_MODE === 'auto' && (_autoLite || looksLowEnd()));
-  document.documentElement.classList.toggle('lite', LITE);
-  const lbl = PERF_MODE === 'auto' ? (LITE ? 'Auto · Lite' : 'Auto') : (PERF_MODE === 'lite' ? 'Lite' : 'Full');
-  setIconBtn('perfBtn', LITE ? 'zap' : 'gauge', lbl);
-  const b = document.getElementById('perfBtn');
-  if (b) b.title = 'Performance mode: ' + lbl + ' (click to change: Auto, Lite, Full)';
-  if (LITE){ stopSnow(); stopHweenFx(); }
-  else if (was){ if (isXmasOn()) startSnow(); if (isHweenOn()) startHweenFx(); }
-  if (was !== LITE && state.items && state.items.length) render();
-}
-function cyclePerf(){
-  PERF_MODE = PERF_MODE === 'auto' ? 'lite' : (PERF_MODE === 'lite' ? 'full' : 'auto');
-  if (PERF_MODE !== 'auto'){ _autoLite = false; try { localStorage.removeItem('AR_AUTO_LITE'); } catch (e) {} }
-  try { localStorage.setItem('AR_PERF', PERF_MODE); } catch (e) {}
-  applyPerf();
-  toast('Performance: ' + (PERF_MODE === 'auto' ? 'Auto' : PERF_MODE === 'lite' ? 'Lite' : 'Full'));
-}
-// Auto mode: if the page is visibly janky (many slow frames), switch to Lite and remember it.
-function probeFps(){
-  if (PERF_MODE !== 'auto' || LITE) return;
-  let n = 0, slow = 0, last = 0;
-  const step = (t)=>{
-    if (document.hidden){ last = 0; requestAnimationFrame(step); return; }
-    if (last){ n++; if (t - last > 34) slow++; }
-    last = t;
-    if (n < 50) requestAnimationFrame(step);
-    else if (slow >= 20){
-      _autoLite = true;
-      try { localStorage.setItem('AR_AUTO_LITE', '1'); } catch (e) {}
-      applyPerf();
-      toast('Lite mode on for smoother performance');
-    }
-  };
-  requestAnimationFrame(step);
-}
-
 init();
-setTimeout(probeFps, 2500);
 </script>
 </body>
 </html>
