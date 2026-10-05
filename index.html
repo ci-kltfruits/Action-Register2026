@@ -1113,6 +1113,37 @@ html[data-theme="light"]:not([data-xmas]):not([data-hween]) ::selection{ backgro
 .lb-how summary{ cursor:pointer; font-weight:700; color:var(--ink); }
 .lb-how div{ margin-top:8px; line-height:1.55; }
 
+/* tier badges */
+.tb{ position:relative; display:inline-block; width:40px; height:46px; flex:none; --g:transparent; --gl:#fff; }
+.tb-face{ position:absolute; inset:0; clip-path:polygon(50% 0,100% 15%,100% 62%,50% 100%,0 62%,0 15%); overflow:hidden; }
+.tb-face::before{ content:''; position:absolute; inset:3px; clip-path:polygon(50% 0,100% 15%,100% 62%,50% 100%,0 62%,0 15%); background:var(--in); }
+.tb-face::after{ content:''; position:absolute; top:-20%; bottom:-20%; width:38%; left:-60%; background:linear-gradient(105deg,transparent,rgba(255,255,255,.8),transparent); transform:skewX(-12deg); opacity:0; }
+.tb-glyph{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding-bottom:5px; font:800 14px 'IBM Plex Mono',monospace; color:var(--gl); text-shadow:0 1px 0 rgba(0,0,0,.28); z-index:2; }
+.tb-bronze .tb-face{ background:linear-gradient(145deg,#efc197,#a8683a 55%,#74431f); } .tb-bronze{ --in:linear-gradient(160deg,#cd8f5f,#8a5128); --gl:#fff3e6; --g:#c98a5b; }
+.tb-silver .tb-face{ background:linear-gradient(145deg,#fafcff,#9aa5b8 55%,#6c778a); } .tb-silver{ --in:linear-gradient(160deg,#cfd6e2,#8892a6); --gl:#fff; --g:#cfd8e6; }
+.tb-gold .tb-face{ background:linear-gradient(145deg,#fff3b0,#f0b429 50%,#b7791f); } .tb-gold{ --in:linear-gradient(160deg,#ffd761,#d9961a); --gl:#5a3a00; --g:#ffcf4a; filter:drop-shadow(0 0 5px rgba(255,200,60,.55)); }
+.tb-platinum .tb-face{ background:linear-gradient(145deg,#ecfffb,#6fe3cf 50%,#2b9c8c); } .tb-platinum{ --in:linear-gradient(160deg,#b4f8ec,#3cbfae); --gl:#05443c; --g:#5ff0d0; }
+.tb-diamond .tb-face{ background:conic-gradient(from 30deg,#e8f9ff,#6cc9ff,#c9a8ff,#e8f9ff,#5fb4ff,#e8f9ff); } .tb-diamond{ --in:linear-gradient(160deg,#a6e6ff,#2f8be0); --gl:#02294a; --g:#52c8ff; }
+.tb-master .tb-face{ background:conic-gradient(from 0deg,#ff5fa2,#ffd36b,#6bffd9,#6bb6ff,#b58cff,#ff5fa2); animation:tb-hue 6s linear infinite; } .tb-master{ --in:linear-gradient(160deg,#2c1850,#0f0a24); --gl:#fff; --g:#ff7ad1; }
+.tb-silver .tb-face::after{ animation:tb-sheen 4.5s ease-in-out infinite; }
+.tb-gold .tb-face::after{ animation:tb-sheen 3.2s ease-in-out infinite; }
+.tb-platinum .tb-face::after{ animation:tb-sheen 2.7s ease-in-out infinite; }
+.tb-diamond .tb-face::after{ animation:tb-sheen 2.2s ease-in-out infinite; }
+.tb-master .tb-face::after{ animation:tb-sheen 1.8s ease-in-out infinite; }
+.tb-platinum{ animation:tb-pulse 2.6s ease-in-out infinite; } .tb-diamond{ animation:tb-pulse 2.2s ease-in-out infinite; } .tb-master{ animation:tb-pulse 1.5s ease-in-out infinite; }
+.tb-diamond::before, .tb-master::before, .tb-master::after{ content:''; position:absolute; width:9px; height:9px; background:#fff; z-index:3; opacity:0; clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%); animation:tb-twinkle 1.9s ease-in-out infinite; }
+.tb-diamond::before{ top:-3px; right:-4px; }
+.tb-master::before{ top:-4px; right:-5px; } .tb-master::after{ bottom:6px; left:-6px; animation-delay:.9s; }
+@keyframes tb-sheen{ 0%,55%{ left:-60%; opacity:0; } 62%{ opacity:1; } 100%{ left:135%; opacity:0; } }
+@keyframes tb-pulse{ 0%,100%{ filter:drop-shadow(0 0 3px var(--g)); } 50%{ filter:drop-shadow(0 0 12px var(--g)); } }
+@keyframes tb-twinkle{ 0%,100%{ transform:scale(0) rotate(0deg); opacity:0; } 50%{ transform:scale(1) rotate(45deg); opacity:1; } }
+@keyframes tb-hue{ from{ filter:hue-rotate(0deg); } to{ filter:hue-rotate(360deg); } }
+.lb-tiers{ display:flex; flex-wrap:wrap; gap:6px 18px; padding:6px 2px 2px; }
+.lb-tiers > div{ display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--ink-dim); }
+.lb-tiers b{ color:var(--ink); display:block; font-size:13px; }
+.lb-tiers .tb{ transform:scale(.72); transform-origin:left center; margin-right:-10px; }
+.lb-main .tb{ transform:scale(.86); margin:-3px -2px; }
+
 </style>
 </head>
 <body>
@@ -1413,13 +1444,15 @@ html[data-theme="light"]:not([data-xmas]):not([data-hween]) ::selection{ backgro
 
 <!-- Leaderboard -->
 <div class="overlay" id="lbOverlay" hidden>
-  <div class="modal" style="max-width:820px;">
+  <div class="modal" style="max-width:860px;">
     <div class="modal-head"><h2>Leaderboard</h2><button class="close-x" id="closeLbBtn">✕</button></div>
     <div class="modal-body">
+      <div class="field"><input type="text" id="lbSearch" placeholder="Search a name to see their points and details…" autocomplete="off"></div>
       <div class="seg" id="lbSeg"></div>
+      <div class="lb-tiers" id="lbTiers"></div>
       <div id="lbList"></div>
       <details class="lb-how"><summary>How points work</summary>
-        <div>Every closed item earns <b>100</b> base points. Closed on or before the due date: <b>+20</b>, plus <b>+3</b> for each day early (up to 14 days). Closed late: <b>−5</b> per day late (up to 12 days). Long-running items: <b>+1</b> per 10 days of age (up to +20). Every item is worth at least 40. Items without a due date get the base and age points only. Shared items split their points equally between owners. The tier (Bronze, Silver, Gold, Platinum, Diamond, Master) comes from all-time points; the ranking uses the selected period.</div>
+        <div>Timeliness is what counts. An item <b>with a due date</b> earns <b>100</b> base points. Closed on or before the due date: <b>+20</b>, plus <b>+3</b> for each day early. Early days count only up to half of the time originally planned for the item (discussed date to due date) and at most 14 days, so a far-away due date can't be farmed. Closed late: <b>−5</b> per day late (up to 12 days). Every item with a due date is worth at least 40. An item <b>without a due date</b> earns a flat <b>30</b> points, with no bonus, so set a due date to earn more. Shared items split their points equally between owners. Tiers use all-time points; the ranking uses the selected period.</div>
       </details>
     </div>
   </div>
@@ -4084,6 +4117,7 @@ function bindEvents(){
   setIconBtn('leaderboardBtn', 'trophy');
   document.getElementById('leaderboardBtn').addEventListener('click', ()=>{ closeMobileSidebar(); openLeaderboard(); });
   document.getElementById('closeLbBtn').addEventListener('click', closeLb);
+  document.getElementById('lbSearch').addEventListener('input', (e)=>{ lbQuery = e.target.value; renderLeaderboard(); });
   document.getElementById('lbSeg').addEventListener('click', (e)=>{ const b = e.target.closest('.seg-btn'); if (b){ lbPeriod = b.dataset.p; renderLeaderboard(); } });
   document.getElementById('lbList').addEventListener('click', (e)=>{ const r = e.target.closest('.lb-row'); if (r){ const d = r.querySelector('.lb-detail'); d.hidden = !d.hidden; } });
   setIconBtn('dashboardBtn', 'chart', 'Dashboard');
@@ -4835,22 +4869,31 @@ function stopHweenMusic(){
 
 /* ---------- Leaderboard (MMR-style score for closed items) ---------- */
 const LB_TIERS = [['Master',8000,'#FF6B9D'],['Diamond',5000,'#38B6FF'],['Platinum',3000,'#2FBF9F'],['Gold',1500,'#E0A81E'],['Silver',500,'#8F9AAE'],['Bronze',0,'#C98A5B']];
-let lbPeriod = 'month';
+let lbPeriod = 'month', lbQuery = '';
 function lbTier(p){ return LB_TIERS.find(t=>p>=t[1]); }
-// 100 base; on/before due +20 and +3/day early (max 14 days); late -5/day (max 12 days); +1 per 10 days of age (max 20); floor 40
+function tierBadge(t){
+  const g = { Bronze:'I', Silver:'II', Gold:'III', Platinum:'IV', Diamond:'V', Master:'♛' }[t[0]];
+  return '<span class="tb tb-' + t[0].toLowerCase() + '" title="' + t[0] + '"><i class="tb-face"></i><b class="tb-glyph">' + g + '</b></span>';
+}
+// With a due date: 100 base; on/before due +20 and +3 per early day (early days capped at 14 and at half of the planned time);
+// late -5 per day (max 12 days); minimum 40. No due date: flat 30 points, no bonus.
 function lbClosure(it){
   const at = it.lastUpdated ? new Date(it.lastUpdated) : null;
   if (!at || isNaN(at.getTime())) return null;
-  let timing = 0, delta = null;
-  if (it.dueDate && it.dueDate !== 'TBD'){
-    const due = new Date(it.dueDate + 'T00:00:00');
-    const day = new Date(at.getFullYear(), at.getMonth(), at.getDate());
-    delta = Math.round((due - day) / 86400000);   // + early, - late
-    timing = delta >= 0 ? 20 + Math.min(14, delta) * 3 : -Math.min(12, -delta) * 5;
+  if (!it.dueDate || it.dueDate === 'TBD') return { at: at, delta: null, total: 30 };
+  const due = new Date(it.dueDate + 'T00:00:00');
+  if (isNaN(due.getTime())) return { at: at, delta: null, total: 30 };
+  const day = new Date(at.getFullYear(), at.getMonth(), at.getDate());
+  const delta = Math.round((due - day) / 86400000);   // + early, - late
+  let timing;
+  if (delta >= 0){
+    const disc = it.dateDiscussed ? new Date(it.dateDiscussed + 'T00:00:00') : null;
+    const planned = (disc && !isNaN(disc.getTime())) ? Math.max(0, Math.round((due - disc) / 86400000)) : 0;
+    timing = 20 + 3 * Math.min(14, Math.floor(planned / 2), delta);
+  } else {
+    timing = -Math.min(12, -delta) * 5;
   }
-  const ag = computeAging(it);
-  const aging = ag ? Math.min(20, Math.floor(ag.days / 10)) : 0;
-  return { at: at, delta: delta, timing: timing, aging: aging, total: Math.max(40, 100 + timing + aging) };
+  return { at: at, delta: delta, total: Math.max(40, 100 + timing) };
 }
 function lbInPeriod(at){
   const now = new Date();
@@ -4870,41 +4913,63 @@ function computeLeaderboard(){
     const names = Array.from(new Set(raw.split(',').map(x=>x.trim()).filter(Boolean)));
     const share = c.total / names.length;
     names.forEach(n=>{
-      const o = owners[n] || (owners[n] = { name:n, all:0, pts:0, closed:0, onTime:0, withDue:0, sumDelta:0, items:[] });
+      const o = owners[n] || (owners[n] = { name:n, all:0, pts:0, closed:0, onTime:0, withDue:0, noDue:0, sumDelta:0, items:[], rank:null });
       o.all += share;
       if (!lbInPeriod(c.at)) return;
       o.pts += share; o.closed++;
-      if (c.delta !== null){ o.withDue++; o.sumDelta += c.delta; if (c.delta >= 0) o.onTime++; }
+      if (c.delta === null) o.noDue++;
+      else { o.withDue++; o.sumDelta += c.delta; if (c.delta >= 0) o.onTime++; }
       o.items.push({ id: it.id, issues: it.issues, pts: share, delta: c.delta, split: names.length });
     });
   });
-  return Object.values(owners).filter(o=>o.closed > 0).sort((a,b)=> (b.pts - a.pts) || (b.closed - a.closed));
+  const ranked = Object.values(owners).filter(o=>o.closed > 0).sort((a,b)=> (b.pts - a.pts) || (b.closed - a.closed));
+  ranked.forEach((o, i)=>{ o.rank = i + 1; });
+  return { owners: owners, ranked: ranked };
+}
+function lbRowHtml(o, open, total){
+  const t = lbTier(o.all);
+  const dept = CFG.nameToDept[o.name.toLowerCase()];
+  const medal = ['#E5B53C', '#9AA4B5', '#C98A5B'];
+  const bits = [];
+  if (!o.closed) bits.push('No items closed in this period');
+  else {
+    bits.push(o.closed + ' closed');
+    if (o.withDue) bits.push(Math.round(o.onTime / o.withDue * 100) + '% on time');
+    if (o.withDue){ const avg = o.sumDelta / o.withDue; bits.push(avg >= 0 ? avg.toFixed(1) + 'd early on average' : Math.abs(avg).toFixed(1) + 'd late on average'); }
+    if (o.noDue) bits.push(o.noDue + ' without a deadline');
+  }
+  const items = o.items.slice().sort((a,b)=>b.pts - a.pts).map(x=>{
+    const when = x.delta === null ? 'no deadline · flat 30 pts' : (x.delta > 0 ? x.delta + 'd early' : (x.delta === 0 ? 'on the due date' : (-x.delta) + 'd late'));
+    return '<div class="lb-item"><span class="mono">#' + x.id + '</span><span>' + escapeHtml(truncate(x.issues, 70)) + '</span><b>+' + Math.round(x.pts) + '</b><span class="muted">' + when + (x.split > 1 ? ' · shared by ' + x.split : '') + '</span></div>';
+  }).join('');
+  const rankStyle = (o.rank && o.rank <= 3) ? ' style="background:' + medal[o.rank - 1] + ';color:#1a1a1a;"' : '';
+  return '<div class="lb-row"><div class="lb-main"><span class="lb-rank"' + rankStyle + '>' + (o.rank || '–') + '</span>' + tierBadge(t) +
+    '<div class="lb-who"><div class="lb-name">' + escapeHtml(o.name) + (dept ? singleDeptPillHtml(dept) : '') + '</div>' +
+    '<div class="lb-sub"><span class="lb-tier" style="--tc:' + t[2] + ';">' + t[0] + '</span>' + (o.rank && total ? 'Rank ' + o.rank + ' of ' + total + ' · ' : '') + bits.join(' · ') + '</div></div>' +
+    '<div class="lb-pts">' + Math.round(o.pts) + '<span>points</span></div></div>' +
+    '<div class="lb-detail"' + (open ? '' : ' hidden') + '>' + (items || '<span class="muted">Nothing to show yet.</span>') + '</div></div>';
 }
 function renderLeaderboard(){
   document.getElementById('lbSeg').innerHTML = [['month','This month'],['30d','Last 30 days'],['quarter','This quarter'],['all','All time']]
     .map(p=>'<button type="button" class="seg-btn' + (p[0] === lbPeriod ? ' on' : '') + '" data-p="' + p[0] + '">' + p[1] + '</button>').join('');
-  const rows = computeLeaderboard();
+  document.getElementById('lbTiers').innerHTML = LB_TIERS.slice().reverse().map(t=>'<div>' + tierBadge(t) + '<span><b>' + t[0] + '</b>' + t[1].toLocaleString() + '+ pts</span></div>').join('');
+  const res = computeLeaderboard();
   const el = document.getElementById('lbList');
-  if (!rows.length){ el.innerHTML = '<div class="noupdate-empty">No closed items with an owner in this period yet.</div>'; return; }
-  const medal = ['#E5B53C', '#9AA4B5', '#C98A5B'];
-  el.innerHTML = rows.map((o, i)=>{
-    const t = lbTier(o.all);
-    const dept = CFG.nameToDept[o.name.toLowerCase()];
-    const ot = o.withDue ? Math.round(o.onTime / o.withDue * 100) + '% on time' : 'no deadlines';
-    const avg = o.withDue ? o.sumDelta / o.withDue : null;
-    const avgTxt = avg === null ? '' : (avg >= 0 ? avg.toFixed(1) + 'd early on average' : Math.abs(avg).toFixed(1) + 'd late on average');
-    const items = o.items.sort((a,b)=>b.pts - a.pts).map(x=>{
-      const when = x.delta === null ? 'no deadline' : (x.delta > 0 ? x.delta + 'd early' : (x.delta === 0 ? 'on the due date' : (-x.delta) + 'd late'));
-      return '<div class="lb-item"><span class="mono">#' + x.id + '</span><span>' + escapeHtml(truncate(x.issues, 70)) + '</span><b>+' + Math.round(x.pts) + '</b><span class="muted">' + when + (x.split > 1 ? ' · shared by ' + x.split : '') + '</span></div>';
-    }).join('');
-    return '<div class="lb-row"><div class="lb-main"><span class="lb-rank"' + (i < 3 ? ' style="background:' + medal[i] + ';color:#1a1a1a;"' : '') + '>' + (i + 1) + '</span>' +
-      '<div class="lb-who"><div class="lb-name">' + escapeHtml(o.name) + (dept ? singleDeptPillHtml(dept) : '') + '</div>' +
-      '<div class="lb-sub"><span class="lb-tier" style="--tc:' + t[2] + ';">' + t[0] + '</span>' + o.closed + ' closed · ' + ot + (avgTxt ? ' · ' + avgTxt : '') + '</div></div>' +
-      '<div class="lb-pts">' + Math.round(o.pts) + '<span>points</span></div></div>' +
-      '<div class="lb-detail" hidden>' + items + '</div></div>';
-  }).join('');
+  const q = lbQuery.trim().toLowerCase();
+  let list;
+  if (q){
+    const hit = new Set((CFG.ownerRecords || []).filter(r=>(r.disp + ' ' + r.full).toLowerCase().indexOf(q) !== -1).map(r=>r.disp));
+    Object.keys(res.owners).forEach(n=>{ if (n.toLowerCase().indexOf(q) !== -1) hit.add(n); });
+    list = Array.from(hit).map(n=> res.owners[n] || { name:n, all:0, pts:0, closed:0, onTime:0, withDue:0, noDue:0, sumDelta:0, items:[], rank:null });
+    list.sort((a,b)=> (a.rank || 9999) - (b.rank || 9999) || a.name.localeCompare(b.name));
+    if (!list.length){ el.innerHTML = '<div class="noupdate-empty">No one matches “' + escapeHtml(lbQuery) + '”.</div>'; return; }
+    el.innerHTML = list.map(o=>lbRowHtml(o, list.length <= 3, res.ranked.length)).join('');
+    return;
+  }
+  if (!res.ranked.length){ el.innerHTML = '<div class="noupdate-empty">No closed items with an owner in this period yet.</div>'; return; }
+  el.innerHTML = res.ranked.map(o=>lbRowHtml(o, false, res.ranked.length)).join('');
 }
-function openLeaderboard(){ renderLeaderboard(); document.getElementById('lbOverlay').hidden = false; }
+function openLeaderboard(){ lbQuery = ''; document.getElementById('lbSearch').value = ''; renderLeaderboard(); document.getElementById('lbOverlay').hidden = false; }
 function closeLb(){ document.getElementById('lbOverlay').hidden = true; }
 
 /* ---------- polish helpers ---------- */
