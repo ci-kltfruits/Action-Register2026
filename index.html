@@ -1144,6 +1144,10 @@ html[data-theme="light"]:not([data-xmas]):not([data-hween]) ::selection{ backgro
 .lb-tiers .tb{ transform:scale(.72); transform-origin:left center; margin-right:-10px; }
 .lb-main .tb{ transform:scale(.86); margin:-3px -2px; }
 
+/* window headers stay solid above scrolling content */
+.modal-head{ background:var(--surface); z-index:5; }
+.tb{ isolation:isolate; }
+
 </style>
 </head>
 <body>
