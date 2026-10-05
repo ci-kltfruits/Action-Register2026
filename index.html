@@ -1053,6 +1053,11 @@ body.mobile-mode .pv-grid{ grid-template-columns:minmax(0,1fr); }
 .tab.dept-tab.iridescent-fill:hover{ filter:saturate(1.2) brightness(1.04); }
 .tab.dept-tab.iridescent-fill.active{ border-color:rgba(140,110,255,.7); box-shadow:inset 0 1px 0 rgba(255,255,255,.9), inset 0 -7px 14px rgba(120,100,210,.22), 0 4px 16px rgba(150,120,255,.5); }
 
+/* present mode: owner expands on click; department updates always shown in full */
+.pm-clamp2{ -webkit-line-clamp:2; }
+.pm-clamp.open{ -webkit-line-clamp:unset; }
+.pm-dept-text{ display:block; -webkit-line-clamp:unset; overflow:visible; }
+
 </style>
 </head>
 <body>
@@ -1330,7 +1335,7 @@ body.mobile-mode .pv-grid{ grid-template-columns:minmax(0,1fr); }
       <button class="close-x" id="closeNoUpdateBtn">✕</button>
     </div>
     <div class="modal-body">
-      <p class="muted" style="font-size:13px; margin:0 0 4px;">Single-owner, non-closed MBU 1.5 / MBU 2 items that haven't been updated today — ranked by each owner's highest no-update days, with the count of their not-updated items.</p>
+      <p class="muted" style="font-size:13px; margin:0 0 4px;">Non-closed MBU 1.5 / MBU 2 items that haven't been updated: single-owner items, plus cross-department items where an owner's department still owes an update. Ranked by each owner's highest no-update days, with the count of their not-updated items.</p>
       <div id="noUpdateList"></div>
     </div>
   </div>
@@ -3756,19 +3761,33 @@ function daysWithoutUpdate(it){
 // Single-owner, non-closed, not-updated-today items, ranked by owner's summed no-update days.
 function computeNoUpdateReport(){
   const byOwner = {};
+  const add = (owner, it, days, dept) => {
+    if (!byOwner[owner]) byOwner[owner] = { maxDays: 0, items: [] };
+    byOwner[owner].maxDays = Math.max(byOwner[owner].maxDays, days);
+    byOwner[owner].items.push({ id: it.id, issues: it.issues, days: days, dept: dept || '' });
+  };
   state.items.forEach(it=>{
     if (getStatusBucket(it) === 'Closed') return;
     if (!isMbuMeeting(it)) return; // only MBU 1.5 / MBU 2 items
-    if (updateStatusInfo(it) !== 'needs') return;
     const raw = (it.owner||'').trim();
     if (!raw || raw.toLowerCase() === 'all') return;
     const parts = raw.split(',').map(s=>s.trim()).filter(Boolean);
+    if (it.deptList && it.deptList.length){
+      // cross-department item: every department that still owes an update is charged to the
+      // owners from that department who are listed on the item
+      it.deptList.forEach(d=>{
+        const du = (it.deptUpdates && it.deptUpdates[d]) || { t:'', updatedToday:false };
+        if (deptUpdateStatusInfo(it, du) !== 'needs') return;
+        let days = 0;
+        if (du.t){ const t = new Date(du.t); if (!isNaN(t.getTime())) days = daysSince_(t); }
+        else if (it.dateDiscussed){ const t = new Date(it.dateDiscussed + 'T00:00:00'); if (!isNaN(t.getTime())) days = daysSince_(t); }
+        parts.filter(o => CFG.nameToDept[o.toLowerCase()] === d).forEach(o => add(o, it, days, d));
+      });
+      return;
+    }
+    if (updateStatusInfo(it) !== 'needs') return;
     if (parts.length !== 1) return;
-    const owner = parts[0];
-    const days = daysWithoutUpdate(it);
-    if (!byOwner[owner]) byOwner[owner] = { maxDays: 0, items: [] };
-    byOwner[owner].maxDays = Math.max(byOwner[owner].maxDays, days);
-    byOwner[owner].items.push({ id: it.id, issues: it.issues, days });
+    add(parts[0], it, daysWithoutUpdate(it), '');
   });
   return Object.entries(byOwner)
     .map(([owner, data]) => ({ owner, maxDays: data.maxDays, count: data.items.length, items: data.items.sort((a,b)=>b.days-a.days) }))
@@ -3786,7 +3805,7 @@ function openNoUpdateReport(){
         <div class="noupdate-rank">${i+1}</div>
         <div class="noupdate-owner">
           <div class="noupdate-name">${escapeHtml(r.owner)} <span class="muted" style="font-weight:600; font-size:12.5px;">· ${r.count} item${r.count===1?'':'s'} not updated</span></div>
-          <div class="noupdate-items">${r.items.map(it=>`Item ${it.id} (${it.days}d)`).join(', ')}</div>
+          <div class="noupdate-items">${r.items.map(it=>`Item ${it.id}${it.dept ? ' · ' + it.dept : ''} (${it.days}d)`).join(', ')}</div>
         </div>
         <div class="noupdate-total">${r.maxDays}<span>day${r.maxDays===1?'':'s'} max</span></div>
       </div>
@@ -3842,9 +3861,9 @@ function openDashboard(){
    PRESENT MODE
    ============================================================ */
 function openPresentMode(){
-  state.presentQueue = getFiltered().filter(i=>i.status!=='Closed');
+  state.presentQueue = getFiltered();   // closed / closed-late items included (unless filtered out)
   if (!state.presentQueue.length){
-    alert('No pending action items to present under the current filters.');
+    alert('No action items to present under the current filters.');
     return;
   }
   state.presentIndex = 0;
@@ -3857,7 +3876,7 @@ function openPresentFromPreview(){
   const id = state.previewId;
   const it = state.items.find(i=>i.id===id);
   if (!it) return;
-  const queue = getFiltered().filter(i=> i.status!=='Closed' || i.id===id);
+  const queue = getFiltered().slice();
   let idx = queue.findIndex(i=>i.id===id);
   if (idx === -1){ queue.unshift(it); idx = 0; }
   closePreview();
@@ -3952,7 +3971,7 @@ function renderPresentCard(){
 
   const side = '<div class="pm-side">' +
     '<div class="pm-card pm-facts"><div><div class="pm-label">Due</div><div class="pm-val">' + (it.dueDate === 'TBD' || !it.dueDate ? 'No date yet' : formatShortDate(it.dueDate)) + '</div></div>' +
-    '<div><div class="pm-label">Owner</div><div class="pm-val pm-clamp" style="-webkit-line-clamp:2;" title="' + escapeHtml(it.owner) + '">' + (escapeHtml(it.owner) || '—') + '</div></div></div>' +
+    '<div><div class="pm-label">Owner</div><div class="pm-val pm-clamp pm-clamp2" title="Click to expand">' + (escapeHtml(it.owner) || '—') + '</div></div></div>' +
     '<div class="pm-card"><div class="pm-label">Details</div><div class="pm-clamp" style="font-size:clamp(15px,1.4vw,18px); line-height:1.45;">' + (escapeHtml(it.details) || '—') + '</div></div>' +
     '<div class="pm-media">' + thumb('Before', it.beforePhotos || [], 'before') + thumb('Currently', it.currentPhotos || [], 'current') + '</div></div>';
 
