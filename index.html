@@ -1058,6 +1058,61 @@ body.mobile-mode .pv-grid{ grid-template-columns:minmax(0,1fr); }
 .pm-clamp.open{ -webkit-line-clamp:unset; }
 .pm-dept-text{ display:block; -webkit-line-clamp:unset; overflow:visible; }
 
+/* ============================================================
+   PREMIUM LIGHT MODE (default light theme only)
+   ============================================================ */
+html[data-theme="light"]:not([data-xmas]):not([data-hween]){ --bg:#F3F5FB; --surface:#FFFFFF; --surface-2:#EDF0F8; --border:#E2E6F0; --ink:#161A2C; --ink-dim:#677089;
+   --glass:rgba(255,255,255,.74); --hair:rgba(24,30,64,.08); --glow1:#D3DCFF; --glow2:#E8D8FB; --glow3:#CFF1EA;
+   --shadow:0 1px 2px rgba(22,26,44,.04), 0 14px 34px -10px rgba(44,56,120,.16);
+   --shadow-lg:0 2px 4px rgba(22,26,44,.05), 0 34px 80px -24px rgba(40,50,120,.38); }
+html[data-theme="light"]:not([data-xmas]):not([data-hween]) body::before{ background:radial-gradient(60% 55% at 12% 0%,var(--glow1) 0%,transparent 70%),radial-gradient(55% 50% at 92% 8%,var(--glow3) 0%,transparent 70%),radial-gradient(60% 60% at 80% 100%,var(--glow2) 0%,transparent 70%); }
+html[data-theme="light"]:not([data-xmas]):not([data-hween]) .topbar{ background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(255,255,255,.74)); box-shadow:0 1px 0 var(--hair), 0 12px 30px -20px rgba(44,56,120,.4); }
+html[data-theme="light"]:not([data-xmas]):not([data-hween]) .toolbar, html[data-theme="light"]:not([data-xmas]):not([data-hween]) .tabs{ background:rgba(255,255,255,.6); }
+html[data-theme="light"]:not([data-xmas]):not([data-hween]) .logo{ background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 78%,#fff),var(--accent)); box-shadow:0 6px 18px color-mix(in srgb,var(--accent) 42%,transparent), inset 0 1px 0 rgba(255,255,255,.4); }
+html[data-theme="light"]:not([data-xmas]):not([data-hween]) .theme-toggle, html[data-theme="light"]:not([data-xmas]):not([data-hween]) .btn-ghost, html[data-theme="light"]:not([data-xmas]):not([data-hween]) .btn:not(.btn-primary):not(.btn-accent):not(.btn-danger){ background:rgba(255,255,255,.92); box-shadow:0 1px 2px rgba(22,26,44,.06); }
+html[data-theme="light"]:not([data-xmas]):not([data-hween]) .btn-accent{ background:linear-gradient(180deg,#2B3152,#161A2C); border-color:#161A2C; color:#fff; box-shadow:0 8px 20px -8px rgba(22,26,44,.55); }
+html[data-theme="light"]:not([data-xmas]):not([data-hween]) .search-wrap input, html[data-theme="light"]:not([data-xmas]):not([data-hween]) .sort-wrap select{ background:rgba(255,255,255,.96); border-color:var(--hair); box-shadow:inset 0 1px 2px rgba(22,26,44,.04); }
+html[data-theme="light"]:not([data-xmas]):not([data-hween]) input:focus, html[data-theme="light"]:not([data-xmas]):not([data-hween]) select:focus, html[data-theme="light"]:not([data-xmas]):not([data-hween]) textarea:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 20%,transparent); }
+html[data-theme="light"]:not([data-xmas]):not([data-hween]) table{ background:rgba(255,255,255,.88); border:1px solid var(--hair); box-shadow:var(--shadow); }
+html[data-theme="light"]:not([data-xmas]):not([data-hween]) thead th{ background:rgba(240,243,250,.94); color:#58627F; letter-spacing:.6px; border-bottom:1px solid var(--hair); }
+html[data-theme="light"]:not([data-xmas]):not([data-hween]) tbody td{ border-bottom-color:rgba(24,30,64,.06); }
+html[data-theme="light"]:not([data-xmas]):not([data-hween]) tbody tr:hover{ background:color-mix(in srgb,var(--accent) 5%,#fff); }
+html[data-theme="light"]:not([data-xmas]):not([data-hween]) .mcard{ background:rgba(255,255,255,.92); border:1px solid var(--hair); box-shadow:var(--shadow); }
+html[data-theme="light"]:not([data-xmas]):not([data-hween]) .modal{ background:rgba(255,255,255,.97); box-shadow:var(--shadow-lg); }
+html[data-theme="light"]:not([data-xmas]):not([data-hween]) .modal-foot{ background:rgba(249,250,253,.97); }
+html[data-theme="light"]:not([data-xmas]):not([data-hween]) .overlay{ background:rgba(28,34,72,.38); }
+html[data-theme="light"]:not([data-xmas]):not([data-hween]) .pv-card, html[data-theme="light"]:not([data-xmas]):not([data-hween]) .pm-card{ background:#FFFFFF; border-color:var(--hair); box-shadow:0 1px 2px rgba(22,26,44,.04); }
+html[data-theme="light"]:not([data-xmas]):not([data-hween]) .pm-dept:not(.needs){ border-color:var(--hair); }
+html[data-theme="light"]:not([data-xmas]):not([data-hween]) .pm-dept{ background:#FFFFFF; box-shadow:0 1px 2px rgba(22,26,44,.04); }
+html[data-theme="light"]:not([data-xmas]):not([data-hween]) .dash-card{ background:#FFFFFF; border-color:var(--hair); box-shadow:var(--shadow); }
+html[data-theme="light"]:not([data-xmas]):not([data-hween]) .present-overlay{ background:radial-gradient(60% 55% at 12% 0%,var(--glow1) 0%,transparent 70%),radial-gradient(60% 60% at 80% 100%,var(--glow2) 0%,transparent 70%),var(--bg); }
+html[data-theme="light"]:not([data-xmas]):not([data-hween]) .present-bottom{ background:rgba(255,255,255,.72); }
+html[data-theme="light"]:not([data-xmas]):not([data-hween]) .pb-btn{ background:#FFFFFF; border-color:var(--hair); box-shadow:0 1px 2px rgba(22,26,44,.06); }
+html[data-theme="light"]:not([data-xmas]):not([data-hween]) .tab:not(.active):not(.dept-tab):not(.sgs-tab):hover{ background:rgba(255,255,255,.95); }
+html[data-theme="light"]:not([data-xmas]):not([data-hween]) .id-pill{ background:#FFFFFF; }
+html[data-theme="light"]:not([data-xmas]):not([data-hween]) .upd-btn{ box-shadow:0 1px 2px rgba(22,26,44,.07); }
+html[data-theme="light"]:not([data-xmas]):not([data-hween]) ::-webkit-scrollbar-thumb{ background:#CBD2E3; }
+html[data-theme="light"]:not([data-xmas]):not([data-hween]) ::selection{ background:color-mix(in srgb,var(--accent) 28%,transparent); }
+
+/* leaderboard */
+.lb-row{ border:1px solid var(--border); border-radius:14px; margin-top:10px; background:color-mix(in srgb,var(--surface-2) 45%,transparent); cursor:pointer; transition:background .15s ease; }
+.lb-row:hover{ background:color-mix(in srgb,var(--accent) 7%,transparent); }
+.lb-main{ display:flex; align-items:center; gap:14px; padding:12px 16px; }
+.lb-rank{ width:34px; height:34px; border-radius:50%; background:var(--surface-2); display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace; font-weight:700; flex:none; }
+.lb-who{ flex:1; min-width:0; }
+.lb-name{ font-weight:700; font-size:16px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.lb-name .dept-pill{ font-size:11px; padding:2px 9px; }
+.lb-sub{ font-size:12.5px; color:var(--ink-dim); margin-top:3px; }
+.lb-tier{ display:inline-block; font-weight:800; font-size:11px; letter-spacing:.4px; text-transform:uppercase; padding:1px 8px; border-radius:999px; color:var(--tc); border:1px solid var(--tc); margin-right:6px; }
+.lb-pts{ font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:24px; text-align:right; line-height:1; }
+.lb-pts span{ display:block; font-size:10.5px; font-weight:600; color:var(--ink-dim); margin-top:3px; text-transform:uppercase; letter-spacing:.4px; }
+.lb-detail{ padding:4px 16px 12px 64px; display:grid; gap:6px; }
+.lb-item{ font-size:13px; display:flex; gap:8px; align-items:baseline; flex-wrap:wrap; }
+.lb-item b{ color:var(--good); }
+.lb-how{ margin-top:16px; font-size:13px; color:var(--ink-dim); }
+.lb-how summary{ cursor:pointer; font-weight:700; color:var(--ink); }
+.lb-how div{ margin-top:8px; line-height:1.55; }
+
 </style>
 </head>
 <body>
@@ -1095,6 +1150,7 @@ body.mobile-mode .pv-grid{ grid-template-columns:minmax(0,1fr); }
     <button class="theme-toggle" id="authBtn" title="Sign in" style="width:auto; padding:0 10px; font-size:13px; font-weight:700;">Sign in</button>
     <button class="theme-toggle" id="themeToggle" title="Toggle light/dark">🌙</button>
     <button class="theme-toggle" id="noUpdateBtn" title="No-update tracker">🚩</button>
+    <button class="theme-toggle" id="leaderboardBtn" title="Leaderboard"></button>
     <button class="theme-toggle" id="mobileToggle" title="Toggle mobile view">📱</button>
     <button class="theme-toggle" id="mobileSidebarBtn" title="Menu" hidden>☰</button>
   </div>
@@ -1352,6 +1408,20 @@ body.mobile-mode .pv-grid{ grid-template-columns:minmax(0,1fr); }
     <button class="pb-btn" id="presentMarkUpdated"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Update</button>
     <button class="pb-btn pb-icon" id="presentNext" aria-label="Next item"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
     <button class="pb-btn" id="exitPresentBtn">Exit</button>
+  </div>
+</div>
+
+<!-- Leaderboard -->
+<div class="overlay" id="lbOverlay" hidden>
+  <div class="modal" style="max-width:820px;">
+    <div class="modal-head"><h2>Leaderboard</h2><button class="close-x" id="closeLbBtn">✕</button></div>
+    <div class="modal-body">
+      <div class="seg" id="lbSeg"></div>
+      <div id="lbList"></div>
+      <details class="lb-how"><summary>How points work</summary>
+        <div>Every closed item earns <b>100</b> base points. Closed on or before the due date: <b>+20</b>, plus <b>+3</b> for each day early (up to 14 days). Closed late: <b>−5</b> per day late (up to 12 days). Long-running items: <b>+1</b> per 10 days of age (up to +20). Every item is worth at least 40. Items without a due date get the base and age points only. Shared items split their points equally between owners. The tier (Bronze, Silver, Gold, Platinum, Diamond, Master) comes from all-time points; the ranking uses the selected period.</div>
+      </details>
+    </div>
   </div>
 </div>
 
@@ -2103,7 +2173,7 @@ function toggleTheme(){
 // Controls physically moved into the mobile sidebar (and back), so listeners keep working.
 const MOBILE_SIDEBAR_MOVE_IDS = [
   'newActionBtn', 'searchWrap', 'filterToggleBtn', 'filterExpandPanel',
-  'sortWrap', 'dashboardBtn', 'themeToggle', 'noUpdateBtn', 'mobileToggle', 'statsStrip'
+  'sortWrap', 'dashboardBtn', 'themeToggle', 'noUpdateBtn', 'leaderboardBtn', 'mobileToggle', 'statsStrip'
 ];
 let _mobileOriginalPositions = null;
 
@@ -3899,6 +3969,7 @@ function closeTopLayer(){
     ['actionOverlay', closeActionModal],
     ['previewOverlay', closePreview],
     ['presentOverlay', closePresentMode],
+    ['lbOverlay', closeLb],
     ['noUpdateOverlay', closeNoUpdateReport],
     ['dashOverlay', ()=>{ document.getElementById('dashOverlay').hidden = true; }]
   ];
@@ -4010,6 +4081,11 @@ function presentNav(dir){
    ============================================================ */
 function bindEvents(){
   setIconBtn('noUpdateBtn', 'flag');
+  setIconBtn('leaderboardBtn', 'trophy');
+  document.getElementById('leaderboardBtn').addEventListener('click', ()=>{ closeMobileSidebar(); openLeaderboard(); });
+  document.getElementById('closeLbBtn').addEventListener('click', closeLb);
+  document.getElementById('lbSeg').addEventListener('click', (e)=>{ const b = e.target.closest('.seg-btn'); if (b){ lbPeriod = b.dataset.p; renderLeaderboard(); } });
+  document.getElementById('lbList').addEventListener('click', (e)=>{ const r = e.target.closest('.lb-row'); if (r){ const d = r.querySelector('.lb-detail'); d.hidden = !d.hidden; } });
   setIconBtn('dashboardBtn', 'chart', 'Dashboard');
   document.getElementById('themeToggle').addEventListener('click', toggleTheme);
   document.getElementById('noUpdateBtn').addEventListener('click', ()=>{ closeMobileSidebar(); openNoUpdateReport(); });
@@ -4757,6 +4833,80 @@ function stopHweenMusic(){
   if (b) b.remove();
 }
 
+/* ---------- Leaderboard (MMR-style score for closed items) ---------- */
+const LB_TIERS = [['Master',8000,'#FF6B9D'],['Diamond',5000,'#38B6FF'],['Platinum',3000,'#2FBF9F'],['Gold',1500,'#E0A81E'],['Silver',500,'#8F9AAE'],['Bronze',0,'#C98A5B']];
+let lbPeriod = 'month';
+function lbTier(p){ return LB_TIERS.find(t=>p>=t[1]); }
+// 100 base; on/before due +20 and +3/day early (max 14 days); late -5/day (max 12 days); +1 per 10 days of age (max 20); floor 40
+function lbClosure(it){
+  const at = it.lastUpdated ? new Date(it.lastUpdated) : null;
+  if (!at || isNaN(at.getTime())) return null;
+  let timing = 0, delta = null;
+  if (it.dueDate && it.dueDate !== 'TBD'){
+    const due = new Date(it.dueDate + 'T00:00:00');
+    const day = new Date(at.getFullYear(), at.getMonth(), at.getDate());
+    delta = Math.round((due - day) / 86400000);   // + early, - late
+    timing = delta >= 0 ? 20 + Math.min(14, delta) * 3 : -Math.min(12, -delta) * 5;
+  }
+  const ag = computeAging(it);
+  const aging = ag ? Math.min(20, Math.floor(ag.days / 10)) : 0;
+  return { at: at, delta: delta, timing: timing, aging: aging, total: Math.max(40, 100 + timing + aging) };
+}
+function lbInPeriod(at){
+  const now = new Date();
+  if (lbPeriod === '30d') return now - at <= 30 * 86400000;
+  if (lbPeriod === 'month') return at.getFullYear() === now.getFullYear() && at.getMonth() === now.getMonth();
+  if (lbPeriod === 'quarter') return at.getFullYear() === now.getFullYear() && Math.floor(at.getMonth() / 3) === Math.floor(now.getMonth() / 3);
+  return true;
+}
+function computeLeaderboard(){
+  const owners = {};
+  state.items.forEach(it=>{
+    if (normalizeStatus(it.status) !== 'Closed') return;
+    const raw = (it.owner || '').trim();
+    if (!raw || raw.toLowerCase() === 'all') return;
+    const c = lbClosure(it);
+    if (!c) return;
+    const names = Array.from(new Set(raw.split(',').map(x=>x.trim()).filter(Boolean)));
+    const share = c.total / names.length;
+    names.forEach(n=>{
+      const o = owners[n] || (owners[n] = { name:n, all:0, pts:0, closed:0, onTime:0, withDue:0, sumDelta:0, items:[] });
+      o.all += share;
+      if (!lbInPeriod(c.at)) return;
+      o.pts += share; o.closed++;
+      if (c.delta !== null){ o.withDue++; o.sumDelta += c.delta; if (c.delta >= 0) o.onTime++; }
+      o.items.push({ id: it.id, issues: it.issues, pts: share, delta: c.delta, split: names.length });
+    });
+  });
+  return Object.values(owners).filter(o=>o.closed > 0).sort((a,b)=> (b.pts - a.pts) || (b.closed - a.closed));
+}
+function renderLeaderboard(){
+  document.getElementById('lbSeg').innerHTML = [['month','This month'],['30d','Last 30 days'],['quarter','This quarter'],['all','All time']]
+    .map(p=>'<button type="button" class="seg-btn' + (p[0] === lbPeriod ? ' on' : '') + '" data-p="' + p[0] + '">' + p[1] + '</button>').join('');
+  const rows = computeLeaderboard();
+  const el = document.getElementById('lbList');
+  if (!rows.length){ el.innerHTML = '<div class="noupdate-empty">No closed items with an owner in this period yet.</div>'; return; }
+  const medal = ['#E5B53C', '#9AA4B5', '#C98A5B'];
+  el.innerHTML = rows.map((o, i)=>{
+    const t = lbTier(o.all);
+    const dept = CFG.nameToDept[o.name.toLowerCase()];
+    const ot = o.withDue ? Math.round(o.onTime / o.withDue * 100) + '% on time' : 'no deadlines';
+    const avg = o.withDue ? o.sumDelta / o.withDue : null;
+    const avgTxt = avg === null ? '' : (avg >= 0 ? avg.toFixed(1) + 'd early on average' : Math.abs(avg).toFixed(1) + 'd late on average');
+    const items = o.items.sort((a,b)=>b.pts - a.pts).map(x=>{
+      const when = x.delta === null ? 'no deadline' : (x.delta > 0 ? x.delta + 'd early' : (x.delta === 0 ? 'on the due date' : (-x.delta) + 'd late'));
+      return '<div class="lb-item"><span class="mono">#' + x.id + '</span><span>' + escapeHtml(truncate(x.issues, 70)) + '</span><b>+' + Math.round(x.pts) + '</b><span class="muted">' + when + (x.split > 1 ? ' · shared by ' + x.split : '') + '</span></div>';
+    }).join('');
+    return '<div class="lb-row"><div class="lb-main"><span class="lb-rank"' + (i < 3 ? ' style="background:' + medal[i] + ';color:#1a1a1a;"' : '') + '>' + (i + 1) + '</span>' +
+      '<div class="lb-who"><div class="lb-name">' + escapeHtml(o.name) + (dept ? singleDeptPillHtml(dept) : '') + '</div>' +
+      '<div class="lb-sub"><span class="lb-tier" style="--tc:' + t[2] + ';">' + t[0] + '</span>' + o.closed + ' closed · ' + ot + (avgTxt ? ' · ' + avgTxt : '') + '</div></div>' +
+      '<div class="lb-pts">' + Math.round(o.pts) + '<span>points</span></div></div>' +
+      '<div class="lb-detail" hidden>' + items + '</div></div>';
+  }).join('');
+}
+function openLeaderboard(){ renderLeaderboard(); document.getElementById('lbOverlay').hidden = false; }
+function closeLb(){ document.getElementById('lbOverlay').hidden = true; }
+
 /* ---------- polish helpers ---------- */
 const _IC = {
   lock:'<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
@@ -4768,7 +4918,8 @@ const _IC = {
   phone:'<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>',
   monitor:'<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',
   chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
-  check:'<path d="M20 6 9 17l-5-5"/>'
+  check:'<path d="M20 6 9 17l-5-5"/>',
+  trophy:'<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>'
 };
 function icon(n){ return '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">' + (_IC[n] || '') + '</svg>'; }
 function setIconBtn(id, n, label){ const el = document.getElementById(id); if (el) el.innerHTML = icon(n) + (label ? '<span class="lbl">' + label + '</span>' : ''); }
