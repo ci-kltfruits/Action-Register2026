@@ -1143,6 +1143,25 @@ html[data-theme="light"]:not([data-xmas]):not([data-hween]) ::selection{ backgro
 @keyframes tb-hue{ from{ filter:hue-rotate(0deg); } to{ filter:hue-rotate(360deg); } }
 @keyframes tb-spin{ to{ transform:rotate(360deg); } }
 
+/* daily quest */
+.qs-top{ display:flex; align-items:center; gap:22px; flex-wrap:wrap; }
+.qs-ring{ width:104px; height:104px; border-radius:50%; background:conic-gradient(var(--accent) var(--d,0deg), var(--surface-2) 0); display:flex; align-items:center; justify-content:center; flex:none; }
+.qs-ring-in{ width:80px; height:80px; border-radius:50%; background:var(--surface); display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.qs-ring-in b{ font-family:'IBM Plex Mono',monospace; font-size:20px; } .qs-ring-in span{ font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.4px; }
+.qs-stats{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; flex:1; min-width:260px; }
+.qs-stats > div{ background:color-mix(in srgb,var(--surface-2) 55%,transparent); border:1px solid var(--border); border-radius:12px; padding:10px 12px; }
+.qs-stats b{ display:block; font-family:'IBM Plex Mono',monospace; font-size:20px; } .qs-stats span{ font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.4px; }
+.qs-bonus{ padding:10px 14px; border-radius:12px; border:1px dashed var(--border); font-weight:600; font-size:14px; color:var(--ink-dim); }
+.qs-bonus.got{ border-style:solid; border-color:var(--good); color:var(--good); background:var(--good-soft); }
+.qs-item{ display:flex; align-items:center; gap:12px; padding:10px 12px; border:1px solid var(--border); border-radius:12px; margin-top:8px; }
+.qs-item.done{ opacity:.65; }
+.qs-check{ width:24px; height:24px; border-radius:50%; border:2px solid var(--border); display:flex; align-items:center; justify-content:center; flex:none; color:#fff; }
+.qs-item.done .qs-check{ background:var(--good); border-color:var(--good); }
+.qs-check .ic{ width:14px; height:14px; }
+.qs-info{ flex:1; min-width:0; } .qs-title{ font-weight:600; font-size:14.5px; overflow-wrap:anywhere; } .qs-sub{ font-size:12px; color:var(--ink-dim); margin-top:2px; }
+.qs-pts{ font-family:'IBM Plex Mono',monospace; font-weight:700; color:var(--good); }
+@media (max-width:620px){ .qs-stats{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+
 </style>
 </head>
 <body>
@@ -1182,6 +1201,7 @@ html[data-theme="light"]:not([data-xmas]):not([data-hween]) ::selection{ backgro
     <button class="theme-toggle" id="themeToggle" title="Toggle light/dark">🌙</button>
     <button class="theme-toggle" id="noUpdateBtn" title="No-update tracker">🚩</button>
     <button class="theme-toggle" id="leaderboardBtn" title="Leaderboard"></button>
+    <button class="theme-toggle" id="questBtn" title="Daily quest"></button>
     <button class="theme-toggle" id="mobileToggle" title="Toggle mobile view">📱</button>
     <button class="theme-toggle" id="mobileSidebarBtn" title="Menu" hidden>☰</button>
   </div>
@@ -1455,6 +1475,14 @@ html[data-theme="light"]:not([data-xmas]):not([data-hween]) ::selection{ backgro
         <div>Timeliness is what counts. An item <b>with a due date</b> earns <b>100</b> base points. Closed on or before the due date: <b>+20</b>, plus <b>+3</b> for each day early. Early days count only up to half of the time originally planned for the item (discussed date to due date) and at most 14 days, so a far-away due date can't be farmed. Closed late: <b>−5</b> per day late (up to 12 days). Every item with a due date is worth at least 40. An item <b>without a due date</b> earns a flat <b>30</b> points, with no bonus, so set a due date to earn more. Shared items split their points equally between owners. Tiers use all-time points; the ranking uses the selected period.</div>
       </details>
     </div>
+  </div>
+</div>
+
+<!-- Daily quest -->
+<div class="overlay" id="questOverlay" hidden>
+  <div class="modal" style="max-width:720px;">
+    <div class="modal-head"><h2>Daily quest</h2><button class="close-x" id="closeQuestBtn">✕</button></div>
+    <div class="modal-body" id="questBody"></div>
   </div>
 </div>
 
@@ -2206,7 +2234,7 @@ function toggleTheme(){
 // Controls physically moved into the mobile sidebar (and back), so listeners keep working.
 const MOBILE_SIDEBAR_MOVE_IDS = [
   'newActionBtn', 'searchWrap', 'filterToggleBtn', 'filterExpandPanel',
-  'sortWrap', 'dashboardBtn', 'themeToggle', 'noUpdateBtn', 'leaderboardBtn', 'mobileToggle', 'statsStrip'
+  'sortWrap', 'dashboardBtn', 'themeToggle', 'noUpdateBtn', 'leaderboardBtn', 'questBtn', 'mobileToggle', 'statsStrip'
 ];
 let _mobileOriginalPositions = null;
 
@@ -3750,6 +3778,7 @@ async function saveAction(){
       if (state.updateDept) labels.push('Update (' + state.updateDept + ')');
       payload.changedFields = labels.join(', ');
       const updated = await run('submitUpdate', state.editingId, payload);
+      lastQuestAward = (updated && updated.questAward) || null;
       const idx = state.items.findIndex(i=>i.id===state.editingId);
       if (idx>-1) state.items[idx] = updated;
       const pIdx = state.presentQueue.findIndex(i=>i.id===state.editingId);
@@ -3757,7 +3786,9 @@ async function saveAction(){
     }
     closeActionModal();
     render();
-    toast(mode === 'update' ? 'Update saved' : mode === 'new' ? 'Action added' : 'Changes saved');
+    toast((mode === 'update' ? 'Update saved' : mode === 'new' ? 'Action added' : 'Changes saved') + (lastQuestAward ? ' · +' + (lastQuestAward.points + (lastQuestAward.bonus || 0)) + ' quest points' : ''));
+    lastQuestAward = null;
+    if (!document.getElementById('questOverlay').hidden) refreshQuest();
     if (!document.getElementById('presentOverlay').hidden) renderPresentCard();
   } catch(err){
     alert('Something went wrong saving this action. ' + (err && err.message ? err.message : ''));
@@ -4002,6 +4033,7 @@ function closeTopLayer(){
     ['actionOverlay', closeActionModal],
     ['previewOverlay', closePreview],
     ['presentOverlay', closePresentMode],
+    ['questOverlay', closeQuest],
     ['lbOverlay', closeLb],
     ['noUpdateOverlay', closeNoUpdateReport],
     ['dashOverlay', ()=>{ document.getElementById('dashOverlay').hidden = true; }]
@@ -4117,6 +4149,16 @@ function bindEvents(){
   setIconBtn('leaderboardBtn', 'trophy');
   document.getElementById('leaderboardBtn').addEventListener('click', ()=>{ closeMobileSidebar(); openLeaderboard(); });
   document.getElementById('closeLbBtn').addEventListener('click', closeLb);
+  setIconBtn('questBtn', 'target');
+  document.getElementById('questBtn').addEventListener('click', ()=>{ closeMobileSidebar(); openQuest(); });
+  document.getElementById('closeQuestBtn').addEventListener('click', closeQuest);
+  document.getElementById('questBody').addEventListener('click', (e)=>{
+    const b = e.target.closest('[data-q]'); if (!b) return;
+    const it = state.items.find(i=>i.id === b.dataset.q); if (!it) return;
+    let dept = null;
+    if (it.deptList && it.deptList.length){ const mine = AUTH && CFG.nameToDept[AUTH.name.toLowerCase()]; dept = (mine && it.deptList.indexOf(mine) !== -1) ? mine : it.deptList[0]; }
+    openActionModal(it.id, 'update', { updateDept: dept });
+  });
   document.getElementById('lbSearch').addEventListener('input', (e)=>{ lbQuery = e.target.value; renderLeaderboard(); });
   document.getElementById('lbSeg').addEventListener('click', (e)=>{ const b = e.target.closest('.seg-btn'); if (b){ lbPeriod = b.dataset.p; renderLeaderboard(); } });
   document.getElementById('lbList').addEventListener('click', (e)=>{ const r = e.target.closest('.lb-row'); if (r){ const d = r.querySelector('.lb-detail'); d.hidden = !d.hidden; } });
@@ -5002,6 +5044,58 @@ function renderLeaderboard(){
 function openLeaderboard(){ lbPeriod = 'all'; lbQuery = ''; document.getElementById('lbSearch').value = ''; renderLeaderboard(); document.getElementById('lbOverlay').hidden = false; }
 function closeLb(){ document.getElementById('lbOverlay').hidden = true; }
 
+/* ---------- Daily quest ---------- */
+let lastQuestAward = null;
+function questOwned(){
+  const me = AUTH ? AUTH.name : '';
+  return state.items.filter(it=>{
+    if (normalizeStatus(it.status) === 'Closed') return false;
+    const raw = (it.owner || '').trim();
+    if (!raw || raw.toLowerCase() === 'all') return false;
+    return raw.split(',').map(x=>x.trim()).indexOf(me) !== -1;
+  });
+}
+function renderQuest(q){
+  const owned = questOwned();
+  const doneN = owned.filter(it=>q.todayItems[it.id]).length;
+  const total = owned.length;
+  const deg = total ? Math.round(doneN / total * 360) : 0;
+  const potential = Math.min(100, 20 + 5 * total);
+  let bonusTxt;
+  if (q.bonusToday) bonusTxt = 'Bonus earned today: +' + q.bonusToday + ' points';
+  else if (!total) bonusTxt = 'You have no open items to update.';
+  else bonusTxt = 'Update all ' + total + ' of your items today for a +' + potential + ' bonus';
+  const rows = owned.slice().sort((a,b)=>{
+    const da = q.todayItems[a.id] ? 1 : 0, db = q.todayItems[b.id] ? 1 : 0;
+    return (da - db) || ((getStatusBucket(b) === 'Overdue') - (getStatusBucket(a) === 'Overdue')) || (parseInt(a.id, 10) - parseInt(b.id, 10));
+  }).map(it=>{
+    const done = !!q.todayItems[it.id];
+    const overdue = getStatusBucket(it) === 'Overdue';
+    return '<div class="qs-item' + (done ? ' done' : '') + '"><span class="qs-check">' + (done ? icon('check') : '') + '</span>' +
+      '<div class="qs-info"><div class="qs-title"><span class="mono">#' + it.id + '</span> ' + escapeHtml(truncate(it.issues, 70)) + '</div>' +
+      '<div class="qs-sub">' + (overdue ? '<span style="color:var(--bad);font-weight:700;">Overdue</span> · ' : '') + escapeHtml(it.meeting || '') + '</div></div>' +
+      '<span class="qs-pts">+' + (done ? q.todayItems[it.id] : 10 + (overdue ? 5 : 0)) + '</span>' +
+      (done ? '' : '<button class="btn btn-sm" data-q="' + it.id + '">Update</button>') + '</div>';
+  }).join('');
+  document.getElementById('questBody').innerHTML =
+    '<div class="qs-top"><div class="qs-ring" style="--d:' + deg + 'deg;"><div class="qs-ring-in"><b>' + doneN + '/' + total + '</b><span>updated</span></div></div>' +
+    '<div class="qs-stats"><div><b>' + q.todayPoints + '</b><span>points today</span></div><div><b>' + q.streak + '</b><span>day streak</span></div><div><b>' + q.month + '</b><span>this month</span></div><div><b>' + q.total + '</b><span>all time</span></div></div></div>' +
+    '<div class="qs-bonus' + (q.bonusToday ? ' got' : '') + '">' + bonusTxt + '</div>' +
+    '<div>' + (rows || '') + '</div>' +
+    '<details class="lb-how"><summary>How the daily quest works</summary><div>Updating an item you own earns <b>10 points</b> (<b>+5</b> if it is overdue). Each item pays once per day, however many times you update it. Update every open item you own in a day for a bonus of <b>20 + 5 per item</b> (max 100). The streak counts consecutive days you earned the bonus. The day resets at midnight.</div></details>';
+}
+async function refreshQuest(){
+  try { renderQuest(await run('getQuest')); }
+  catch (e){ document.getElementById('questBody').innerHTML = '<div class="noupdate-empty">Could not load your quest. ' + escapeHtml(e && e.message ? e.message : '') + '</div>'; }
+}
+function openQuest(){
+  if (!AUTH){ openLogin(()=>openQuest()); return; }
+  document.getElementById('questBody').innerHTML = '<div class="noupdate-empty">Loading your quest…</div>';
+  document.getElementById('questOverlay').hidden = false;
+  refreshQuest();
+}
+function closeQuest(){ document.getElementById('questOverlay').hidden = true; }
+
 /* ---------- polish helpers ---------- */
 const _IC = {
   lock:'<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
@@ -5014,7 +5108,8 @@ const _IC = {
   monitor:'<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',
   chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
   check:'<path d="M20 6 9 17l-5-5"/>',
-  trophy:'<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>'
+  trophy:'<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>',
+  target:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>'
 };
 function icon(n){ return '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">' + (_IC[n] || '') + '</svg>'; }
 function setIconBtn(id, n, label){ const el = document.getElementById(id); if (el) el.innerHTML = icon(n) + (label ? '<span class="lbl">' + label + '</span>' : ''); }
