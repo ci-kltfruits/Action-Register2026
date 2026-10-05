@@ -1114,11 +1114,11 @@ html[data-theme="light"]:not([data-xmas]):not([data-hween]) ::selection{ backgro
 .lb-how div{ margin-top:8px; line-height:1.55; }
 
 /* tier badges */
-.tb{ position:relative; display:inline-block; width:40px; height:46px; flex:none; --g:transparent; --gl:#fff; }
-.tb-face{ position:absolute; inset:0; clip-path:polygon(50% 0,100% 15%,100% 62%,50% 100%,0 62%,0 15%); overflow:hidden; }
-.tb-face::before{ content:''; position:absolute; inset:3px; clip-path:polygon(50% 0,100% 15%,100% 62%,50% 100%,0 62%,0 15%); background:var(--in); }
+.tb{ position:relative; display:inline-block; width:44px; height:44px; flex:none; --g:transparent; --gl:#fff; }
+.tb-face{ position:absolute; inset:0; clip-path:var(--shape); overflow:hidden; }
+.tb-face::before{ content:''; position:absolute; inset:3px; clip-path:var(--shape); background:var(--in); }
 .tb-face::after{ content:''; position:absolute; top:-20%; bottom:-20%; width:38%; left:-60%; background:linear-gradient(105deg,transparent,rgba(255,255,255,.8),transparent); transform:skewX(-12deg); opacity:0; }
-.tb-glyph{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding-bottom:5px; font:800 14px 'IBM Plex Mono',monospace; color:var(--gl); text-shadow:0 1px 0 rgba(0,0,0,.28); z-index:2; }
+.tb-glyph{ position:absolute; left:0; right:0; bottom:0; top:var(--gy,0%); display:flex; align-items:center; justify-content:center; font:800 15px 'IBM Plex Mono',monospace; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.6); z-index:2; }
 .tb-bronze .tb-face{ background:linear-gradient(145deg,#efc197,#a8683a 55%,#74431f); } .tb-bronze{ --in:linear-gradient(160deg,#cd8f5f,#8a5128); --gl:#fff3e6; --g:#c98a5b; }
 .tb-silver .tb-face{ background:linear-gradient(145deg,#fafcff,#9aa5b8 55%,#6c778a); } .tb-silver{ --in:linear-gradient(160deg,#cfd6e2,#8892a6); --gl:#fff; --g:#cfd8e6; }
 .tb-gold .tb-face{ background:linear-gradient(145deg,#fff3b0,#f0b429 50%,#b7791f); } .tb-gold{ --in:linear-gradient(160deg,#ffd761,#d9961a); --gl:#5a3a00; --g:#ffcf4a; filter:drop-shadow(0 0 5px rgba(255,200,60,.55)); }
@@ -1147,6 +1147,14 @@ html[data-theme="light"]:not([data-xmas]):not([data-hween]) ::selection{ backgro
 /* window headers stay solid above scrolling content */
 .modal-head{ background:var(--surface); z-index:5; }
 .tb{ isolation:isolate; }
+
+/* badge shapes: the higher the tier, the more corners (3, 4, 5, 6, 8, 10) */
+.tb-bronze{ --shape:polygon(50.0% 0.0%,100.0% 100.0%,0.0% 100.0%); --gy:33.3%; --in:linear-gradient(160deg,#c8844f,#7c4821); }
+.tb-silver{ --shape:polygon(50.0% 0.0%,100.0% 50.0%,50.0% 100.0%,0.0% 50.0%); --gy:0.0%; --in:linear-gradient(160deg,#a9b3c5,#6a7589); }
+.tb-gold{ --shape:polygon(50.0% 0.0%,100.0% 38.2%,80.9% 100.0%,19.1% 100.0%,0.0% 38.2%); --gy:10.6%; --in:linear-gradient(160deg,#e8aa22,#b87a0b); }
+.tb-platinum{ --shape:polygon(50.0% 0.0%,100.0% 25.0%,100.0% 75.0%,50.0% 100.0%,0.0% 75.0%,0.0% 25.0%); --gy:0.0%; --in:linear-gradient(160deg,#47cdb9,#1d8173); }
+.tb-diamond{ --shape:polygon(70.7% 0.0%,100.0% 29.3%,100.0% 70.7%,70.7% 100.0%,29.3% 100.0%,0.0% 70.7%,0.0% 29.3%,29.3% 0.0%); --gy:0.0%; --in:linear-gradient(160deg,#47a8f5,#1f5cbf); }
+.tb-master{ --shape:polygon(50.0% 0.0%,80.9% 9.5%,100.0% 34.5%,100.0% 65.5%,80.9% 90.5%,50.0% 100.0%,19.1% 90.5%,0.0% 65.5%,0.0% 34.5%,19.1% 9.5%); --gy:0.0%; --in:linear-gradient(160deg,#2c1850,#0f0a24); }
 
 </style>
 </head>
@@ -4873,10 +4881,10 @@ function stopHweenMusic(){
 
 /* ---------- Leaderboard (MMR-style score for closed items) ---------- */
 const LB_TIERS = [['Master',8000,'#FF6B9D'],['Diamond',5000,'#38B6FF'],['Platinum',3000,'#2FBF9F'],['Gold',1500,'#E0A81E'],['Silver',500,'#8F9AAE'],['Bronze',0,'#C98A5B']];
-let lbPeriod = 'month', lbQuery = '';
+let lbPeriod = 'all', lbQuery = '';
 function lbTier(p){ return LB_TIERS.find(t=>p>=t[1]); }
 function tierBadge(t){
-  const g = { Bronze:'I', Silver:'II', Gold:'III', Platinum:'IV', Diamond:'V', Master:'♛' }[t[0]];
+  const g = { Bronze:'I', Silver:'II', Gold:'III', Platinum:'IV', Diamond:'V', Master:'VI' }[t[0]];
   return '<span class="tb tb-' + t[0].toLowerCase() + '" title="' + t[0] + '"><i class="tb-face"></i><b class="tb-glyph">' + g + '</b></span>';
 }
 // With a due date: 100 base; on/before due +20 and +3 per early day (early days capped at 14 and at half of the planned time);
@@ -4954,7 +4962,7 @@ function lbRowHtml(o, open, total){
     '<div class="lb-detail"' + (open ? '' : ' hidden') + '>' + (items || '<span class="muted">Nothing to show yet.</span>') + '</div></div>';
 }
 function renderLeaderboard(){
-  document.getElementById('lbSeg').innerHTML = [['month','This month'],['30d','Last 30 days'],['quarter','This quarter'],['all','All time']]
+  document.getElementById('lbSeg').innerHTML = [['all','All time'],['30d','Last 30 days'],['month','This month'],['quarter','This quarter']]
     .map(p=>'<button type="button" class="seg-btn' + (p[0] === lbPeriod ? ' on' : '') + '" data-p="' + p[0] + '">' + p[1] + '</button>').join('');
   document.getElementById('lbTiers').innerHTML = LB_TIERS.slice().reverse().map(t=>'<div>' + tierBadge(t) + '<span><b>' + t[0] + '</b>' + t[1].toLocaleString() + '+ pts</span></div>').join('');
   const res = computeLeaderboard();
@@ -4973,7 +4981,7 @@ function renderLeaderboard(){
   if (!res.ranked.length){ el.innerHTML = '<div class="noupdate-empty">No closed items with an owner in this period yet.</div>'; return; }
   el.innerHTML = res.ranked.map(o=>lbRowHtml(o, false, res.ranked.length)).join('');
 }
-function openLeaderboard(){ lbQuery = ''; document.getElementById('lbSearch').value = ''; renderLeaderboard(); document.getElementById('lbOverlay').hidden = false; }
+function openLeaderboard(){ lbPeriod = 'all'; lbQuery = ''; document.getElementById('lbSearch').value = ''; renderLeaderboard(); document.getElementById('lbOverlay').hidden = false; }
 function closeLb(){ document.getElementById('lbOverlay').hidden = true; }
 
 /* ---------- polish helpers ---------- */
