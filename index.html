@@ -1113,31 +1113,6 @@ html[data-theme="light"]:not([data-xmas]):not([data-hween]) ::selection{ backgro
 .lb-how summary{ cursor:pointer; font-weight:700; color:var(--ink); }
 .lb-how div{ margin-top:8px; line-height:1.55; }
 
-/* tier badges */
-.tb{ position:relative; display:inline-block; width:44px; height:44px; flex:none; --g:transparent; --gl:#fff; }
-.tb-face{ position:absolute; inset:0; clip-path:var(--shape); overflow:hidden; }
-.tb-face::before{ content:''; position:absolute; inset:3px; clip-path:var(--shape); background:var(--in); }
-.tb-face::after{ content:''; position:absolute; top:-20%; bottom:-20%; width:38%; left:-60%; background:linear-gradient(105deg,transparent,rgba(255,255,255,.8),transparent); transform:skewX(-12deg); opacity:0; }
-.tb-glyph{ position:absolute; left:0; right:0; bottom:0; top:var(--gy,0%); display:flex; align-items:center; justify-content:center; font:800 15px 'IBM Plex Mono',monospace; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.6); z-index:2; }
-.tb-bronze .tb-face{ background:linear-gradient(145deg,#efc197,#a8683a 55%,#74431f); } .tb-bronze{ --in:linear-gradient(160deg,#cd8f5f,#8a5128); --gl:#fff3e6; --g:#c98a5b; }
-.tb-silver .tb-face{ background:linear-gradient(145deg,#fafcff,#9aa5b8 55%,#6c778a); } .tb-silver{ --in:linear-gradient(160deg,#cfd6e2,#8892a6); --gl:#fff; --g:#cfd8e6; }
-.tb-gold .tb-face{ background:linear-gradient(145deg,#fff3b0,#f0b429 50%,#b7791f); } .tb-gold{ --in:linear-gradient(160deg,#ffd761,#d9961a); --gl:#5a3a00; --g:#ffcf4a; filter:drop-shadow(0 0 5px rgba(255,200,60,.55)); }
-.tb-platinum .tb-face{ background:linear-gradient(145deg,#ecfffb,#6fe3cf 50%,#2b9c8c); } .tb-platinum{ --in:linear-gradient(160deg,#b4f8ec,#3cbfae); --gl:#05443c; --g:#5ff0d0; }
-.tb-diamond .tb-face{ background:conic-gradient(from 30deg,#e8f9ff,#6cc9ff,#c9a8ff,#e8f9ff,#5fb4ff,#e8f9ff); } .tb-diamond{ --in:linear-gradient(160deg,#a6e6ff,#2f8be0); --gl:#02294a; --g:#52c8ff; }
-.tb-master .tb-face{ background:conic-gradient(from 0deg,#ff5fa2,#ffd36b,#6bffd9,#6bb6ff,#b58cff,#ff5fa2); animation:tb-hue 6s linear infinite; } .tb-master{ --in:linear-gradient(160deg,#2c1850,#0f0a24); --gl:#fff; --g:#ff7ad1; }
-.tb-silver .tb-face::after{ animation:tb-sheen 4.5s ease-in-out infinite; }
-.tb-gold .tb-face::after{ animation:tb-sheen 3.2s ease-in-out infinite; }
-.tb-platinum .tb-face::after{ animation:tb-sheen 2.7s ease-in-out infinite; }
-.tb-diamond .tb-face::after{ animation:tb-sheen 2.2s ease-in-out infinite; }
-.tb-master .tb-face::after{ animation:tb-sheen 1.8s ease-in-out infinite; }
-.tb-platinum{ animation:tb-pulse 2.6s ease-in-out infinite; } .tb-diamond{ animation:tb-pulse 2.2s ease-in-out infinite; } .tb-master{ animation:tb-pulse 1.5s ease-in-out infinite; }
-.tb-diamond::before, .tb-master::before, .tb-master::after{ content:''; position:absolute; width:9px; height:9px; background:#fff; z-index:3; opacity:0; clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%); animation:tb-twinkle 1.9s ease-in-out infinite; }
-.tb-diamond::before{ top:-3px; right:-4px; }
-.tb-master::before{ top:-4px; right:-5px; } .tb-master::after{ bottom:6px; left:-6px; animation-delay:.9s; }
-@keyframes tb-sheen{ 0%,55%{ left:-60%; opacity:0; } 62%{ opacity:1; } 100%{ left:135%; opacity:0; } }
-@keyframes tb-pulse{ 0%,100%{ filter:drop-shadow(0 0 3px var(--g)); } 50%{ filter:drop-shadow(0 0 12px var(--g)); } }
-@keyframes tb-twinkle{ 0%,100%{ transform:scale(0) rotate(0deg); opacity:0; } 50%{ transform:scale(1) rotate(45deg); opacity:1; } }
-@keyframes tb-hue{ from{ filter:hue-rotate(0deg); } to{ filter:hue-rotate(360deg); } }
 .lb-tiers{ display:flex; flex-wrap:wrap; gap:6px 18px; padding:6px 2px 2px; }
 .lb-tiers > div{ display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--ink-dim); }
 .lb-tiers b{ color:var(--ink); display:block; font-size:13px; }
@@ -1148,17 +1123,30 @@ html[data-theme="light"]:not([data-xmas]):not([data-hween]) ::selection{ backgro
 .modal-head{ background:var(--surface); z-index:5; }
 .tb{ isolation:isolate; }
 
-/* badge shapes: the higher the tier, the more corners (3, 4, 5, 6, 8, 10) */
-.tb-bronze{ --shape:polygon(50.0% 0.0%,100.0% 100.0%,0.0% 100.0%); --gy:33.3%; --in:linear-gradient(160deg,#c8844f,#7c4821); }
-.tb-silver{ --shape:polygon(50.0% 0.0%,100.0% 50.0%,50.0% 100.0%,0.0% 50.0%); --gy:0.0%; --in:linear-gradient(160deg,#a9b3c5,#6a7589); }
-.tb-gold{ --shape:polygon(50.0% 0.0%,100.0% 38.2%,80.9% 100.0%,19.1% 100.0%,0.0% 38.2%); --gy:10.6%; --in:linear-gradient(160deg,#e8aa22,#b87a0b); }
-.tb-platinum{ --shape:polygon(50.0% 0.0%,100.0% 25.0%,100.0% 75.0%,50.0% 100.0%,0.0% 75.0%,0.0% 25.0%); --gy:0.0%; --in:linear-gradient(160deg,#47cdb9,#1d8173); }
-.tb-diamond{ --shape:polygon(70.7% 0.0%,100.0% 29.3%,100.0% 70.7%,70.7% 100.0%,29.3% 100.0%,0.0% 70.7%,0.0% 29.3%,29.3% 0.0%); --gy:0.0%; --in:linear-gradient(160deg,#47a8f5,#1f5cbf); }
-.tb-master{ --shape:polygon(50.0% 0.0%,80.9% 9.5%,100.0% 34.5%,100.0% 65.5%,80.9% 90.5%,50.0% 100.0%,19.1% 90.5%,0.0% 65.5%,0.0% 34.5%,19.1% 9.5%); --gy:0.0%; --in:linear-gradient(160deg,#2c1850,#0f0a24); }
+
+/* crest emblems */
+.tb{ position:relative; display:inline-block; width:54px; height:54px; flex:none; --g:transparent; isolation:isolate; }
+.tb svg{ width:100%; height:100%; overflow:visible; display:block; }
+.tb-gold{ --g:#ffcf4a; filter:drop-shadow(0 0 5px rgba(255,200,60,.55)); }
+.tb-platinum{ --g:#5ff0d0; animation:tb-pulse 2.6s ease-in-out infinite; }
+.tb-diamond{ --g:#52c8ff; animation:tb-pulse 2.2s ease-in-out infinite; }
+.tb-master{ --g:#ff7ad1; animation:tb-pulse 1.5s ease-in-out infinite; }
+.tb-master svg{ animation:tb-hue 6s linear infinite; }
+.tb .sh{ animation:tb-sweep 3.4s ease-in-out infinite; opacity:0; }
+.tb-silver .sh{ animation-duration:4.6s; } .tb-platinum .sh{ animation-duration:2.7s; } .tb-diamond .sh{ animation-duration:2.2s; } .tb-master .sh{ animation-duration:1.8s; }
+.tb .tw{ transform-box:fill-box; transform-origin:center; animation:tb-twinkle 1.9s ease-in-out infinite; }
+.tb .tw2{ animation-delay:.9s; }
+.tb .halo{ transform-origin:50px 52px; animation:tb-spin 16s linear infinite; }
+@keyframes tb-sweep{ 0%,55%{ transform:translateX(-24px); opacity:0; } 62%{ opacity:1; } 100%{ transform:translateX(106px); opacity:0; } }
+@keyframes tb-pulse{ 0%,100%{ filter:drop-shadow(0 0 3px var(--g)); } 50%{ filter:drop-shadow(0 0 12px var(--g)); } }
+@keyframes tb-twinkle{ 0%,100%{ transform:scale(0) rotate(0deg); opacity:0; } 50%{ transform:scale(1) rotate(45deg); opacity:1; } }
+@keyframes tb-hue{ from{ filter:hue-rotate(0deg); } to{ filter:hue-rotate(360deg); } }
+@keyframes tb-spin{ to{ transform:rotate(360deg); } }
 
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="tbo-bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2c79e"/><stop offset=".5" stop-color="#b97a45"/><stop offset="1" stop-color="#6e3f1d"/></linearGradient><linearGradient id="tbi-bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c88650"/><stop offset="1" stop-color="#7a4822"/></linearGradient><linearGradient id="tbo-silver" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbfdff"/><stop offset=".5" stop-color="#a2adc0"/><stop offset="1" stop-color="#5f6a7e"/></linearGradient><linearGradient id="tbi-silver" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b8c1d1"/><stop offset="1" stop-color="#6a7589"/></linearGradient><linearGradient id="tbo-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3b0"/><stop offset=".5" stop-color="#f0b429"/><stop offset="1" stop-color="#a86f12"/></linearGradient><linearGradient id="tbi-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2b92b"/><stop offset="1" stop-color="#b87a0b"/></linearGradient><linearGradient id="tbo-platinum" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecfffb"/><stop offset=".5" stop-color="#6fe3cf"/><stop offset="1" stop-color="#237a6d"/></linearGradient><linearGradient id="tbi-platinum" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#55d6c2"/><stop offset="1" stop-color="#1b7c6e"/></linearGradient><linearGradient id="tbo-diamond" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eaf9ff"/><stop offset=".45" stop-color="#7fd0ff"/><stop offset="1" stop-color="#9a7cf5"/></linearGradient><linearGradient id="tbi-diamond" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4aa9f6"/><stop offset="1" stop-color="#2058c4"/></linearGradient><linearGradient id="tbo-master" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5fa2"/><stop offset=".35" stop-color="#ffd36b"/><stop offset=".65" stop-color="#6bffd9"/><stop offset="1" stop-color="#9a7cff"/></linearGradient><linearGradient id="tbi-master" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2c1850"/><stop offset="1" stop-color="#0f0a24"/></linearGradient><linearGradient id="tbg-gem" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#9fe4ff"/><stop offset="1" stop-color="#3f8cf0"/></linearGradient><linearGradient id="tb-shg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".85"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient><clipPath id="tb-body"><path d="M50 22 L72 30 V54 C72 68 60 78 50 84 C40 78 28 68 28 54 V30 Z"/></clipPath></defs></svg>
 
 <div id="loadErrorBanner" hidden style="background:var(--bad-soft); color:var(--bad); padding:9px 16px; font-size:13px; font-weight:600; border-bottom:1px solid var(--border);"></div>
 
@@ -4883,9 +4871,39 @@ function stopHweenMusic(){
 const LB_TIERS = [['Master',8000,'#FF6B9D'],['Diamond',5000,'#38B6FF'],['Platinum',3000,'#2FBF9F'],['Gold',1500,'#E0A81E'],['Silver',500,'#8F9AAE'],['Bronze',0,'#C98A5B']];
 let lbPeriod = 'all', lbQuery = '';
 function lbTier(p){ return LB_TIERS.find(t=>p>=t[1]); }
+const TB_BODY = 'M50 22 L72 30 V54 C72 68 60 78 50 84 C40 78 28 68 28 54 V30 Z';
+const TB_FACE = 'M50 28 L66 34 V54 C66 64 58 72 50 77 C42 72 34 64 34 54 V34 Z';
+const TB_WING_SM = 'M28 38 C22 36 16 38 13 44 C18 43 22 45 24 49 L28 48 Z';
+const TB_WING = 'M28 36 C18 29 9 31 3 40 C9 40 14 43 16 47 C10 47 7 51 6 57 C12 55 18 55 22 59 L28 55 Z';
+const TB_WING_BIG = 'M28 34 C16 23 6 25 1 36 C7 35 12 38 14 43 C7 43 3 49 2 57 C8 54 14 55 18 60 C13 62 10 67 10 73 C16 69 22 69 26 71 L28 60 Z';
+const TB_CROWN = {
+  gold: 'M37 26 L40 14 L46 22 L50 9 L54 22 L60 14 L63 26 Z',
+  platinum: 'M34 27 L35 14 L41 22 L44 9 L50 21 L56 9 L59 22 L65 14 L66 27 Z',
+  diamond: 'M34 27 L35 12 L41 21 L44 7 L50 20 L56 7 L59 21 L65 12 L66 27 Z',
+  master: 'M32 28 L32 13 L38 22 L41 7 L46 21 L50 3 L54 21 L59 7 L62 22 L68 13 L68 28 Z'
+};
+// Original crest emblems: the higher the tier, the more ornate (plain plate, fins, wings, crown, gem, halo)
 function tierBadge(t){
-  const g = { Bronze:'I', Silver:'II', Gold:'III', Platinum:'IV', Diamond:'V', Master:'VI' }[t[0]];
-  return '<span class="tb tb-' + t[0].toLowerCase() + '" title="' + t[0] + '"><i class="tb-face"></i><b class="tb-glyph">' + g + '</b></span>';
+  const k = t[0].toLowerCase();
+  const num = { Bronze:'I', Silver:'II', Gold:'III', Platinum:'IV', Diamond:'V', Master:'VI' }[t[0]];
+  const O = 'url(#tbo-' + k + ')', I = 'url(#tbi-' + k + ')', edge = ' stroke="rgba(0,0,0,.3)" stroke-width="1"';
+  const mir = 'translate(100 0) scale(-1 1)';
+  const wing = (d, fill, tf) => '<path d="' + d + '" fill="' + fill + '"' + edge + (tf ? ' transform="' + tf + '"' : '') + '/>';
+  const pair = (d, fill) => wing(d, fill) + wing(d, fill, mir);
+  const spark = (x, y, c) => '<g transform="translate(' + x + ' ' + y + ')"><path class="tw ' + c + '" d="M0 -7 L2 -2 L7 0 L2 2 L0 7 L-2 2 L-7 0 L-2 -2 Z" fill="#fff"/></g>';
+  let back = '', crown = '', gem = '', extra = '';
+  if (k === 'silver') back = pair(TB_WING_SM, O);
+  if (k === 'gold' || k === 'platinum') back = pair(TB_WING, O);
+  if (k === 'diamond' || k === 'master') back = pair(TB_WING_BIG, O) + pair(TB_WING, I);
+  if (TB_CROWN[k]) crown = '<path d="' + TB_CROWN[k] + '" fill="' + O + '"' + edge + '/>';
+  if (k === 'platinum') gem = '<path d="M50 31 L56 38 L50 47 L44 38 Z" fill="url(#tbg-gem)" stroke="rgba(255,255,255,.75)" stroke-width=".8"/>';
+  if (k === 'diamond' || k === 'master') gem = '<path d="M50 29 L58 38 L50 50 L42 38 Z" fill="url(#tbg-gem)" stroke="rgba(255,255,255,.85)" stroke-width=".9"/><path d="M42 38 H58 M50 29 L47 38 L50 50 L53 38 Z" fill="none" stroke="rgba(255,255,255,.55)" stroke-width=".7"/>';
+  if (k === 'master') extra = '<circle class="halo" cx="50" cy="52" r="48" fill="none" stroke="url(#tbo-master)" stroke-width="2" stroke-dasharray="9 6"/>';
+  const sheen = k === 'bronze' ? '' : '<g clip-path="url(#tb-body)"><rect class="sh" x="0" y="0" width="16" height="100" fill="url(#tb-shg)"/></g>';
+  const sparks = (k === 'diamond' || k === 'master') ? spark(91, 16, '') + spark(8, 74, 'tw2') : '';
+  const text = '<text x="50" y="' + (k === 'bronze' ? 60 : 64) + '" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="800" font-size="19" fill="#fff" stroke="rgba(0,0,0,.45)" stroke-width=".8" paint-order="stroke">' + num + '</text>';
+  return '<span class="tb tb-' + k + '" title="' + t[0] + '"><svg viewBox="0 0 100 100" aria-hidden="true">' + extra + back + crown +
+    '<path d="' + TB_BODY + '" fill="' + O + '"' + edge + '/><path d="' + TB_FACE + '" fill="' + I + '"/>' + gem + sheen + text + sparks + '</svg></span>';
 }
 // With a due date: 100 base; on/before due +20 and +3 per early day (early days capped at 14 and at half of the planned time);
 // late -5 per day (max 12 days); minimum 40. No due date: flat 30 points, no bonus.
