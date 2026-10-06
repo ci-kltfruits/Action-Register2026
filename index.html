@@ -1116,32 +1116,12 @@ html[data-theme="light"]:not([data-xmas]):not([data-hween]) ::selection{ backgro
 .lb-tiers{ display:flex; flex-wrap:wrap; gap:6px 18px; padding:6px 2px 2px; }
 .lb-tiers > div{ display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--ink-dim); }
 .lb-tiers b{ color:var(--ink); display:block; font-size:13px; }
-.lb-tiers .tb{ transform:scale(.72); transform-origin:left center; margin-right:-10px; }
-.lb-main .tb{ transform:scale(.86); margin:-3px -2px; }
 
 /* window headers stay solid above scrolling content */
 .modal-head{ background:var(--surface); z-index:5; }
 .tb{ isolation:isolate; }
 
 
-/* crest emblems */
-.tb{ position:relative; display:inline-block; width:54px; height:54px; flex:none; --g:transparent; isolation:isolate; }
-.tb svg{ width:100%; height:100%; overflow:visible; display:block; }
-.tb-gold{ --g:#ffcf4a; filter:drop-shadow(0 0 5px rgba(255,200,60,.55)); }
-.tb-platinum{ --g:#5ff0d0; animation:tb-pulse 2.6s ease-in-out infinite; }
-.tb-diamond{ --g:#52c8ff; animation:tb-pulse 2.2s ease-in-out infinite; }
-.tb-master{ --g:#ff7ad1; animation:tb-pulse 1.5s ease-in-out infinite; }
-.tb-master svg{ animation:tb-hue 6s linear infinite; }
-.tb .sh{ animation:tb-sweep 3.4s ease-in-out infinite; opacity:0; }
-.tb-silver .sh{ animation-duration:4.6s; } .tb-platinum .sh{ animation-duration:2.7s; } .tb-diamond .sh{ animation-duration:2.2s; } .tb-master .sh{ animation-duration:1.8s; }
-.tb .tw{ transform-box:fill-box; transform-origin:center; animation:tb-twinkle 1.9s ease-in-out infinite; }
-.tb .tw2{ animation-delay:.9s; }
-.tb .halo{ transform-origin:50px 52px; animation:tb-spin 16s linear infinite; }
-@keyframes tb-sweep{ 0%,55%{ transform:translateX(-24px); opacity:0; } 62%{ opacity:1; } 100%{ transform:translateX(106px); opacity:0; } }
-@keyframes tb-pulse{ 0%,100%{ filter:drop-shadow(0 0 3px var(--g)); } 50%{ filter:drop-shadow(0 0 12px var(--g)); } }
-@keyframes tb-twinkle{ 0%,100%{ transform:scale(0) rotate(0deg); opacity:0; } 50%{ transform:scale(1) rotate(45deg); opacity:1; } }
-@keyframes tb-hue{ from{ filter:hue-rotate(0deg); } to{ filter:hue-rotate(360deg); } }
-@keyframes tb-spin{ to{ transform:rotate(360deg); } }
 
 /* daily quest */
 .qs-top{ display:flex; align-items:center; gap:22px; flex-wrap:wrap; }
@@ -1162,10 +1142,27 @@ html[data-theme="light"]:not([data-xmas]):not([data-hween]) ::selection{ backgro
 .qs-pts{ font-family:'IBM Plex Mono',monospace; font-weight:700; color:var(--good); }
 @media (max-width:620px){ .qs-stats{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
 
+/* rank badges (from the supplied design; no tilt) */
+.rb-stage{ position:relative; display:inline-block; vertical-align:middle; flex:none; }
+.rb-badge{ position:relative; display:block; }
+.rb-badge svg{ display:block; width:100%; height:auto; overflow:visible; }
+.rb-glint{ animation:rb-sweep var(--gs,5s) ease-in-out infinite; }
+@keyframes rb-sweep{ 0%{ transform:translateX(-130px); } 45%,100%{ transform:translateX(330px); } }
+.rb-pris{ animation:rb-hue 6s linear infinite; mix-blend-mode:color-dodge; }
+@keyframes rb-hue{ to{ filter:hue-rotate(360deg); } }
+.rb-glow{ animation:rb-pulse var(--pp,3s) ease-in-out infinite; }
+@keyframes rb-pulse{ 50%{ filter:drop-shadow(0 0 var(--g2) var(--gc)); } }
+.rb-rune{ animation:rb-rn 2.6s ease-in-out infinite; }
+@keyframes rb-rn{ 0%,100%{ filter:drop-shadow(0 0 2px var(--rc)); } 50%{ filter:drop-shadow(0 0 9px var(--rc)); } }
+.rb-sp{ position:absolute; width:calc(var(--bw,46px)*.05); height:calc(var(--bw,46px)*.05); min-width:5px; min-height:5px; pointer-events:none; opacity:0; animation:rb-tw var(--d,3s) ease-in-out infinite var(--l,0s); }
+.rb-sp::before,.rb-sp::after{ content:""; position:absolute; left:50%; top:50%; background:#fff; border-radius:2px; transform:translate(-50%,-50%); box-shadow:0 0 4px 1px var(--sc,#9fe0ff); }
+.rb-sp::before{ width:1.5px; height:100%; } .rb-sp::after{ width:100%; height:1.5px; }
+@keyframes rb-tw{ 0%,100%{ opacity:0; transform:scale(.2) rotate(0); } 50%{ opacity:1; transform:scale(1) rotate(45deg); } }
+.lb-main .rb-stage{ margin:-2px 0; }
+
 </style>
 </head>
 <body>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="tbo-bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2c79e"/><stop offset=".5" stop-color="#b97a45"/><stop offset="1" stop-color="#6e3f1d"/></linearGradient><linearGradient id="tbi-bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c88650"/><stop offset="1" stop-color="#7a4822"/></linearGradient><linearGradient id="tbo-silver" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbfdff"/><stop offset=".5" stop-color="#a2adc0"/><stop offset="1" stop-color="#5f6a7e"/></linearGradient><linearGradient id="tbi-silver" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b8c1d1"/><stop offset="1" stop-color="#6a7589"/></linearGradient><linearGradient id="tbo-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3b0"/><stop offset=".5" stop-color="#f0b429"/><stop offset="1" stop-color="#a86f12"/></linearGradient><linearGradient id="tbi-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2b92b"/><stop offset="1" stop-color="#b87a0b"/></linearGradient><linearGradient id="tbo-platinum" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecfffb"/><stop offset=".5" stop-color="#6fe3cf"/><stop offset="1" stop-color="#237a6d"/></linearGradient><linearGradient id="tbi-platinum" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#55d6c2"/><stop offset="1" stop-color="#1b7c6e"/></linearGradient><linearGradient id="tbo-diamond" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eaf9ff"/><stop offset=".45" stop-color="#7fd0ff"/><stop offset="1" stop-color="#9a7cf5"/></linearGradient><linearGradient id="tbi-diamond" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4aa9f6"/><stop offset="1" stop-color="#2058c4"/></linearGradient><linearGradient id="tbo-master" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5fa2"/><stop offset=".35" stop-color="#ffd36b"/><stop offset=".65" stop-color="#6bffd9"/><stop offset="1" stop-color="#9a7cff"/></linearGradient><linearGradient id="tbi-master" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2c1850"/><stop offset="1" stop-color="#0f0a24"/></linearGradient><linearGradient id="tbg-gem" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#9fe4ff"/><stop offset="1" stop-color="#3f8cf0"/></linearGradient><linearGradient id="tb-shg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".85"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient><clipPath id="tb-body"><path d="M50 22 L72 30 V54 C72 68 60 78 50 84 C40 78 28 68 28 54 V30 Z"/></clipPath></defs></svg>
 
 <div id="loadErrorBanner" hidden style="background:var(--bad-soft); color:var(--bad); padding:9px 16px; font-size:13px; font-weight:600; border-bottom:1px solid var(--border);"></div>
 
@@ -1472,7 +1469,7 @@ html[data-theme="light"]:not([data-xmas]):not([data-hween]) ::selection{ backgro
       <div class="lb-tiers" id="lbTiers"></div>
       <div id="lbList"></div>
       <details class="lb-how"><summary>How points work</summary>
-        <div>Timeliness is what counts. An item <b>with a due date</b> earns <b>100</b> base points. Closed on or before the due date: <b>+20</b>, plus <b>+3</b> for each day early. Early days count only up to half of the time originally planned for the item (discussed date to due date) and at most 14 days, so a far-away due date can't be farmed. Closed late: <b>−5</b> per day late (up to 12 days). Every item with a due date is worth at least 40. An item <b>without a due date</b> earns a flat <b>30</b> points, with no bonus, so set a due date to earn more. Shared items split their points equally between owners. Tiers use all-time points; the ranking uses the selected period.</div>
+        <div>Timeliness is what counts. An item <b>with a due date</b> earns <b>100</b> base points. Closed on or before the due date: <b>+20</b>, plus <b>+3</b> for each day early. Early days count only up to half of the time originally planned for the item (discussed date to due date) and at most 14 days, so a far-away due date can't be farmed. Closed late: <b>−5</b> per day late (up to 12 days). Every item with a due date is worth at least 40. An item <b>without a due date</b> earns a flat <b>30</b> points, with no bonus, so set a due date to earn more. Shared items split their points equally between owners. Points from the daily quest (updating items) count here too. Tiers use all-time points; the ranking uses the selected period.</div>
       </details>
     </div>
   </div>
@@ -4910,42 +4907,87 @@ function stopHweenMusic(){
 }
 
 /* ---------- Leaderboard (MMR-style score for closed items) ---------- */
-const LB_TIERS = [['Master',8000,'#FF6B9D'],['Diamond',5000,'#38B6FF'],['Platinum',3000,'#2FBF9F'],['Gold',1500,'#E0A81E'],['Silver',500,'#8F9AAE'],['Bronze',0,'#C98A5B']];
-let lbPeriod = 'all', lbQuery = '';
+const LB_TIERS = [['Diamond',25000,'#38B6FF'],['Platinum',12000,'#6FC4D8'],['Gold',5000,'#E0A81E'],['Silver',1500,'#8F9AAE'],['Bronze',0,'#C98A5B']];
+let lbPeriod = 'all', lbQuery = '', lbQuest = [];
 function lbTier(p){ return LB_TIERS.find(t=>p>=t[1]); }
-const TB_BODY = 'M50 22 L72 30 V54 C72 68 60 78 50 84 C40 78 28 68 28 54 V30 Z';
-const TB_FACE = 'M50 28 L66 34 V54 C66 64 58 72 50 77 C42 72 34 64 34 54 V34 Z';
-const TB_WING_SM = 'M28 38 C22 36 16 38 13 44 C18 43 22 45 24 49 L28 48 Z';
-const TB_WING = 'M28 36 C18 29 9 31 3 40 C9 40 14 43 16 47 C10 47 7 51 6 57 C12 55 18 55 22 59 L28 55 Z';
-const TB_WING_BIG = 'M28 34 C16 23 6 25 1 36 C7 35 12 38 14 43 C7 43 3 49 2 57 C8 54 14 55 18 60 C13 62 10 67 10 73 C16 69 22 69 26 71 L28 60 Z';
-const TB_CROWN = {
-  gold: 'M37 26 L40 14 L46 22 L50 9 L54 22 L60 14 L63 26 Z',
-  platinum: 'M34 27 L35 14 L41 22 L44 9 L50 21 L56 9 L59 22 L65 14 L66 27 Z',
-  diamond: 'M34 27 L35 12 L41 21 L44 7 L50 20 L56 7 L59 21 L65 12 L66 27 Z',
-  master: 'M32 28 L32 13 L38 22 L41 7 L46 21 L50 3 L54 21 L59 7 L62 22 L68 13 L68 28 Z'
-};
-// Original crest emblems: the higher the tier, the more ornate (plain plate, fins, wings, crown, gem, halo)
-function tierBadge(t){
-  const k = t[0].toLowerCase();
-  const num = { Bronze:'I', Silver:'II', Gold:'III', Platinum:'IV', Diamond:'V', Master:'VI' }[t[0]];
-  const O = 'url(#tbo-' + k + ')', I = 'url(#tbi-' + k + ')', edge = ' stroke="rgba(0,0,0,.3)" stroke-width="1"';
-  const mir = 'translate(100 0) scale(-1 1)';
-  const wing = (d, fill, tf) => '<path d="' + d + '" fill="' + fill + '"' + edge + (tf ? ' transform="' + tf + '"' : '') + '/>';
-  const pair = (d, fill) => wing(d, fill) + wing(d, fill, mir);
-  const spark = (x, y, c) => '<g transform="translate(' + x + ' ' + y + ')"><path class="tw ' + c + '" d="M0 -7 L2 -2 L7 0 L2 2 L0 7 L-2 2 L-7 0 L-2 -2 Z" fill="#fff"/></g>';
-  let back = '', crown = '', gem = '', extra = '';
-  if (k === 'silver') back = pair(TB_WING_SM, O);
-  if (k === 'gold' || k === 'platinum') back = pair(TB_WING, O);
-  if (k === 'diamond' || k === 'master') back = pair(TB_WING_BIG, O) + pair(TB_WING, I);
-  if (TB_CROWN[k]) crown = '<path d="' + TB_CROWN[k] + '" fill="' + O + '"' + edge + '/>';
-  if (k === 'platinum') gem = '<path d="M50 31 L56 38 L50 47 L44 38 Z" fill="url(#tbg-gem)" stroke="rgba(255,255,255,.75)" stroke-width=".8"/>';
-  if (k === 'diamond' || k === 'master') gem = '<path d="M50 29 L58 38 L50 50 L42 38 Z" fill="url(#tbg-gem)" stroke="rgba(255,255,255,.85)" stroke-width=".9"/><path d="M42 38 H58 M50 29 L47 38 L50 50 L53 38 Z" fill="none" stroke="rgba(255,255,255,.55)" stroke-width=".7"/>';
-  if (k === 'master') extra = '<circle class="halo" cx="50" cy="52" r="48" fill="none" stroke="url(#tbo-master)" stroke-width="2" stroke-dasharray="9 6"/>';
-  const sheen = k === 'bronze' ? '' : '<g clip-path="url(#tb-body)"><rect class="sh" x="0" y="0" width="16" height="100" fill="url(#tb-shg)"/></g>';
-  const sparks = (k === 'diamond' || k === 'master') ? spark(91, 16, '') + spark(8, 74, 'tw2') : '';
-  const text = '<text x="50" y="' + (k === 'bronze' ? 60 : 64) + '" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="800" font-size="19" fill="#fff" stroke="rgba(0,0,0,.45)" stroke-width=".8" paint-order="stroke">' + num + '</text>';
-  return '<span class="tb tb-' + k + '" title="' + t[0] + '"><svg viewBox="0 0 100 100" aria-hidden="true">' + extra + back + crown +
-    '<path d="' + TB_BODY + '" fill="' + O + '"' + edge + '/><path d="' + TB_FACE + '" fill="' + I + '"/>' + gem + sheen + text + sparks + '</svg></span>';
+const RB=(function(){
+const P=(n,R,rot)=>{let d='';for(let i=0;i<n;i++){const t=(rot+i*360/n)*Math.PI/180;d+=(i?'L':'M')+(100+R*Math.cos(t)).toFixed(1)+' '+(120+R*Math.sin(t)).toFixed(1)}return d+'Z'};
+const S=(n,R,r,rot,cx=100,cy=120)=>{let d='';for(let i=0;i<2*n;i++){const t=(rot+i*180/n)*Math.PI/180,q=i%2?r:R;d+=(i?'L':'M')+(cx+q*Math.cos(t)).toFixed(1)+' '+(cy+q*Math.sin(t)).toFixed(1)}return d+'Z'};
+const C=r=>`M${100-r} 120a${r} ${r} 0 1 0 ${2*r} 0a${r} ${r} 0 1 0 ${-2*r} 0Z`;
+const sc=(s,y=120)=>`translate(100 ${y}) scale(${s}) translate(-100 -${y})`;
+const rgb=h=>[1,3,5].map(i=>(parseInt(h.substr(i,2),16)/255).toFixed(2)).join(' ');
+const R=[
+{n:'Bronze',num:'I',o:C(100),f:['#d9a373','#9a5f2e','#563018','#b8794a','#5e3517'],p:['#4a2a14','#1c0f07'],e:['#e7bb8c','#9a5f2e'],w:.9,pc:'#3aa88a',gs:0},
+{n:'Silver',num:'II',o:P(6,108,-90),f:['#ffffff','#c3c8cf','#6f777f','#dde1e6','#868e97'],p:['#464b52','#1a1d21'],e:['#ffffff','#a5acb4'],w:.7,pc:'#15171a',gs:7},
+{n:'Gold',num:'III',o:P(8,106,-67.5),f:['#fff3b8','#e6b53f','#855c10','#f8d96c','#9a6f16'],p:['#5b430c','#201603'],e:['#fff5c2','#d9a62e'],w:.5,pc:'#6b4a0c',gs:5.5},
+{n:'Platinum',num:'IV',o:"M100 22 C88 6 56 4 18 20 L18 120 C18 172 56 208 100 236 C144 208 182 172 182 120 L182 20 C144 4 112 6 100 22 Z",f:['#eef6f9','#9fb8c2','#52707c','#c9dde4','#5d7b88'],p:['#26414d','#0a1822'],e:['#f4fbff','#8fc4d8'],w:.55,pc:'#2f5a5f',gs:4.5,glow:['#7fd8ff',8,16],rune:'#7fd8ff',band:1,cg:'#8fe3ff'},
+{n:'Diamond',num:'V',o:"M52 10 L148 10 L192 80 L100 234 L8 80 Z",f:['#d8e8f2','#8fb0c8','#41627f','#a8c4d8','#36546f'],p:['#15294a','#040a18'],e:['#ffffff','#8fd0ff'],w:.4,pc:'#8fb6d4',gs:3.5,glow:['#5cc8ff',12,26],rune:'#5cc8ff',sp:7,pris:1,band:1,cg:'#7fd8ff',ny:170}
+];
+function sym(i,E){
+ const cx=100,cy=108;
+ if(i===0)return `<path d="M100 76 L132 134 L68 134 Z" fill="none" stroke="${E}" stroke-width="5" stroke-linejoin="round"/><circle cx="100" cy="118" r="5" fill="${E}"/>`;
+ if(i===1)return `<path d="M120 76 A33 33 0 1 0 120 140 A26 26 0 1 1 120 76 Z" fill="${E}"/><circle cx="124" cy="108" r="4" fill="${E}"/>`;
+ if(i===2){let r='';for(let j=0;j<12;j++){const t=j*Math.PI/6;r+=`<line x1="${cx+22*Math.cos(t)}" y1="${cy+22*Math.sin(t)}" x2="${cx+37*Math.cos(t)}" y2="${cy+37*Math.sin(t)}" stroke="${E}" stroke-width="4" stroke-linecap="round"/>`}return r+`<circle cx="${cx}" cy="${cy}" r="14" fill="${E}"/>`}
+ if(i===3)return `<path d="${S(8,40,15,-90,cx,cy)}" fill="${E}"/><circle cx="${cx}" cy="${cy}" r="6" fill="#0a1822"/>`;
+ if(i===4)return `<polygon points="100,70 130,92 100,148 70,92" fill="${E}"/><polygon points="100,70 130,92 100,92" fill="#fff" opacity=".55"/><polygon points="70,92 100,92 100,148" fill="#2b6bd0" opacity=".45"/><path d="M70 92H130M85 81L100 148M115 81L100 148" stroke="#06122a" stroke-width="1.4" fill="none" opacity=".6"/>`;
+ return `<g transform="rotate(0 100 76)"><path d="M100 76 C100 56 126 50 134 68 C140 82 128 96 114 94" fill="none" stroke="${E}" stroke-width="5" stroke-linecap="round"/><circle cx="114" cy="94" r="5" fill="${E}"/></g><g transform="rotate(120 100 76)"><path d="M100 76 C100 56 126 50 134 68 C140 82 128 96 114 94" fill="none" stroke="${E}" stroke-width="5" stroke-linecap="round"/><circle cx="114" cy="94" r="5" fill="${E}"/></g><g transform="rotate(240 100 76)"><path d="M100 76 C100 56 126 50 134 68 C140 82 128 96 114 94" fill="none" stroke="${E}" stroke-width="5" stroke-linecap="round"/><circle cx="114" cy="94" r="5" fill="${E}"/></g><circle cx="100" cy="76" r="7" fill="${E}"/><path d="M164 44 C182 68 182 98 164 122 M36 44 C18 68 18 98 36 122" fill="none" stroke="${E}" stroke-width="2.5" opacity=".7"/><text transform="translate(100 172) rotate(90)" text-anchor="middle" dominant-baseline="central" font-family="Cinzel,Georgia,serif" font-weight="700" font-size="14" letter-spacing="3" fill="${E}">VI</text>`;
+}
+function badge(r,i){
+ 
+ const k='k'+i,E=`url(#e${k})`,pc=r.pc?rgb(r.pc):'0 0 0';
+ const [a,b,c]=pc.split(' ');
+ const ri=r.i||r.o,rs=r.i?1:.87,pl=r.pl||r.o,ps=r.pl?1:.76;
+ return `<svg viewBox="0 0 200 240" role="img" aria-label="${r.n} rank badge"><defs>
+<linearGradient id="f${k}" x1="0" y1="0" x2="1" y2="1">${r.f.map((x,j)=>`<stop offset="${j*25}%" stop-color="${x}"/>`).join('')}</linearGradient>
+<linearGradient id="p${k}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${r.p[0]}"/><stop offset="1" stop-color="${r.p[1]}"/></linearGradient>
+<linearGradient id="e${k}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${r.e[0]}"/><stop offset="1" stop-color="${r.e[1]}"/></linearGradient>
+<linearGradient id="gl${k}"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".7"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<linearGradient id="rb${k}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0f"/><stop offset=".3" stop-color="#0ff"/><stop offset=".6" stop-color="#ff0"/><stop offset="1" stop-color="#f0f"/></linearGradient>
+<filter id="bv${k}" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".05" numOctaves="2" seed="${i+2}" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="${(r.w*7).toFixed(1)}" result="d"/><feGaussianBlur in="d" stdDeviation="2.4" result="b"/><feSpecularLighting in="b" surfaceScale="5" specularConstant=".9" specularExponent="22" lighting-color="#fff" result="s"><fePointLight x="30" y="-30" z="130"/></feSpecularLighting><feComposite in="s" in2="d" operator="in" result="s2"/><feComposite in="d" in2="s2" operator="arithmetic" k1="0" k2="1" k3="1" k4="0"/></filter>
+<filter id="en${k}" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur in="SourceAlpha" stdDeviation="1" result="b"/><feSpecularLighting in="b" surfaceScale="3" specularConstant=".9" specularExponent="14" lighting-color="#fff" result="s"><feDistantLight azimuth="225" elevation="50"/></feSpecularLighting><feComposite in="s" in2="SourceAlpha" operator="in" result="s2"/><feComposite in="SourceGraphic" in2="s2" operator="arithmetic" k1="0" k2="1" k3="1" k4="0"/></filter>
+<filter id="gr${k}"><feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="2" seed="${i+9}"/><feColorMatrix type="saturate" values="0"/></filter>
+<filter id="pt${k}"><feTurbulence type="fractalNoise" baseFrequency=".03" numOctaves="3" seed="${i+7}"/><feColorMatrix values="0 0 0 0 ${a} 0 0 0 0 ${b} 0 0 0 0 ${c} 2.4 0 0 0 -.85"/></filter>
+<clipPath id="o${k}"><path d="${r.o}"/></clipPath>
+<clipPath id="c${k}"><path d="${pl}" transform="${sc(ps)}"/></clipPath>
+</defs>
+<path d="${r.o}" fill="url(#f${k})" filter="url(#bv${k})"/>
+<path d="${ri}" transform="${sc(rs)}" fill="#000" opacity=".55"/>
+<path d="${pl}" transform="${sc(ps)}" fill="url(#p${k})" stroke="${r.f[0]}" stroke-opacity=".5" stroke-width="1.2"/>
+${r.pris?`<g clip-path="url(#c${k})" opacity=".5"><polygon points="52,10 100,10 78,80 8,80" fill="#fff" opacity=".16"/><polygon points="100,10 148,10 192,80 122,80" fill="#7fd0ff" opacity=".2"/><polygon points="78,80 100,10 122,80" fill="#fff" opacity=".1"/><polygon points="8,80 78,80 100,234" fill="#000" opacity=".25"/><polygon points="192,80 122,80 100,234" fill="#fff" opacity=".07"/></g>`:''}
+<g clip-path="url(#c${k})" fill="none" stroke="${r.cg||'#000'}" stroke-width="${r.cg?1.8:1.3}" opacity="${r.cg?.8:(r.w*.6).toFixed(2)}" ${r.cg?`style="filter:drop-shadow(0 0 3px ${r.cg})"`:''}><path d="M70 62 L82 88 L74 104 L90 124 L84 150 L96 176"/><path d="M152 70 L138 92 L146 110 L132 132"/></g>
+<g clip-path="url(#o${k})"><rect width="200" height="240" filter="url(#gr${k})" opacity=".28" style="mix-blend-mode:overlay"/>${r.pc?`<rect width="200" height="240" filter="url(#pt${k})" opacity="${(r.w*.85).toFixed(2)}"/>`:''}</g>
+<g style="filter:drop-shadow(0 2px 1px rgba(0,0,0,.65))"><g ${r.rune?`class="rb-rune" style="--rc:${r.rune}"`:''}><g filter="url(#en${k})">
+${r.band?`<path d="${pl}" transform="${sc(ps*.9,r.bc)}" fill="none" stroke="${E}" stroke-width="2.6" stroke-dasharray="9 4 3 4" vector-effect="non-scaling-stroke" opacity=".6"/><path d="${pl}" transform="${sc(ps*.83,r.bc)}" fill="none" stroke="${E}" stroke-width="1.2" vector-effect="non-scaling-stroke" opacity=".5"/>`:`<circle cx="100" cy="110" r="58" fill="none" stroke="${E}" stroke-width="2" stroke-dasharray="1.5 5.2" opacity=".75"/>`}
+<g transform="${r.ey?`translate(100 ${108+r.ey}) scale(.85) translate(-100 -108)`:''}">${sym(i,E)}</g>
+${r.crown?[[9,62],[56,41],[100,13],[144,41],[191,62]].map(q=>`<circle cx="${q[0]}" cy="${q[1]}" r="5.5" fill="${E}"/>`).join(''):''}
+<text x="100" y="${r.ny||186}" text-anchor="middle" font-family="Cinzel,Georgia,serif" font-weight="700" font-size="17" letter-spacing="3" fill="${E}">${r.num}</text>
+</g></g></g>
+${r.pris?`<g clip-path="url(#o${k})"><rect class="rb-pris" x="-60" y="0" width="320" height="240" fill="url(#rb${k})" opacity=".35"/></g>`:''}
+${r.gs?`<g clip-path="url(#o${k})"><g transform="rotate(20 100 120)"><rect class="rb-glint" style="--gs:${r.gs}s" x="-30" y="-40" width="34" height="330" fill="url(#gl${k})"/></g></g>`:''}
+</svg>`}
+
+return {R:R,badge:badge};
+})();
+const RB_INDEX = { Bronze:0, Silver:1, Gold:2, Platinum:3, Diamond:4 };
+function tierBadge(t, w){
+  w = w || 46;
+  const i = RB_INDEX[t[0]], r = RB.R[i], k = w / 260;
+  const rnd = x => { const y = Math.sin(x * 97.13) * 10000; return y - Math.floor(y); };
+  let ex = '';
+  for (let j = 0; j < (r.sp || 0); j++) ex += '<span class="rb-sp" data-o="' + (rnd(j * 3 + i) * 3).toFixed(2) + '" style="left:' + (rnd(i * 31 + j) * 90 + 3) + '%;top:' + (rnd(i * 17 + j + 5) * 80 + 4) + '%;--d:' + (2.4 + rnd(j + i) * 2.4).toFixed(2) + 's;--sc:' + r.glow[0] + ';"></span>';
+  const gl = r.glow ? 'class="rb-badge rb-glow" style="--gc:' + r.glow[0] + ';--g2:' + (r.glow[2] * k).toFixed(1) + 'px;filter:drop-shadow(0 0 ' + (r.glow[1] * k).toFixed(1) + 'px ' + r.glow[0] + ');--pp:' + (4 - i * .4).toFixed(1) + 's;"' : 'class="rb-badge"';
+  return '<span class="rb-stage" title="' + t[0] + '" style="width:' + w + 'px;--bw:' + w + 'px;">' + ex + '<span ' + gl + '>' + RB.badge(r, i) + '</span></span>';
+}
+// Newly drawn badges join the animation at the same point as ones already on screen, so redrawing the list
+// (changing the period, searching) never makes the effects restart.
+function rbSync(root){
+  const t = (document.timeline && document.timeline.currentTime ? document.timeline.currentTime : performance.now()) / 1000;
+  root.querySelectorAll('.rb-glint,.rb-pris,.rb-glow,.rb-rune,.rb-sp').forEach(el=>{
+    if (el.dataset.rbs) return;
+    el.dataset.rbs = '1';
+    const d = parseFloat(getComputedStyle(el).animationDuration) || 0;
+    if (d > 0) el.style.animationDelay = (-((t + parseFloat(el.dataset.o || 0)) % d)) + 's';
+  });
 }
 // With a due date: 100 base; on/before due +20 and +3 per early day (early days capped at 14 and at half of the planned time);
 // late -5 per day (max 12 days); minimum 40. No due date: flat 30 points, no bonus.
@@ -4985,7 +5027,7 @@ function computeLeaderboard(){
     const names = Array.from(new Set(raw.split(',').map(x=>x.trim()).filter(Boolean)));
     const share = c.total / names.length;
     names.forEach(n=>{
-      const o = owners[n] || (owners[n] = { name:n, all:0, pts:0, closed:0, onTime:0, withDue:0, noDue:0, sumDelta:0, items:[], rank:null });
+      const o = owners[n] || (owners[n] = { name:n, all:0, pts:0, closed:0, onTime:0, withDue:0, noDue:0, sumDelta:0, items:[], rank:null, q:0 });
       o.all += share;
       if (!lbInPeriod(c.at)) return;
       o.pts += share; o.closed++;
@@ -4994,7 +5036,12 @@ function computeLeaderboard(){
       o.items.push({ id: it.id, issues: it.issues, pts: share, delta: c.delta, split: names.length });
     });
   });
-  const ranked = Object.values(owners).filter(o=>o.closed > 0).sort((a,b)=> (b.pts - a.pts) || (b.closed - a.closed));
+  (lbQuest || []).forEach(r=>{
+    const o = owners[r[0]] || (owners[r[0]] = { name:r[0], all:0, pts:0, closed:0, onTime:0, withDue:0, noDue:0, sumDelta:0, items:[], rank:null, q:0 });
+    o.all += r[2];
+    if (lbInPeriod(new Date(r[1] + 'T12:00:00'))){ o.q += r[2]; o.pts += r[2]; }
+  });
+  const ranked = Object.values(owners).filter(o=>o.closed > 0 || o.q > 0).sort((a,b)=> (b.pts - a.pts) || (b.closed - a.closed));
   ranked.forEach((o, i)=>{ o.rank = i + 1; });
   return { owners: owners, ranked: ranked };
 }
@@ -5003,9 +5050,10 @@ function lbRowHtml(o, open, total){
   const dept = CFG.nameToDept[o.name.toLowerCase()];
   const medal = ['#E5B53C', '#9AA4B5', '#C98A5B'];
   const bits = [];
-  if (!o.closed) bits.push('No items closed in this period');
+  if (!o.closed && !o.q) bits.push('Nothing earned in this period');
   else {
-    bits.push(o.closed + ' closed');
+    if (o.closed) bits.push(o.closed + ' closed');
+    if (o.q) bits.push(Math.round(o.q) + ' quest pts');
     if (o.withDue) bits.push(Math.round(o.onTime / o.withDue * 100) + '% on time');
     if (o.withDue){ const avg = o.sumDelta / o.withDue; bits.push(avg >= 0 ? avg.toFixed(1) + 'd early on average' : Math.abs(avg).toFixed(1) + 'd late on average'); }
     if (o.noDue) bits.push(o.noDue + ' without a deadline');
@@ -5019,12 +5067,18 @@ function lbRowHtml(o, open, total){
     '<div class="lb-who"><div class="lb-name">' + escapeHtml(o.name) + (dept ? singleDeptPillHtml(dept) : '') + '</div>' +
     '<div class="lb-sub"><span class="lb-tier" style="--tc:' + t[2] + ';">' + t[0] + '</span>' + (o.rank && total ? 'Rank ' + o.rank + ' of ' + total + ' · ' : '') + bits.join(' · ') + '</div></div>' +
     '<div class="lb-pts">' + Math.round(o.pts) + '<span>points</span></div></div>' +
-    '<div class="lb-detail"' + (open ? '' : ' hidden') + '>' + (items || '<span class="muted">Nothing to show yet.</span>') + '</div></div>';
+    '<div class="lb-detail"' + (open ? '' : ' hidden') + '>' + ((o.q ? '<div class="lb-item"><span>Daily quest points</span><b>+' + Math.round(o.q) + '</b></div>' : '') + (items || (o.q ? '' : '<span class="muted">Nothing to show yet.</span>'))) + '</div></div>';
 }
 function renderLeaderboard(){
   document.getElementById('lbSeg').innerHTML = [['all','All time'],['30d','Last 30 days'],['month','This month'],['quarter','This quarter']]
     .map(p=>'<button type="button" class="seg-btn' + (p[0] === lbPeriod ? ' on' : '') + '" data-p="' + p[0] + '">' + p[1] + '</button>').join('');
-  document.getElementById('lbTiers').innerHTML = LB_TIERS.slice().reverse().map(t=>'<div>' + tierBadge(t) + '<span><b>' + t[0] + '</b>' + t[1].toLocaleString() + '+ pts</span></div>').join('');
+  const legend = document.getElementById('lbTiers');
+  if (!legend.dataset.built){
+    legend.dataset.built = '1';
+    legend.innerHTML = LB_TIERS.slice().reverse().map(t=>'<div>' + tierBadge(t, 40) + '<span><b>' + t[0] + '</b>' + t[1].toLocaleString() + '+ pts</span></div>').join('');
+    rbSync(legend);
+  }
+  Promise.resolve().then(()=>rbSync(document.getElementById('lbList')));
   const res = computeLeaderboard();
   const el = document.getElementById('lbList');
   const q = lbQuery.trim().toLowerCase();
@@ -5032,7 +5086,7 @@ function renderLeaderboard(){
   if (q){
     const hit = new Set((CFG.ownerRecords || []).filter(r=>(r.disp + ' ' + r.full).toLowerCase().indexOf(q) !== -1).map(r=>r.disp));
     Object.keys(res.owners).forEach(n=>{ if (n.toLowerCase().indexOf(q) !== -1) hit.add(n); });
-    list = Array.from(hit).map(n=> res.owners[n] || { name:n, all:0, pts:0, closed:0, onTime:0, withDue:0, noDue:0, sumDelta:0, items:[], rank:null });
+    list = Array.from(hit).map(n=> res.owners[n] || { name:n, all:0, pts:0, closed:0, onTime:0, withDue:0, noDue:0, sumDelta:0, items:[], rank:null, q:0 });
     list.sort((a,b)=> (a.rank || 9999) - (b.rank || 9999) || a.name.localeCompare(b.name));
     if (!list.length){ el.innerHTML = '<div class="noupdate-empty">No one matches “' + escapeHtml(lbQuery) + '”.</div>'; return; }
     el.innerHTML = list.map(o=>lbRowHtml(o, list.length <= 3, res.ranked.length)).join('');
@@ -5041,11 +5095,16 @@ function renderLeaderboard(){
   if (!res.ranked.length){ el.innerHTML = '<div class="noupdate-empty">No closed items with an owner in this period yet.</div>'; return; }
   el.innerHTML = res.ranked.map(o=>lbRowHtml(o, false, res.ranked.length)).join('');
 }
-function openLeaderboard(){ lbPeriod = 'all'; lbQuery = ''; document.getElementById('lbSearch').value = ''; renderLeaderboard(); document.getElementById('lbOverlay').hidden = false; }
+async function loadLbQuest(){
+  try { lbQuest = await run('getQuestBoard'); } catch (e) { lbQuest = []; }
+  if (!document.getElementById('lbOverlay').hidden) renderLeaderboard();
+}
+function openLeaderboard(){ lbPeriod = 'all'; lbQuery = ''; document.getElementById('lbSearch').value = ''; renderLeaderboard(); document.getElementById('lbOverlay').hidden = false; loadLbQuest(); }
 function closeLb(){ document.getElementById('lbOverlay').hidden = true; }
 
 /* ---------- Daily quest ---------- */
 let lastQuestAward = null;
+function questMyDept(){ return AUTH ? (CFG.nameToDept[AUTH.name.toLowerCase()] || '') : ''; }
 function questOwned(){
   const me = AUTH ? AUTH.name : '';
   return state.items.filter(it=>{
@@ -5055,34 +5114,50 @@ function questOwned(){
     return raw.split(',').map(x=>x.trim()).indexOf(me) !== -1;
   });
 }
+// who earned today's update for this item (for a cross-department item: for the user's own department)
+function questUnitInfo(it, q){
+  const dl = it.deptList || [];
+  if (!dl.length) return q.units[String(it.id)] || null;
+  const mine = questMyDept();
+  if (dl.indexOf(mine) !== -1) return q.units[it.id + '|' + mine] || null;
+  for (const d of dl){ if (q.units[it.id + '|' + d]) return q.units[it.id + '|' + d]; }
+  return null;
+}
 function renderQuest(q){
+  const me = AUTH ? AUTH.name : '';
   const owned = questOwned();
-  const doneN = owned.filter(it=>q.todayItems[it.id]).length;
+  const infos = {};
+  owned.forEach(it=>{ infos[it.id] = questUnitInfo(it, q); });
+  const doneN = owned.filter(it=>infos[it.id]).length;
   const total = owned.length;
   const deg = total ? Math.round(doneN / total * 360) : 0;
-  const potential = Math.min(100, 20 + 5 * total);
+  const potential = Math.min(30, 10 + 2 * total);
   let bonusTxt;
   if (q.bonusToday) bonusTxt = 'Bonus earned today: +' + q.bonusToday + ' points';
   else if (!total) bonusTxt = 'You have no open items to update.';
   else bonusTxt = 'Update all ' + total + ' of your items today for a +' + potential + ' bonus';
   const rows = owned.slice().sort((a,b)=>{
-    const da = q.todayItems[a.id] ? 1 : 0, db = q.todayItems[b.id] ? 1 : 0;
+    const da = infos[a.id] ? 1 : 0, db = infos[b.id] ? 1 : 0;
     return (da - db) || ((getStatusBucket(b) === 'Overdue') - (getStatusBucket(a) === 'Overdue')) || (parseInt(a.id, 10) - parseInt(b.id, 10));
   }).map(it=>{
-    const done = !!q.todayItems[it.id];
+    const inf = infos[it.id];
     const overdue = getStatusBucket(it) === 'Overdue';
-    return '<div class="qs-item' + (done ? ' done' : '') + '"><span class="qs-check">' + (done ? icon('check') : '') + '</span>' +
+    const dl = it.deptList || [];
+    const mine = questMyDept();
+    const canEarn = !dl.length || dl.indexOf(mine) !== -1;
+    let right;
+    if (inf) right = inf.by === me ? '<span class="qs-pts">+' + inf.pts + '</span>' : '<span class="qs-sub">updated by ' + escapeHtml(inf.by) + '</span>';
+    else right = '<span class="qs-pts">' + (canEarn ? '+' + (overdue ? 5 : 10) : '–') + '</span><button class="btn btn-sm" data-q="' + it.id + '">Update</button>';
+    return '<div class="qs-item' + (inf ? ' done' : '') + '"><span class="qs-check">' + (inf ? icon('check') : '') + '</span>' +
       '<div class="qs-info"><div class="qs-title"><span class="mono">#' + it.id + '</span> ' + escapeHtml(truncate(it.issues, 70)) + '</div>' +
-      '<div class="qs-sub">' + (overdue ? '<span style="color:var(--bad);font-weight:700;">Overdue</span> · ' : '') + escapeHtml(it.meeting || '') + '</div></div>' +
-      '<span class="qs-pts">+' + (done ? q.todayItems[it.id] : 10 + (overdue ? 5 : 0)) + '</span>' +
-      (done ? '' : '<button class="btn btn-sm" data-q="' + it.id + '">Update</button>') + '</div>';
+      '<div class="qs-sub">' + (overdue ? '<span style="color:var(--bad);font-weight:700;">Overdue · lower points</span> · ' : '') + (dl.length ? 'Your department: ' + escapeHtml(canEarn ? mine : '—') + ' · ' : '') + escapeHtml(it.meeting || '') + '</div></div>' + right + '</div>';
   }).join('');
   document.getElementById('questBody').innerHTML =
     '<div class="qs-top"><div class="qs-ring" style="--d:' + deg + 'deg;"><div class="qs-ring-in"><b>' + doneN + '/' + total + '</b><span>updated</span></div></div>' +
     '<div class="qs-stats"><div><b>' + q.todayPoints + '</b><span>points today</span></div><div><b>' + q.streak + '</b><span>day streak</span></div><div><b>' + q.month + '</b><span>this month</span></div><div><b>' + q.total + '</b><span>all time</span></div></div></div>' +
     '<div class="qs-bonus' + (q.bonusToday ? ' got' : '') + '">' + bonusTxt + '</div>' +
-    '<div>' + (rows || '') + '</div>' +
-    '<details class="lb-how"><summary>How the daily quest works</summary><div>Updating an item you own earns <b>10 points</b> (<b>+5</b> if it is overdue). Each item pays once per day, however many times you update it. Update every open item you own in a day for a bonus of <b>20 + 5 per item</b> (max 100). The streak counts consecutive days you earned the bonus. The day resets at midnight.</div></details>';
+    '<div>' + rows + '</div>' +
+    '<details class="lb-how"><summary>How the daily quest works</summary><div>Points go to <b>whoever makes the update</b>. Each item pays <b>once per day</b>: <b>10 points</b>, or <b>5</b> if the item is overdue. On a cross-department item every department earns separately for its own update, and only the <b>first person from that department</b> to update it that day is paid. Update every open item you own in a day for a bonus of <b>10 + 2 per item</b> (max 30). Quest points also count towards your leaderboard rank. The day resets at midnight.</div></details>';
 }
 async function refreshQuest(){
   try { renderQuest(await run('getQuest')); }
