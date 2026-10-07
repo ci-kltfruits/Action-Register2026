@@ -1723,29 +1723,36 @@ const isAppsScript = !!(window.google && google.script && google.script.run);
 // Only used when hosted outside Apps Script (e.g. GitHub Pages)
 const API_URL = "https://script.google.com/macros/s/AKfycbxd8uCBpLiTTz5zRHFjLbZp3rR61h18mV6jZPjc1Ywb9QwEk5xxGWfYyMO9VfkMyPa9qg/exec";
 
-// Only safe (read-only) calls are retried; saves are sent once so a slow-but-successful save
-// can never be repeated and create duplicates.
-const READ_FNS = ['getConfig', 'getActions', 'getHistory'];
+// Every save carries a request id, so a retry after a slow or failed response can never create a second copy:
+// the server returns the first result for the same id. That makes it safe to retry saves as well as reads.
+const WRITE_FNS = ['addAction', 'updateAction', 'submitUpdate', 'uploadBinMedia', 'deleteMedia', 'deleteAction'];
+function newRid(){ return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2); }
 
-async function fetchWithRetry(url, options, retries = 2, delay = 800) {
-  for (let i = 0; i < retries; i++) {
+async function callApi(body, retries, timeoutMs){
+  let lastErr;
+  for (let i = 0; i < retries; i++){
+    const ctl = new AbortController();
+    const to = setTimeout(()=>ctl.abort(), timeoutMs);
     try {
-      const res = await fetch(url, options);
-      if (!res.ok) {
-        const e = new Error('Bad response: ' + res.status);
-        if (res.status >= 400 && res.status < 500) e.noRetry = true; // will never fix itself
-        throw e;
-      }
-      return res;
-    } catch (err) {
-      if (err.noRetry || i === retries - 1) throw err;
-      // exponential backoff + random jitter so several tabs don't retry at the same instant
-      await new Promise(r => setTimeout(r, delay * Math.pow(2, i) + Math.random() * 600));
+      // No Content-Type header on purpose: avoids a CORS preflight Apps Script can't answer.
+      const res = await fetch(API_URL, { method:'POST', body: body, signal: ctl.signal });
+      if (!res.ok){ const e = new Error('The server is busy (' + res.status + ')'); e.noRetry = res.status >= 400 && res.status < 500 && res.status !== 429; throw e; }
+      const data = await res.json();
+      if (!data.ok && i < retries - 1 && /too many times|lock|timed out|try again|temporar/i.test(data.error || '')) throw new Error(data.error);
+      clearTimeout(to);
+      return data;
+    } catch (err){
+      clearTimeout(to);
+      lastErr = err.name === 'AbortError' ? new Error('The server took too long to respond') : err;
+      if (lastErr.noRetry || i === retries - 1) throw lastErr;
+      await new Promise(r => setTimeout(r, 900 * Math.pow(2, i) + Math.random() * 700));   // backoff + jitter
     }
   }
+  throw lastErr;
 }
 
-function run(fnName, ...args){
+function run(fnName, ...args){ return runWith(null, fnName, ...args); }
+function runWith(rid, fnName, ...args){
   return new Promise(async (resolve, reject) => {
     if (isAppsScript) {
       google.script.run.withSuccessHandler(resolve).withFailureHandler(err => reject(err)).apiCall({ fn: fnName, args: args, auth: AUTH });
@@ -1757,12 +1764,9 @@ function run(fnName, ...args){
       return;
     }
     try {
-      // No Content-Type header on purpose: avoids a CORS preflight Apps Script can't answer.
-      const res = await fetchWithRetry(API_URL, {
-        method: 'POST',
-        body: JSON.stringify({ fn: fnName, args: args, auth: AUTH })
-      }, READ_FNS.indexOf(fnName) !== -1 ? 2 : 1);
-      const data = await res.json();
+      const isWrite = WRITE_FNS.indexOf(fnName) !== -1;
+      const body = JSON.stringify({ fn: fnName, args: args, auth: AUTH, rid: isWrite ? (rid || newRid()) : undefined });   // same body (and id) on every retry
+      const data = await callApi(body, 3, isWrite ? 60000 : 35000);
       if (data.ok) resolve(data.result);
       else {
         let msg = data.error || 'Server error';
@@ -2051,7 +2055,7 @@ async function init(){
   // Bind controls FIRST so the UI stays interactive even if loading fails.
   bindEvents();
   if (!AUTH && localStorage.getItem('AR_GATE_OFF') !== '1') openLogin();   // PIN gate: first visit, or a new browser session
-  loadGate();   // asks the server whether the gate is currently on
+  if (!AUTH || ADMIN_NAMES.indexOf(AUTH.name) !== -1) loadGate();   // is the gate on? (skipped for signed-in non-admins: one request less)
 
   try {
     // Roster/config is static and already in this page (DEMO_ROSTER) — no server round trip.
@@ -3032,7 +3036,7 @@ async function fillLastNotes(it, root){
   const targets = root.querySelectorAll('[data-lastnote]');
   if (!targets.length) return;
   let hist;
-  try { hist = await run('getHistory', it.id); } catch (e) { return; }
+  try { hist = await getHistoryCached(it.id); } catch (e) { return; }
   if (!Array.isArray(hist)) return;
   targets.forEach(el=>{
     if (!el.isConnected) return;
@@ -3449,6 +3453,7 @@ async function submitLogin(){
     const r = await run('login');
     setAuth({ name: r.name, pin: pin });          // identity comes from the PIN, verified by the server
     startData();                                   // only now is the saved copy used
+    if (ADMIN_NAMES.indexOf(r.name) !== -1) loadGate();
     const next = _afterLogin;
     document.getElementById('loginOverlay').hidden = true; _afterLogin = null;
     setLoginLoading(false);
@@ -3469,6 +3474,7 @@ function openActionModal(id, mode, opts){
   if (!AUTH && GATE_ON){ openLogin(()=>openActionModal(id, mode, opts)); return; }   // gate OFF = open without a PIN
   opts = opts || {};
   state.editingId = id || null;
+  state.saveRid = newRid();   // one request id per open window: pressing Save again after an error is a retry, not a new save
   state.modalMode = mode;
   state.updateDept = (mode === 'update') ? (opts.updateDept || null) : null;
   state.pendingBefore = [];
@@ -3609,14 +3615,28 @@ function syncStatusSeg(){
 }
 function closeActionModal(){ document.getElementById('actionOverlay').hidden = true; }
 
-function readFilesAsBase64(fileList){
-  const files = Array.from(fileList || []);
+// Photos are shrunk to at most 1600px (JPEG) before upload: much smaller requests, fewer timeouts and bad gateways.
+async function compressImage(file){
+  if (!/^image\/(jpeg|png|webp)$/.test(file.type) || file.size < 300 * 1024) return file;
+  try {
+    const bmp = await createImageBitmap(file);
+    const sc = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+    const c = document.createElement('canvas');
+    c.width = Math.round(bmp.width * sc); c.height = Math.round(bmp.height * sc);
+    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+    const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.82));
+    return (blob && blob.size < file.size) ? new File([blob], file.name.replace(/\.\w+$/, '') + '.jpg', { type:'image/jpeg' }) : file;
+  } catch (e) { return file; }
+}
+async function readFilesAsBase64(fileList){
+  const MAX = 25 * 1024 * 1024;
+  let files = Array.from(fileList || []);
+  const big = files.filter(f=>f.size > MAX);
+  if (big.length){ alert(big.length + ' file(s) over 25 MB were skipped (too large to upload reliably). Please trim or compress them.'); files = files.filter(f=>f.size <= MAX); }
+  files = await Promise.all(files.map(compressImage));
   return Promise.all(files.map(file => new Promise((resolve,reject)=>{
     const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = reader.result.split(',')[1];
-      resolve({ name:file.name, mimeType:file.type||'image/jpeg', data:base64 });
-    };
+    reader.onload = () => resolve({ name:file.name, mimeType:file.type||'image/jpeg', data:reader.result.split(',')[1] });
     reader.onerror = reject;
     reader.readAsDataURL(file);
   })));
@@ -3752,6 +3772,7 @@ async function saveAction(){
 
   const saveBtn = document.getElementById('saveBtn');
   saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+  let pendingUp = null;
   try{
     const payload = {
       dateDiscussed: vals.dateDiscussed, meeting: vals.meeting, issues: vals.issues, details: vals.details,
@@ -3761,12 +3782,11 @@ async function saveAction(){
 
     if (mode === 'new'){
       payload.inputBy = (AUTH ? AUTH.name : 'Guest (no PIN)');
-      payload.beforePhotos = state.pendingBefore;
-      payload.currentPhotos = state.pendingCurrent;
-      const created = await run('addAction', payload);
-      state.items.push(created);
+      const created = await runWith(state.saveRid, 'addAction', payload);   // the item itself is saved first (fast) ...
+      if (!state.items.some(i=>i.id === created.id)) state.items.push(created);
+      pendingUp = { id: created.id, before: state.pendingBefore.slice(), current: state.pendingCurrent.slice() };   // ... photos upload afterwards
     } else if (mode === 'edit'){
-      const updated = await run('updateAction', state.editingId, payload);
+      const updated = await runWith(state.saveRid, 'updateAction', state.editingId, payload);
       const idx = state.items.findIndex(i=>i.id===state.editingId);
       if (idx>-1) state.items[idx] = updated;
     } else {
@@ -3775,7 +3795,7 @@ async function saveAction(){
       const labels = computeChangedFieldLabels(payload, !!state.updateDept);
       if (state.updateDept) labels.push('Update (' + state.updateDept + ')');
       payload.changedFields = labels.join(', ');
-      const updated = await run('submitUpdate', state.editingId, payload);
+      const updated = await runWith(state.saveRid, 'submitUpdate', state.editingId, payload);
       lastQuestAward = (updated && updated.questAward) || null;
       const idx = state.items.findIndex(i=>i.id===state.editingId);
       if (idx>-1) state.items[idx] = updated;
@@ -3787,6 +3807,8 @@ async function saveAction(){
     toast((mode === 'update' ? 'Update saved' : mode === 'new' ? 'Action added' : 'Changes saved') + (lastQuestAward ? ' · +' + (lastQuestAward.points + (lastQuestAward.bonus || 0)) + ' quest points' : ''));
     lastQuestAward = null;
     if (!document.getElementById('questOverlay').hidden) refreshQuest();
+    _histCache.clear();
+    if (pendingUp) uploadPending(pendingUp);
     if (!document.getElementById('presentOverlay').hidden) renderPresentCard();
   } catch(err){
     alert('Something went wrong saving this action. ' + (err && err.message ? err.message : ''));
@@ -5187,6 +5209,28 @@ const _IC = {
 function icon(n){ return '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">' + (_IC[n] || '') + '</svg>'; }
 function setIconBtn(id, n, label){ const el = document.getElementById(id); if (el) el.innerHTML = icon(n) + (label ? '<span class="lbl">' + label + '</span>' : ''); }
 let _animNext = true, _presentDir = 0, _searchT = 0;
+const _histCache = new Map();
+async function getHistoryCached(id){
+  const hit = _histCache.get(String(id));
+  if (hit && Date.now() - hit.t < 60000) return hit.v;
+  const v = await run('getHistory', id);
+  _histCache.set(String(id), { t: Date.now(), v: v });
+  return v;
+}
+async function uploadPending(up){
+  const bins = [['before', up.before], ['current', up.current]].filter(b=>b[1].length);
+  if (!bins.length) return;
+  toast('Uploading photos…');
+  for (const b of bins){
+    try {
+      const upd = await run('uploadBinMedia', up.id, b[0], b[1]);
+      const idx = state.items.findIndex(i=>i.id === up.id);
+      if (idx > -1) state.items[idx] = upd;
+      render();
+    } catch (e) { alert('Item ' + up.id + ' was saved, but some photos could not be uploaded (' + (e && e.message ? e.message : 'error') + '). Open the item and add them again.'); return; }
+  }
+  toast('Photos uploaded');
+}
 function thumbUrl(u){ return String(u || '').replace('sz=w1600', 'sz=w200'); }   // small thumbnails for the table
 function toast(msg){
   const t = document.createElement('div');
