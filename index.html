@@ -1161,6 +1161,20 @@ html[data-theme="light"]:not([data-xmas]):not([data-hween]) ::selection{ backgro
 .lb-main .rb-stage{ margin:-2px 0; }
 
 .lb-tiers{ justify-content:center; }
+/* one-row toolbar: search shrinks, filters and Order stay on the same row without being cropped */
+.toolbar{ flex-wrap:nowrap; }
+.search-wrap{ flex:1 1 140px; min-width:96px; }
+.filter-expand{ min-width:0; }
+.filter-expand.expanded{ flex:1 1 auto; }
+.filter-bar{ min-width:0; flex:1 1 auto; gap:4px; }
+.filter-bar .filter-wrap{ min-width:0; flex:0 1 auto; }
+.filter-btn{ min-width:0; padding:6px 8px; font-size:12.5px; }
+.filter-btn .filter-btn-label{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
+.filter-btn-right{ margin-left:4px; flex:none; }
+.filter-expand .sort-wrap{ flex:none; gap:4px; }
+.filter-expand .sort-wrap select{ max-width:150px; font-size:12.5px; padding:6px 6px; text-overflow:ellipsis; }
+.filter-expand .clear-filters, #clearFiltersBtn{ flex:none; }
+
 </style>
 </head>
 <body>
@@ -1177,21 +1191,6 @@ html[data-theme="light"]:not([data-xmas]):not([data-hween]) ::selection{ backgro
     <span id="syncStatus" style="font-size:12px; color:var(--ink-dim); white-space:nowrap; margin-left:4px;"></span>
   </div>
   <div class="topbar-controls">
-    <div class="sort-wrap" id="sortWrap">
-      <label for="sortOrderSelect">Order</label>
-      <select id="sortOrderSelect">
-        <option value="item_asc">Item # (Low→High)</option>
-        <option value="item_desc">Item # (High→Low)</option>
-        <option value="due_asc">Due Date (Soonest)</option>
-        <option value="due_desc">Due Date (Latest)</option>
-        <option value="discussed_desc">Date Discussed (Newest)</option>
-        <option value="discussed_asc">Date Discussed (Oldest)</option>
-        <option value="aging_desc">Aging (Most days)</option>
-        <option value="aging_asc">Aging (Fewest days)</option>
-        <option value="updated_desc">Last Updated (Newest)</option>
-        <option value="updated_asc">Last Updated (Oldest)</option>
-      </select>
-    </div>
     <button class="btn btn-accent" id="presentModeBtn">▶ Present Mode</button>
     <button class="btn btn-ghost" id="dashboardBtn">📊 Dashboard</button>
     <button class="theme-toggle" id="gateBtn" hidden title="Turn the PIN login gate on/off (admin only)" style="width:auto; padding:0 10px; font-size:13px; font-weight:700;"></button>
@@ -1216,6 +1215,21 @@ html[data-theme="light"]:not([data-xmas]):not([data-hween]) ::selection{ backgro
   </button>
   <div class="filter-expand" id="filterExpandPanel">
     <div class="filter-bar" id="filterBar"></div>
+    <div class="sort-wrap" id="sortWrap">
+      <label for="sortOrderSelect">Order</label>
+      <select id="sortOrderSelect">
+        <option value="item_asc">Item # (Low→High)</option>
+        <option value="item_desc">Item # (High→Low)</option>
+        <option value="due_asc">Due Date (Soonest)</option>
+        <option value="due_desc">Due Date (Latest)</option>
+        <option value="discussed_desc">Date Discussed (Newest)</option>
+        <option value="discussed_asc">Date Discussed (Oldest)</option>
+        <option value="aging_desc">Aging (Most days)</option>
+        <option value="aging_asc">Aging (Fewest days)</option>
+        <option value="updated_desc">Last Updated (Newest)</option>
+        <option value="updated_asc">Last Updated (Oldest)</option>
+      </select>
+    </div>
     <button class="btn btn-sm btn-ghost" id="clearFiltersBtn" hidden>✕ Clear filters</button>
   </div>
   <div class="stats-strip" id="statsStrip"></div>
@@ -1580,7 +1594,7 @@ function itemMatchesDeptTab(it, tab){
 const FILTER_DEFS = [
   { key:'dateDiscussed', label:'Date Discussed', kind:'value', dateLike:true, sortDesc:true, getValue: it=> it.dateDiscussed || null },
   { key:'meeting', label:'Meeting', kind:'value', sortDesc:false, getValue: it=> it.meeting || null },
-  { key:'updatedToday', label:'Updated Today', kind:'fixed', multi:true, optionsFn: ()=>['Updated','Update','Needs Update','Closed Today'],
+  { key:'updatedToday', label:'Update', kind:'fixed', multi:true, optionsFn: ()=>['Updated','Update','Needs Update','Closed Today'],
     getValue: it => {
       if (getStatusBucket(it)==='Closed') return it.updatedToday ? ['Closed Today'] : [];
       const s = updateStatusInfo(it);
@@ -4014,8 +4028,14 @@ function openDashboard(){
 /* ============================================================
    PRESENT MODE
    ============================================================ */
+// What Present Mode shows: the current list, but on a department tab (not All / Cross Dept / SGS) cross-department items are left out.
+function presentItems(){
+  let rows = getFiltered();
+  if (CFG.departments.indexOf(state.activeTab) !== -1) rows = rows.filter(i=>!isCrossDeptItem(i));
+  return rows;
+}
 function openPresentMode(){
-  state.presentQueue = getFiltered();   // closed / closed-late items included (unless filtered out)
+  state.presentQueue = presentItems();   // closed / closed-late items included (unless filtered out)
   if (!state.presentQueue.length){
     alert('No action items to present under the current filters.');
     return;
@@ -4030,7 +4050,7 @@ function openPresentFromPreview(){
   const id = state.previewId;
   const it = state.items.find(i=>i.id===id);
   if (!it) return;
-  const queue = getFiltered().slice();
+  const queue = presentItems();
   let idx = queue.findIndex(i=>i.id===id);
   if (idx === -1){ queue.unshift(it); idx = 0; }
   closePreview();
