@@ -1175,6 +1175,10 @@ html[data-theme="light"]:not([data-xmas]):not([data-hween]) ::selection{ backgro
 .filter-expand .sort-wrap select{ max-width:150px; font-size:12.5px; padding:6px 6px; text-overflow:ellipsis; }
 .filter-expand .clear-filters, #clearFiltersBtn{ flex:none; }
 
+
+/* keyboard focus ring (accessibility) */
+:focus-visible{ outline:2px solid #2563eb; outline-offset:2px; }
+#appVersion{ position:fixed; bottom:2px; right:8px; font-size:11px; opacity:.5; pointer-events:none; z-index:5; }
 </style>
 </head>
 <body>
@@ -1276,7 +1280,7 @@ html[data-theme="light"]:not([data-xmas]):not([data-hween]) ::selection{ backgro
 
 <!-- Preview Modal (read-only) -->
 <div class="overlay" id="previewOverlay" hidden style="z-index:140;">
-  <div class="modal theme-preview" id="previewModal">
+  <div class="modal theme-preview" id="previewModal" role="dialog" aria-modal="true" aria-label="Action details">
     <div class="modal-head">
       <h2>Item Preview</h2>
       <div class="modal-head-actions">
@@ -1300,7 +1304,7 @@ html[data-theme="light"]:not([data-xmas]):not([data-hween]) ::selection{ backgro
 
 <!-- New / Edit / Update Action Modal -->
 <div class="overlay" id="actionOverlay" hidden>
-  <div class="modal" id="actionModal">
+  <div class="modal" id="actionModal" role="dialog" aria-modal="true" aria-label="Action form">
     <div class="modal-head">
       <h2 id="modalTitle">New Action</h2>
       <div class="modal-head-actions">
@@ -1571,7 +1575,7 @@ const NO_DUE_DATE_VALUE = '__no_due_date__';   // sentinel: lets "No date yet" b
 
 // These two may record ANY department's per-department update on a cross-department item,
 // bypassing the "must belong to that department" rule — they're the usual meeting facilitators.
-// Keep this in sync with CROSS_DEPT_FACILITATORS in Code.gs (the server enforces this too).
+// (Note: the server no longer enforces this - anyone signed in may record any department's update; every change is logged by name.)
 const CROSS_DEPT_FACILITATORS = ['G. Tagotong', 'N. Lim'];
 
 // Cross-department = spans 2+ distinct departments (or "All").
@@ -1740,6 +1744,9 @@ const API_URL = "https://script.google.com/macros/s/AKfycbxd8uCBpLiTTz5zRHFjLbZp
 // Every save carries a request id, so a retry after a slow or failed response can never create a second copy:
 // the server returns the first result for the same id. That makes it safe to retry saves as well as reads.
 const WRITE_FNS = ['addAction', 'updateAction', 'submitUpdate', 'uploadBinMedia', 'deleteMedia', 'deleteAction'];
+// Short fingerprint of the text being saved: if the same save is retried the id is identical (no duplicate), but if the person
+// changed the text before pressing Save again, the id changes so the new text is not silently dropped.
+function fingerprint(obj){ const t = JSON.stringify(obj); let h = 5381; for (let i = 0; i < t.length; i++) h = ((h * 33) ^ t.charCodeAt(i)) >>> 0; return h.toString(36); }
 function newRid(){ return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2); }
 
 async function callApi(body, retries, timeoutMs){
@@ -3022,7 +3029,7 @@ function openPreview(id){
           <div><div class="pv-label">Input by</div><div>${escapeHtml(it.inputBy) || '—'}</div></div>
         </div>
         <div class="preview-photos">${photoBox('Before', it.beforePhotos || [], 'before')}${photoBox('Currently', it.currentPhotos || [], 'current')}</div>
-        ${it.photoFolder ? `<a class="folder-link" href="${it.photoFolder}" target="_blank">Open photo folder in Drive →</a>` : ''}
+        ${it.photoFolder ? `<a class="folder-link" href="${escapeHtml(it.photoFolder)}" target="_blank">Open photo folder in Drive →</a>` : ''}
       </div>
     </div>`;
   document.getElementById('previewBody').querySelectorAll('[data-action="preview-open-update"]').forEach(row=>{
@@ -3037,7 +3044,7 @@ function openPreview(id){
     });
   });
   document.getElementById('previewFolderWrap').innerHTML = it.photoFolder
-    ? `<a class="folder-link" href="${it.photoFolder}" target="_blank">📁 Open full photo folder in Drive →</a>` : '';
+    ? `<a class="folder-link" href="${escapeHtml(it.photoFolder)}" target="_blank">📁 Open full photo folder in Drive →</a>` : '';
   document.getElementById('previewUpdateBtn').hidden = !!(it.deptList && it.deptList.length);
   document.getElementById('previewOverlay').hidden = false;
   document.getElementById('previewModal').scrollTop = 0;
@@ -3597,7 +3604,7 @@ function openActionModal(id, mode, opts){
     renderExistingGrid('before', it);
     renderExistingGrid('current', it);
     document.getElementById('folderLinkWrap').innerHTML = it.photoFolder
-      ? `<a class="folder-link" href="${it.photoFolder}" target="_blank">📁 Open full photo folder in Drive →</a>`
+      ? `<a class="folder-link" href="${escapeHtml(it.photoFolder)}" target="_blank">📁 Open full photo folder in Drive →</a>`
       : `<span class="muted" style="font-size:13px;">No Drive folder yet — uploading media will create one.</span>`;
     state.updateSnapshot = {
       dateDiscussed: it.dateDiscussed || '',
@@ -3800,7 +3807,7 @@ async function saveAction(){
       if (!state.items.some(i=>i.id === created.id)) state.items.push(created);
       pendingUp = { id: created.id, before: state.pendingBefore.slice(), current: state.pendingCurrent.slice() };   // ... photos upload afterwards
     } else if (mode === 'edit'){
-      const updated = await runWith(state.saveRid, 'updateAction', state.editingId, payload);
+      const updated = await runWith(state.saveRid + '-' + fingerprint(payload), 'updateAction', state.editingId, payload);
       const idx = state.items.findIndex(i=>i.id===state.editingId);
       if (idx>-1) state.items[idx] = updated;
     } else {
@@ -3809,7 +3816,7 @@ async function saveAction(){
       const labels = computeChangedFieldLabels(payload, !!state.updateDept);
       if (state.updateDept) labels.push('Update (' + state.updateDept + ')');
       payload.changedFields = labels.join(', ');
-      const updated = await runWith(state.saveRid, 'submitUpdate', state.editingId, payload);
+      const updated = await runWith(state.saveRid + '-' + fingerprint(payload), 'submitUpdate', state.editingId, payload);
       lastQuestAward = (updated && updated.questAward) || null;
       const idx = state.items.findIndex(i=>i.id===state.editingId);
       if (idx>-1) state.items[idx] = updated;
@@ -5290,5 +5297,7 @@ document.addEventListener('click', (e)=>{
 
 init();
 </script>
+<div id="appVersion"></div>
+<script>const APP_VERSION = "2026-10-12"; document.getElementById("appVersion").textContent = "v" + APP_VERSION;</script>
 </body>
 </html>
