@@ -5204,7 +5204,7 @@ function renderQuest(q){
     '<div class="qs-stats"><div><b>' + q.todayPoints + '</b><span>points today</span></div><div><b>' + q.streak + '</b><span>day streak</span></div><div><b>' + q.month + '</b><span>this month</span></div><div><b>' + q.total + '</b><span>all time</span></div></div></div>' +
     '<div class="qs-bonus' + (q.bonusToday ? ' got' : '') + '">' + bonusTxt + '</div>' +
     '<div>' + rows + '</div>' +
-    '<details class="lb-how"><summary>How the daily quest works</summary><div>Points go to <b>whoever makes the update</b>. Each item pays <b>once per day</b>: <b>10 points</b>, or <b>5</b> if the item is overdue. On a cross-department item every department earns separately for its own update, and only the <b>first person from that department</b> to update it that day is paid. Update every open item you own in a day for a bonus of <b>10 + 2 per item</b> (max 30). Quest points also count towards your leaderboard rank. The day resets at midnight.</div></details>';
+    '<details class="lb-how"><summary>How the daily quest works</summary><div>Points go to <b>whoever makes the update</b>. Each item pays <b>once per day</b>: <b>10 points</b>, or <b>5</b> if the item is overdue. On a cross-department item every department earns separately for its own update, and only the <b>first person from that department</b> to update it that day is paid. Update every open item you own in a day for a bonus of <b>10 + 2 per item</b> (max 30). Quest points also count towards your leaderboard rank. The day resets at 12:10 pm.</div></details>';
 }
 async function refreshQuest(){
   try { renderQuest(await run('getQuest')); }
