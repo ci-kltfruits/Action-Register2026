@@ -1332,7 +1332,7 @@ html[data-theme="light"]:not([data-xmas]):not([data-hween]) ::selection{ backgro
           <button type="button" class="btn owner-select-btn" id="ownerSelectBtn">Select owner(s)</button>
           <input type="hidden" id="f_owner">
           <div class="owner-select-panel" id="ownerSelectPanel" hidden>
-            <input type="text" id="ownerSelectSearch" class="owner-select-search" placeholder="Search names…" autocomplete="off">
+            <input type="text" id="ownerSelectSearch" class="owner-select-search" placeholder="Search full or short name…" autocomplete="off">
             <div class="owner-select-list" id="ownerSelectList"></div>
           </div>
           <span class="field-error-msg">Select at least one owner (or "All").</span>
@@ -1832,7 +1832,6 @@ const DEMO_ROSTER = [
   { full: 'Jocelyn Barnachea', disp: 'J. Barnachea', dept: 'PROD', color: 'yellow, light blue, brown, purple' },
   { full: 'Maria Carmina De Guzman', disp: 'C. De Guzman', dept: 'PROD', color: 'yellow, light blue, brown, purple' },
   { full: 'Marianne Del Rosario', disp: 'M. Del Rosario', dept: 'PROD', color: 'yellow, light blue, brown, purple' },
-  { full: 'Neressa Buenaflor', disp: 'N. Buenaflor', dept: 'PROD', color: 'yellow, light blue, brown, purple' },
   { full: 'Reniel Badanoy', disp: 'R. Badanoy', dept: 'PROD', color: 'yellow, light blue, brown, purple' },
   { full: 'Jenesis Carlo Sy', disp: 'J. Sy', dept: 'PROD', color: 'mustard' },
   { full: 'Ryan Avelino', disp: 'R. Avelino', dept: 'PROD', color: 'mustard' },
@@ -2513,9 +2512,13 @@ function matchesActiveFiltersAndSearch(it){
     // items — each department's own updater) — searching a name like "G. Tagotong" should find it
     // no matter which of those roles it's in.
     const deptByNames = (it.deptUpdates ? Object.values(it.deptUpdates).map(du => du.by || '') : []);
+    const roleNames = [it.owner, it.inputBy, it.lastUpdatedBy].concat(deptByNames);
+    const matchingFullNames = (CFG.ownerRecords || []).filter(r =>
+      roleNames.some(v => String(v || '').split(',').map(n => n.trim()).includes(r.disp))
+    ).map(r => r.full);
     const hay = [it.id, it.issues, it.owner, it.meeting, it.details, it.remarks, it.inputBy, it.lastUpdatedBy]
-      .concat(deptByNames).join(' ').toLowerCase();
-    if (!hay.includes(q)) return false;
+      .concat(deptByNames, matchingFullNames).join(' ').toLowerCase();
+    if (!q.trim().split(/\s+/).every(word => hay.includes(word))) return false;
   }
   return true;
 }
@@ -3228,6 +3231,21 @@ function syncDeptSelectUI(opts){
   if (!opts.skipOwnerAutofill) autofillOwnersFromDepartments();
 }
 
+// Match any part of a full name or abbreviated display name, independent of word order.
+function nameSearchMatches(record, query){
+  const words = String(query || '').toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
+  const hay = (String(record.full || '') + ' ' + String(record.disp || '')).toLocaleLowerCase();
+  return words.every(word => hay.includes(word));
+}
+function fullNameForDisplay(disp){
+  const rec = (CFG.ownerRecords || []).find(r => r.disp === disp);
+  return rec ? rec.full : disp;
+}
+function nameSuggestionHtml(disp){
+  const full = fullNameForDisplay(disp);
+  return escapeHtml(full) + (full !== disp ? ' <span class="muted">(' + escapeHtml(disp) + ')</span>' : '');
+}
+
 function renderOwnerSelectList(query){
   const list = document.getElementById('ownerSelectList');
   const q = (query||'').trim().toLowerCase();
@@ -3235,7 +3253,7 @@ function renderOwnerSelectList(query){
   const rows = [];
   (CFG.ownerRecords||[]).forEach(r=>{
     if (seen.has(r.disp)) return;
-    if (!q || r.full.toLowerCase().includes(q) || r.disp.toLowerCase().includes(q)){
+    if (nameSearchMatches(r, q)){
       seen.add(r.disp);
       rows.push(r.disp);
     }
@@ -3247,7 +3265,7 @@ function renderOwnerSelectList(query){
   } else {
     html += rows.map(disp=>{
       const checked = !allChecked && state.ownerSelection.has(disp);
-      return `<label class="owner-opt"><input type="checkbox" value="${escapeHtml(disp)}" ${checked?'checked':''} ${allChecked?'disabled':''}><span>${escapeHtml(disp)}</span></label>`;
+      return `<label class="owner-opt"><input type="checkbox" value="${escapeHtml(disp)}" ${checked?'checked':''} ${allChecked?'disabled':''}><span>${nameSuggestionHtml(disp)}</span></label>`;
     }).join('');
   }
   list.innerHTML = html;
@@ -3326,7 +3344,7 @@ function ownerMatches(query){
   const out = [];
   (CFG.ownerRecords||[]).forEach(r=>{
     if (seen.has(r.disp)) return;
-    if (!q || r.full.toLowerCase().includes(q) || r.disp.toLowerCase().includes(q)){
+    if (nameSearchMatches(r, q)){
       seen.add(r.disp);
       out.push(r.disp);
     }
@@ -3361,7 +3379,7 @@ function attachNameAutocomplete(inputId, listId, opts){
     if (!items.length){
       list.innerHTML = `<div class="name-opt-empty">No matching names</div>`;
     } else {
-      list.innerHTML = items.map((v,i)=>`<div class="name-opt" data-idx="${i}">${escapeHtml(v)}</div>`).join('');
+      list.innerHTML = items.map((v,i)=>`<div class="name-opt" data-idx="${i}">${v === 'All' ? escapeHtml(v) : nameSuggestionHtml(v)}</div>`).join('');
       list.querySelectorAll('.name-opt').forEach(el=>{
         // mousedown fires before the input's blur handler hides the list.
         el.addEventListener('mousedown', (e)=>{
