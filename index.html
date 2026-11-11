@@ -3198,6 +3198,7 @@ function autofillDeptSelectionFromOwners(){
 }
 
 function autofillOwnersFromDepartments(){
+  if (!canChangeOwners()) return;
   if (state.deptSelection.has('All')) return;
   let added = false;
   state.deptSelection.forEach(dept=>{
@@ -3641,12 +3642,25 @@ function openActionModal(id, mode, opts){
     document.getElementById('moreFieldsBtn').textContent = 'More fields (owners, departments, details)';
     syncStatusSeg();
   }
+  {
+    const locked = !canChangeOwners();
+    const ob = document.getElementById('ownerSelectBtn');
+    ob.disabled = locked;
+    ob.style.opacity = locked ? '.6' : '';
+    ob.style.cursor = locked ? 'not-allowed' : '';
+    ob.title = locked ? 'Only the CI department can change owners' : '';
+  }
   state.remarksCleared = false;
   state.remarksPrefilled = !!document.getElementById('f_remarks').value;
   document.getElementById('actionOverlay').hidden = false;
   document.getElementById('actionModal').scrollTop = 0;
 }
 
+// Owners of an existing item can only be changed by the CI department. Anyone may pick owners on a New Action.
+function canChangeOwners(){
+  if (state.modalMode === 'new') return true;
+  return !!(AUTH && CFG.nameToDept[AUTH.name.toLowerCase()] === 'CI');
+}
 function syncStatusSeg(){
   const sel = document.getElementById('f_status');
   document.getElementById('statusSeg').innerHTML = Array.from(sel.options).map(o=>'<button type="button" class="seg-btn' + (o.value === sel.value ? ' on' : '') + '" data-v="' + escapeHtml(o.value) + '">' + escapeHtml(o.value) + '</button>').join('');
