@@ -3649,6 +3649,11 @@ function openActionModal(id, mode, opts){
     ob.style.opacity = locked ? '.6' : '';
     ob.style.cursor = locked ? 'not-allowed' : '';
     ob.title = locked ? 'Only the CI department can change owners' : '';
+    const db = document.getElementById('deptSelectBtn');
+    db.disabled = locked;
+    db.style.opacity = locked ? '.6' : '';
+    db.style.cursor = locked ? 'not-allowed' : '';
+    db.title = locked ? 'Only the CI department can change departments' : '';
   }
   state.remarksCleared = false;
   state.remarksPrefilled = !!document.getElementById('f_remarks').value;
@@ -3656,7 +3661,7 @@ function openActionModal(id, mode, opts){
   document.getElementById('actionModal').scrollTop = 0;
 }
 
-// Owners of an existing item can only be changed by the CI department. Anyone may pick owners on a New Action.
+// Owners and departments of an existing item can only be changed by the CI department. Anyone may pick owners on a New Action.
 function canChangeOwners(){
   if (state.modalMode === 'new') return true;
   return !!(AUTH && CFG.nameToDept[AUTH.name.toLowerCase()] === 'CI');
