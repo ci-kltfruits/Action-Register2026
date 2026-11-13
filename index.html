@@ -1176,6 +1176,19 @@ html[data-theme="light"]:not([data-xmas]):not([data-hween]) ::selection{ backgro
 .filter-expand .clear-filters, #clearFiltersBtn{ flex:none; }
 
 
+/* meeting access */
+.sw{ position:relative; display:inline-block; width:44px; height:24px; flex:none; }
+.sw input{ opacity:0; width:0; height:0; position:absolute; }
+.sw-s{ position:absolute; inset:0; background:var(--surface-2); border:1px solid var(--border); border-radius:999px; cursor:pointer; transition:.15s ease; }
+.sw-s::before{ content:''; position:absolute; width:18px; height:18px; left:2px; top:2px; border-radius:50%; background:var(--ink-dim); transition:.15s ease; }
+.sw input:checked + .sw-s{ background:var(--good); border-color:var(--good); }
+.sw input:checked + .sw-s::before{ transform:translateX(20px); background:#fff; }
+.sw input:disabled + .sw-s{ opacity:.5; cursor:wait; }
+.sw input:focus-visible + .sw-s{ outline:2px solid #2563eb; outline-offset:2px; }
+.ma-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 4px; border-bottom:1px solid var(--border); }
+.ma-name{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-weight:600; font-size:14.5px; }
+.ma-name .dept-pill{ font-size:11px; padding:2px 9px; }
+
 /* keyboard focus ring (accessibility) */
 :focus-visible{ outline:2px solid #2563eb; outline-offset:2px; }
 #appVersion{ position:fixed; bottom:2px; right:8px; font-size:11px; opacity:.5; pointer-events:none; z-index:5; }
@@ -1203,6 +1216,7 @@ html[data-theme="light"]:not([data-xmas]):not([data-hween]) ::selection{ backgro
     <button class="theme-toggle" id="noUpdateBtn" title="No-update tracker">🚩</button>
     <button class="theme-toggle" id="leaderboardBtn" title="Leaderboard"></button>
     <button class="theme-toggle" id="questBtn" title="Daily quest"></button>
+    <button class="theme-toggle" id="meetingBtn" title="Meeting access" hidden></button>
     <button class="theme-toggle" id="mobileToggle" title="Toggle mobile view">📱</button>
     <button class="theme-toggle" id="mobileSidebarBtn" title="Menu" hidden>☰</button>
   </div>
@@ -1499,6 +1513,22 @@ html[data-theme="light"]:not([data-xmas]):not([data-hween]) ::selection{ backgro
   <div class="modal" style="max-width:720px;">
     <div class="modal-head"><h2>Daily quest</h2><button class="close-x" id="closeQuestBtn">✕</button></div>
     <div class="modal-body" id="questBody"></div>
+  </div>
+</div>
+
+<!-- Meeting access (moderators only) -->
+<div class="overlay" id="meetingOverlay" hidden>
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-head"><h2>Meeting access</h2><button class="close-x" id="closeMeetingBtn">✕</button></div>
+    <div class="modal-body">
+      <p class="muted" style="font-size:13px; margin:0;">Switch a person on to let them Edit and Update any item during the meeting. Owner, Department and Due Date stay moderator-only. Access stays on until you switch it off.</p>
+      <div class="field"><input type="text" id="meetingSearch" placeholder="Search a name…" autocomplete="off"></div>
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+        <span class="muted" id="meetingCount" style="font-size:13px; font-weight:600;"></span>
+        <button class="btn btn-sm btn-danger" id="meetingClearBtn">Turn all off</button>
+      </div>
+      <div id="meetingList"></div>
+    </div>
   </div>
 </div>
 
@@ -2094,6 +2124,7 @@ async function init(){
     showLoadError('Could not build page controls. ' + errMsg(err));
   }
 
+  renderAuthBtn();   // roster is known now: show the moderator-only buttons if needed
   // Nothing (not even the saved copy) is shown until we know who is using the app:
   //  - signed in this session -> use the saved copy + refresh right away
   //  - not signed in          -> loadGate() asks the server: gate ON = PIN screen, gate OFF = start then
@@ -2182,6 +2213,7 @@ async function loadItems(force){
       persistItemsNow();
       render();
       setSync('Updated ' + formatTime(new Date(lastLoadAt).toISOString()));
+      loadMeetingAccess();
     } catch (err) {
       state.loading = false;
       setSync(state.items.length ? 'Showing saved copy' : '');
@@ -2255,7 +2287,7 @@ function toggleTheme(){
 // Controls physically moved into the mobile sidebar (and back), so listeners keep working.
 const MOBILE_SIDEBAR_MOVE_IDS = [
   'newActionBtn', 'searchWrap', 'filterToggleBtn', 'filterExpandPanel',
-  'sortWrap', 'dashboardBtn', 'themeToggle', 'noUpdateBtn', 'leaderboardBtn', 'questBtn', 'mobileToggle', 'statsStrip'
+  'sortWrap', 'dashboardBtn', 'themeToggle', 'noUpdateBtn', 'leaderboardBtn', 'questBtn', 'meetingBtn', 'mobileToggle', 'statsStrip'
 ];
 let _mobileOriginalPositions = null;
 
@@ -3054,11 +3086,8 @@ function openPreview(id){
   document.getElementById('previewFolderWrap').innerHTML = it.photoFolder
     ? `<a class="folder-link" href="${escapeHtml(it.photoFolder)}" target="_blank">📁 Open full photo folder in Drive →</a>` : '';
   document.getElementById('previewUpdateBtn').hidden = !!(it.deptList && it.deptList.length);
-  ['previewEditBtn','previewUpdateBtn'].forEach(bid=>{
-    const b = document.getElementById(bid), ok = canModifyItem(it, null);
-    b.disabled = !ok; b.style.opacity = ok ? '' : '.5'; b.style.cursor = ok ? '' : 'not-allowed';
-    b.title = ok ? '' : "Only this item's owners can edit or update it";
-  });
+  applyPreviewButtons(it);
+  loadMeetingAccess().then(()=>{ if (state.previewId === it.id && !document.getElementById('previewOverlay').hidden) applyPreviewButtons(it); });
   document.getElementById('previewOverlay').hidden = false;
   document.getElementById('previewModal').scrollTop = 0;
   fillLastNotes(it, document.getElementById('previewBody'));
@@ -3466,6 +3495,7 @@ function closeLogin(){ document.getElementById('loginOverlay').hidden = true; _a
 function renderGateBtn(){
   const b = document.getElementById('gateBtn');
   if (!b) return;
+  const mb = document.getElementById('meetingBtn'); if (mb) mb.hidden = !isModerator();
   b.hidden = !(AUTH && ADMIN_NAMES.indexOf(AUTH.name) !== -1);
   b.innerHTML = icon(GATE_ON ? 'lock' : 'unlock') + '<span class="lbl">Gate: ' + (GATE_ON ? 'ON' : 'OFF') + '</span>';
 }
@@ -3526,6 +3556,7 @@ function canModifyItem(it, dept){
   if (!AUTH) return false;
   const myDept = CFG.nameToDept[AUTH.name.toLowerCase()];
   if (myDept === 'CI') return true;
+  if (hasMeetingAccess()) return true;   // switched on by a moderator for this meeting
   const raw = (it.owner || '').trim();
   const isOwner = raw.toLowerCase() === 'all' || raw.split(',').map(s=>s.trim()).indexOf(AUTH.name) !== -1;
   if (!isOwner) return false;
@@ -3537,8 +3568,13 @@ function openActionModal(id, mode, opts){
   opts = opts || {};
   if (id && (mode === 'edit' || mode === 'update')){
     const cur = state.items.find(i=>i.id===id);
-    if (cur && !canModifyItem(cur, mode === 'update' ? (opts.updateDept || null) : null)){
-      alert("Only this item's owners can edit or update it. On a cross-department item, owners can update only their own department's part.");
+    const reqDept = mode === 'update' ? (opts.updateDept || null) : null;
+    if (cur && !canModifyItem(cur, reqDept)){
+      // maybe a moderator just switched this person on: check once more before refusing
+      loadMeetingAccess(true).then(()=>{
+        if (canModifyItem(cur, reqDept)) openActionModal(id, mode, opts);
+        else alert("Only this item's owners can edit or update it. On a cross-department item, owners can update only their own department's part.");
+      });
       return;
     }
   }
@@ -4150,6 +4186,7 @@ function closeTopLayer(){
     ['actionOverlay', closeActionModal],
     ['previewOverlay', closePreview],
     ['presentOverlay', closePresentMode],
+    ['meetingOverlay', closeMeeting],
     ['questOverlay', closeQuest],
     ['lbOverlay', closeLb],
     ['noUpdateOverlay', closeNoUpdateReport],
@@ -4269,6 +4306,12 @@ function bindEvents(){
   setIconBtn('questBtn', 'target');
   document.getElementById('questBtn').addEventListener('click', ()=>{ closeMobileSidebar(); openQuest(); });
   document.getElementById('closeQuestBtn').addEventListener('click', closeQuest);
+  setIconBtn('meetingBtn', 'users');
+  document.getElementById('meetingBtn').addEventListener('click', ()=>{ closeMobileSidebar(); openMeeting(); });
+  document.getElementById('closeMeetingBtn').addEventListener('click', closeMeeting);
+  document.getElementById('meetingSearch').addEventListener('input', renderMeetingList);
+  document.getElementById('meetingClearBtn').addEventListener('click', clearMeetingAccess);
+  document.getElementById('meetingList').addEventListener('change', onMeetingToggle);
   document.getElementById('questBody').addEventListener('click', (e)=>{
     const b = e.target.closest('[data-q]'); if (!b) return;
     const it = state.items.find(i=>i.id === b.dataset.q); if (!it) return;
@@ -5288,6 +5331,78 @@ function openQuest(){
 }
 function closeQuest(){ document.getElementById('questOverlay').hidden = true; }
 
+/* ---------- Meeting access (moderators switch people on to edit/update any item) ---------- */
+let MEETING_ACCESS = [], _maLast = 0, _maBusy = null;
+function isModerator(){ return !!(AUTH && CFG.nameToDept[AUTH.name.toLowerCase()] === 'CI'); }
+function hasMeetingAccess(){ return !!(AUTH && MEETING_ACCESS.indexOf(AUTH.name) !== -1); }
+function applyPreviewButtons(it){
+  ['previewEditBtn','previewUpdateBtn'].forEach(bid=>{
+    const b = document.getElementById(bid), ok = canModifyItem(it, null);
+    b.disabled = !ok; b.style.opacity = ok ? '' : '.5'; b.style.cursor = ok ? '' : 'not-allowed';
+    b.title = ok ? '' : "Only this item's owners can edit or update it";
+  });
+}
+async function loadMeetingAccess(force){
+  if (!AUTH){ MEETING_ACCESS = []; return; }
+  if (!force && Date.now() - _maLast < 15000) return;
+  if (_maBusy) return _maBusy;
+  _maBusy = (async ()=>{
+    try {
+      const r = await run('getMeetingAccess');
+      const names = (r && r.names) || [];
+      _maLast = Date.now();
+      if (JSON.stringify(names) !== JSON.stringify(MEETING_ACCESS)){ MEETING_ACCESS = names; render(); }
+    } catch (e) { /* keep the last known list */ }
+    finally { _maBusy = null; }
+  })();
+  return _maBusy;
+}
+function renderMeetingList(){
+  const q = document.getElementById('meetingSearch').value;
+  const seen = new Set();
+  const rows = (CFG.ownerRecords || []).filter(r=>{ if (seen.has(r.disp)) return false; seen.add(r.disp); return nameSearchMatches(r, q); });
+  const on = new Set(MEETING_ACCESS);
+  document.getElementById('meetingCount').textContent = MEETING_ACCESS.length + ' with access';
+  document.getElementById('meetingList').innerHTML = rows.length ? rows.map(r=>{
+    const dept = CFG.nameToDept[r.disp.toLowerCase()];
+    return '<div class="ma-row"><div class="ma-name">' + nameSuggestionHtml(r.disp) + (dept ? singleDeptPillHtml(dept) : '') + '</div>' +
+      '<label class="sw"><input type="checkbox" data-n="' + escapeHtml(r.disp) + '"' + (on.has(r.disp) ? ' checked' : '') + '><span class="sw-s"></span></label></div>';
+  }).join('') : '<div class="noupdate-empty">No matching names.</div>';
+}
+function openMeeting(){
+  if (!isModerator()) return;
+  document.getElementById('meetingSearch').value = '';
+  renderMeetingList();
+  document.getElementById('meetingOverlay').hidden = false;
+  loadMeetingAccess(true).then(()=>{ if (!document.getElementById('meetingOverlay').hidden) renderMeetingList(); });
+}
+function closeMeeting(){ document.getElementById('meetingOverlay').hidden = true; }
+async function onMeetingToggle(e){
+  const cb = e.target.closest('input[data-n]'); if (!cb) return;
+  const name = cb.dataset.n, on = cb.checked;
+  cb.disabled = true;
+  try {
+    const r = await run('setMeetingAccess', name, on);
+    MEETING_ACCESS = (r && r.names) || []; _maLast = Date.now();
+    render();
+  } catch (err){
+    cb.checked = !on;
+    alert('Could not change access. ' + (err && err.message ? err.message : ''));
+  } finally {
+    cb.disabled = false;
+    document.getElementById('meetingCount').textContent = MEETING_ACCESS.length + ' with access';
+  }
+}
+async function clearMeetingAccess(){
+  if (!MEETING_ACCESS.length){ alert('Nobody has meeting access right now.'); return; }
+  if (!confirm('Turn off meeting access for everyone?')) return;
+  try {
+    const r = await run('setMeetingAccess', '__ALL__', false);
+    MEETING_ACCESS = (r && r.names) || []; _maLast = Date.now();
+    renderMeetingList(); render();
+  } catch (err){ alert('Could not change access. ' + (err && err.message ? err.message : '')); }
+}
+
 /* ---------- polish helpers ---------- */
 const _IC = {
   lock:'<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
@@ -5301,7 +5416,8 @@ const _IC = {
   chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
   check:'<path d="M20 6 9 17l-5-5"/>',
   trophy:'<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>',
-  target:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>'
+  target:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+  users:'<circle cx="9" cy="8" r="3.5"/><path d="M2 21a7 7 0 0 1 14 0"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14a5 5 0 0 1 5 5"/>'
 };
 function icon(n){ return '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">' + (_IC[n] || '') + '</svg>'; }
 function setIconBtn(id, n, label){ const el = document.getElementById(id); if (el) el.innerHTML = icon(n) + (label ? '<span class="lbl">' + label + '</span>' : ''); }
