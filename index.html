@@ -2894,6 +2894,12 @@ function render(){
       el.addEventListener('click', (e)=>{ e.stopPropagation(); openActionModal(el.dataset.id, 'edit'); });
     });
   });
+  [tbody, cardList].forEach(container=>{
+    container.querySelectorAll('[data-action="open-update"],[data-action="open-edit-for-photo"]').forEach(el=>{
+      const it = state.items.find(i=>i.id===el.dataset.id);
+      if (it && !canModifyItem(it, el.dataset.action === 'open-update' ? (el.dataset.dept || null) : null)){ el.style.opacity = '.5'; el.title = "Only this item's owners can update or edit it"; }
+    });
+  });
   tbody.querySelectorAll('tr[data-id]').forEach(tr=>{
     tr.addEventListener('click', (e)=>{
       if (e.target.closest('[data-action]')) return;
@@ -3048,6 +3054,11 @@ function openPreview(id){
   document.getElementById('previewFolderWrap').innerHTML = it.photoFolder
     ? `<a class="folder-link" href="${escapeHtml(it.photoFolder)}" target="_blank">📁 Open full photo folder in Drive →</a>` : '';
   document.getElementById('previewUpdateBtn').hidden = !!(it.deptList && it.deptList.length);
+  ['previewEditBtn','previewUpdateBtn'].forEach(bid=>{
+    const b = document.getElementById(bid), ok = canModifyItem(it, null);
+    b.disabled = !ok; b.style.opacity = ok ? '' : '.5'; b.style.cursor = ok ? '' : 'not-allowed';
+    b.title = ok ? '' : "Only this item's owners can edit or update it";
+  });
   document.getElementById('previewOverlay').hidden = false;
   document.getElementById('previewModal').scrollTop = 0;
   fillLastNotes(it, document.getElementById('previewBody'));
@@ -3509,9 +3520,28 @@ async function submitLogin(){
   } finally { _loggingIn = false; }
 }
 
+// Mirrors the server rule: only the item's owners ("All" = any signed-in person) and CI may edit/update it.
+// On a cross-department item an owner may update only their own department's part.
+function canModifyItem(it, dept){
+  if (!AUTH) return false;
+  const myDept = CFG.nameToDept[AUTH.name.toLowerCase()];
+  if (myDept === 'CI') return true;
+  const raw = (it.owner || '').trim();
+  const isOwner = raw.toLowerCase() === 'all' || raw.split(',').map(s=>s.trim()).indexOf(AUTH.name) !== -1;
+  if (!isOwner) return false;
+  if (dept && it.deptList && it.deptList.length && myDept !== dept) return false;
+  return true;
+}
 function openActionModal(id, mode, opts){
   if (!AUTH && GATE_ON){ openLogin(()=>openActionModal(id, mode, opts)); return; }   // gate OFF = open without a PIN
   opts = opts || {};
+  if (id && (mode === 'edit' || mode === 'update')){
+    const cur = state.items.find(i=>i.id===id);
+    if (cur && !canModifyItem(cur, mode === 'update' ? (opts.updateDept || null) : null)){
+      alert("Only this item's owners can edit or update it. On a cross-department item, owners can update only their own department's part.");
+      return;
+    }
+  }
   state.editingId = id || null;
   state.saveRid = newRid();   // one request id per open window: pressing Save again after an error is a retry, not a new save
   state.modalMode = mode;
