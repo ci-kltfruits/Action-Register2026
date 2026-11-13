@@ -3654,6 +3654,10 @@ function openActionModal(id, mode, opts){
     db.style.opacity = locked ? '.6' : '';
     db.style.cursor = locked ? 'not-allowed' : '';
     db.title = locked ? 'Only the CI department can change departments' : '';
+    const dd = document.getElementById('f_dueDate'), nd = document.getElementById('f_noDateYet');
+    nd.disabled = locked;
+    if (locked){ dd.disabled = true; dd.style.opacity = '.6'; dd.style.cursor = 'not-allowed'; dd.title = 'Only the CI department can change due dates'; }
+    else { dd.style.opacity = ''; dd.style.cursor = ''; dd.title = ''; }
   }
   state.remarksCleared = false;
   state.remarksPrefilled = !!document.getElementById('f_remarks').value;
@@ -3661,7 +3665,7 @@ function openActionModal(id, mode, opts){
   document.getElementById('actionModal').scrollTop = 0;
 }
 
-// Owners and departments of an existing item can only be changed by the CI department. Anyone may pick owners on a New Action.
+// Owners, departments and due dates of an existing item can only be changed by the CI department. Anyone may pick owners on a New Action.
 function canChangeOwners(){
   if (state.modalMode === 'new') return true;
   return !!(AUTH && CFG.nameToDept[AUTH.name.toLowerCase()] === 'CI');
