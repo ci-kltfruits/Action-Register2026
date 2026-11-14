@@ -1521,7 +1521,7 @@ html[data-theme="light"]:not([data-xmas]):not([data-hween]) ::selection{ backgro
   <div class="modal" style="max-width:640px;">
     <div class="modal-head"><h2>Meeting access</h2><button class="close-x" id="closeMeetingBtn">✕</button></div>
     <div class="modal-body">
-      <p class="muted" style="font-size:13px; margin:0;">Switch a person on to let them Edit and Update any item during the meeting. Owner, Department and Due Date stay moderator-only. Access stays on until you switch it off.</p>
+      <p class="muted" style="font-size:13px; margin:0;">Switch a person on to let them Edit and Update any item during the meeting. This includes Owner, Department and Due Date. Access stays on until you switch it off.</p>
       <div class="field"><input type="text" id="meetingSearch" placeholder="Search a name…" autocomplete="off"></div>
       <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
         <span class="muted" id="meetingCount" style="font-size:13px; font-weight:600;"></span>
@@ -3714,15 +3714,15 @@ function openActionModal(id, mode, opts){
     ob.disabled = locked;
     ob.style.opacity = locked ? '.6' : '';
     ob.style.cursor = locked ? 'not-allowed' : '';
-    ob.title = locked ? 'Only the CI department can change owners' : '';
+    ob.title = locked ? 'Only moderators or people with meeting access can change owners' : '';
     const db = document.getElementById('deptSelectBtn');
     db.disabled = locked;
     db.style.opacity = locked ? '.6' : '';
     db.style.cursor = locked ? 'not-allowed' : '';
-    db.title = locked ? 'Only the CI department can change departments' : '';
+    db.title = locked ? 'Only moderators or people with meeting access can change departments' : '';
     const dd = document.getElementById('f_dueDate'), nd = document.getElementById('f_noDateYet');
     nd.disabled = locked;
-    if (locked){ dd.disabled = true; dd.style.opacity = '.6'; dd.style.cursor = 'not-allowed'; dd.title = 'Only the CI department can change due dates'; }
+    if (locked){ dd.disabled = true; dd.style.opacity = '.6'; dd.style.cursor = 'not-allowed'; dd.title = 'Only moderators or people with meeting access can change due dates'; }
     else { dd.style.opacity = ''; dd.style.cursor = ''; dd.title = ''; }
   }
   state.remarksCleared = false;
@@ -3734,7 +3734,7 @@ function openActionModal(id, mode, opts){
 // Owners, departments and due dates of an existing item can only be changed by the CI department. Anyone may pick owners on a New Action.
 function canChangeOwners(){
   if (state.modalMode === 'new') return true;
-  return !!(AUTH && CFG.nameToDept[AUTH.name.toLowerCase()] === 'CI');
+  return !!(AUTH && (CFG.nameToDept[AUTH.name.toLowerCase()] === 'CI' || hasMeetingAccess()));
 }
 function syncStatusSeg(){
   const sel = document.getElementById('f_status');
@@ -4515,7 +4515,9 @@ function setXmas(on, quiet){
 function applyStoredXmas(){
   let saved = null;
   try { saved = localStorage.getItem(XMAS_KEY); } catch (e) {}
-  if (saved === 'on') setXmas(true, true);
+  let hw = null;
+  try { hw = localStorage.getItem(HWEEN_KEY); } catch (e) {}
+  if (saved !== 'off' && hw !== 'on') setXmas(true, true);   // Christmas is the default theme
 }
 
 // Returns true if the text was the secret word (and the theme was toggled).
