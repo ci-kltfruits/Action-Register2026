@@ -1580,6 +1580,7 @@ let state = {
   pendingCurrent: [],
   ownerSelection: new Set(),
   deptSelection: new Set(),
+  ownerPicked: new Set(), ownerExcluded: new Set(), deptPicked: new Set(), deptAuto: new Set(), deptAllPicked: false,
   presentQueue: [],
   presentIndex: 0,
   lightbox: { images: [], index: 0, label: '' },
@@ -3223,53 +3224,62 @@ function parseDeptFieldToSelection(value){
   return set;
 }
 
-function autofillDeptSelectionFromOwners(){
-  if (state.ownerSelection.has('All')){
+// Owners and departments are kept independent:
+//  - ownerPicked: people ticked one by one (their own department is tagged, but NOT their teammates)
+//  - deptPicked: departments ticked on purpose (everyone in them becomes an owner)
+//  - ownerExcluded: people unticked from a department that was tagged as a whole
+//  - deptAuto: departments present only because of a tab/preloaded value (no owner behind them)
+function deptBacked(d){
+  return Array.from(state.ownerSelection).some(n => CFG.nameToDept[String(n).toLowerCase()] === d);
+}
+function recomputeSelections(){
+  if (!state.ownerSelection.has('All')){
+    const own = new Set(state.ownerPicked);
+    state.deptPicked.forEach(d => (CFG.ownersByDept[d] || []).forEach(n => { if (!state.ownerExcluded.has(n)) own.add(n); }));
+    state.ownerSelection = own;
+  }
+  if (state.ownerSelection.has('All') || state.deptAllPicked){
     state.deptSelection = new Set(['All']);
   } else {
-    const depts = new Set();
-    state.ownerSelection.forEach(disp=>{
-      const dept = CFG.nameToDept[disp.toLowerCase()];
-      if (dept) depts.add(dept);
-    });
-    if (depts.size) state.deptSelection = depts;
+    const ds = new Set([...state.deptPicked, ...state.deptAuto]);
+    state.ownerSelection.forEach(n => { const d = CFG.nameToDept[String(n).toLowerCase()]; if (d) ds.add(d); });
+    state.deptSelection = ds;
   }
-  syncDeptSelectUI({ skipOwnerAutofill: true });
+  syncOwnerSelectUI();
+  syncDeptSelectUI();
 }
-
-function autofillOwnersFromDepartments(){
-  if (!canChangeOwners()) return;
-  if (state.deptSelection.has('All')) return;
-  let added = false;
-  state.deptSelection.forEach(dept=>{
-    (CFG.ownersByDept[dept]||[]).forEach(disp=>{
-      if (!state.ownerSelection.has(disp) && !state.ownerSelection.has('All')){
-        state.ownerSelection.add(disp);
-        added = true;
-      }
-    });
+// For an existing item: a department whose members are ALL owners counts as "tagged as a whole";
+// every other owner counts as a specifically chosen person.
+function initPickStateFromSelections(){
+  const owners = state.ownerSelection, depts = state.deptSelection;
+  state.ownerPicked = new Set(); state.ownerExcluded = new Set(); state.deptPicked = new Set(); state.deptAuto = new Set();
+  state.deptAllPicked = depts.has('All');
+  if (owners.has('All')) return;
+  const full = new Set();
+  depts.forEach(d => {
+    if (d === 'All') return;
+    const mem = CFG.ownersByDept[d] || [];
+    if (mem.length && mem.every(n => owners.has(n))) full.add(d);
   });
-  if (added) syncOwnerSelectUI({ skipDeptAutofill: true });
+  state.deptPicked = full;
+  owners.forEach(n => { const d = CFG.nameToDept[String(n).toLowerCase()]; if (!(d && full.has(d))) state.ownerPicked.add(n); });
+  depts.forEach(d => { if (d !== 'All' && !full.has(d)) state.deptAuto.add(d); });
 }
 
 function syncOwnerSelectUI(opts){
-  opts = opts || {};
   const summary = ownerSelectionSummary();
   document.getElementById('f_owner').value = summary;
   const btn = document.getElementById('ownerSelectBtn');
   btn.innerHTML = summary ? (state.ownerSelection.has('All') ? '<span class="chip-s">All</span>' : Array.from(state.ownerSelection).map(n=>'<span class="chip-s">'+escapeHtml(n)+'</span>').join('')) : 'Select owner(s)';
   btn.classList.toggle('placeholder', !summary);
-  if (!opts.skipDeptAutofill) autofillDeptSelectionFromOwners();
 }
 
 function syncDeptSelectUI(opts){
-  opts = opts || {};
   const summary = deptSelectionSummary();
   document.getElementById('f_department').value = summary;
   const btn = document.getElementById('deptSelectBtn');
   btn.innerHTML = summary ? (state.deptSelection.has('All') ? '<span class="chip-s">All</span>' : Array.from(state.deptSelection).map(n=>'<span class="chip-s">'+escapeHtml(n)+'</span>').join('')) : 'Select department(s)';
   btn.classList.toggle('placeholder', !summary);
-  if (!opts.skipOwnerAutofill) autofillOwnersFromDepartments();
 }
 
 // Match any part of a full name or abbreviated display name, independent of word order.
@@ -3318,10 +3328,15 @@ function renderOwnerSelectList(query){
         else state.ownerSelection.delete('All');
       } else {
         state.ownerSelection.delete('All');
-        if (cb.checked) state.ownerSelection.add(val);
-        else state.ownerSelection.delete(val);
+        state.deptAuto.clear();
+        if (cb.checked){ state.ownerPicked.add(val); state.ownerExcluded.delete(val); }
+        else {
+          state.ownerPicked.delete(val);
+          const od = CFG.nameToDept[val.toLowerCase()];
+          if (od && state.deptPicked.has(od)) state.ownerExcluded.add(val);   // unticked from a whole-department tag
+        }
       }
-      syncOwnerSelectUI();
+      recomputeSelections();
       renderOwnerSelectList(document.getElementById('ownerSelectSearch').value);
     });
   });
@@ -3338,7 +3353,8 @@ function renderDeptSelectList(query){
   } else {
     html += rows.map(d=>{
       const checked = !allChecked && state.deptSelection.has(d);
-      return `<label class="owner-opt"><input type="checkbox" value="${escapeHtml(d)}" ${checked?'checked':''} ${allChecked?'disabled':''}><span>${escapeHtml(d)}</span></label>`;
+      const hint = (checked && !state.deptPicked.has(d) && deptBacked(d)) ? ' <span class="muted" style="font-size:12px;">· from owner — click to tag everyone</span>' : '';
+      return `<label class="owner-opt"><input type="checkbox" value="${escapeHtml(d)}" ${checked?'checked':''} ${allChecked?'disabled':''}><span>${escapeHtml(d)}${hint}</span></label>`;
     }).join('');
   }
   list.innerHTML = html;
@@ -3346,14 +3362,19 @@ function renderDeptSelectList(query){
     cb.addEventListener('change', ()=>{
       const val = cb.value;
       if (val === 'All'){
-        if (cb.checked) state.deptSelection = new Set(['All']);
-        else state.deptSelection.delete('All');
+        state.deptAllPicked = cb.checked;
+      } else if (state.deptPicked.has(val)){
+        state.deptPicked.delete(val);                 // untick: owners that came only from this department are dropped
+      } else if (deptBacked(val)){
+        state.deptPicked.add(val);                    // department was only tagged because of one owner: now tag everyone in it
+        (CFG.ownersByDept[val] || []).forEach(n => state.ownerExcluded.delete(n));
+      } else if (state.deptAuto.has(val)){
+        state.deptAuto.delete(val);                   // preloaded department with nobody behind it: remove it
       } else {
-        state.deptSelection.delete('All');
-        if (cb.checked) state.deptSelection.add(val);
-        else state.deptSelection.delete(val);
+        state.deptPicked.add(val);                    // fresh tick: tag everyone in the department
+        (CFG.ownersByDept[val] || []).forEach(n => state.ownerExcluded.delete(n));
       }
-      syncDeptSelectUI();
+      recomputeSelections();
       renderDeptSelectList(document.getElementById('deptSelectSearch').value);
     });
   });
@@ -3619,6 +3640,8 @@ function openActionModal(id, mode, opts){
     document.getElementById('f_remarks').value = '';
     document.getElementById('updateDeptPrevRemarks').hidden = true;
     state.deptSelection = (state.activeTab !== 'All' && state.activeTab !== CROSS_DEPT_LABEL) ? new Set([state.activeTab]) : new Set();
+    state.ownerPicked = new Set(); state.ownerExcluded = new Set(); state.deptPicked = new Set(); state.deptAllPicked = false;
+    state.deptAuto = new Set(state.deptSelection);   // tab department: tagged, but nobody is added automatically
     document.getElementById('deptSelectSearch').value = '';
     closeDeptSelectPanel();
     syncDeptSelectUI({ skipOwnerAutofill: true });
@@ -3678,6 +3701,7 @@ function openActionModal(id, mode, opts){
     document.getElementById('ownerSelectSearch').value = '';
     closeOwnerSelectPanel();
     syncOwnerSelectUI({ skipDeptAutofill: true });
+    initPickStateFromSelections();
     const noDate = it.dueDate === 'TBD' || !it.dueDate;
     document.getElementById('f_noDateYet').checked = noDate;
     document.getElementById('f_dueDate').value = noDate ? '' : it.dueDate;
