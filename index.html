@@ -3624,7 +3624,7 @@ function openActionModal(id, mode, opts){
 
   const it = id ? state.items.find(i=>i.id===id) : null;
 
-  document.getElementById('deleteBtn').hidden = (mode !== 'edit');
+  document.getElementById('deleteBtn').hidden = (mode !== 'edit' || !(isModerator() || hasMeetingAccess()));
   document.getElementById('actingAs').textContent = 'Saving as ' + (AUTH ? AUTH.name : 'Guest (no PIN)');
   document.getElementById('saveBtn').textContent = mode === 'update' ? 'Save Update' : 'Save Action';
   document.getElementById('editModeHint').hidden = (mode !== 'edit');
@@ -4020,6 +4020,7 @@ async function promptCloseAll(id){
 
 async function deleteCurrentAction(){
   if (!state.editingId) return;
+  if (!(isModerator() || hasMeetingAccess())){ alert('Only moderators or people with meeting access can delete items.'); return; }
   if (!confirm('Delete this action item? This cannot be undone.')) return;
   await run('deleteAction', state.editingId);
   state.items = state.items.filter(i=>i.id!==state.editingId);
