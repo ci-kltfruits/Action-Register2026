@@ -1425,6 +1425,8 @@ html[data-theme="light"]:not([data-xmas]):not([data-hween]) ::selection{ backgro
     </div>
     <div class="modal-foot">
       <button class="btn btn-danger" id="deleteBtn" hidden>Delete</button>
+      <button class="btn" id="doneBtn" hidden style="color:var(--good); border-color:var(--good);"></button>
+      <button class="btn" id="reopenBtn" hidden></button>
       <div style="margin-left:auto; display:flex; gap:8px;">
         <button class="btn" id="cancelBtn">Cancel</button>
         <button class="btn btn-primary" id="saveBtn">Save Action</button>
@@ -2720,6 +2722,7 @@ function updateStatusBadgeHtml(it, lastUpdStr, widthAuto){
 // Same three states, for one department's own update record on a cross-department item.
 function deptUpdateStatusInfo(it, du){
   if (normalizeStatus(it.status) === 'Closed') return null;
+  if (du.done) return 'done';
   if (du.updatedToday) return 'updated';
   if (getStatusBucket(it) === 'Overdue') return 'needs';
   return du.t ? 'update' : 'needs';
@@ -2746,6 +2749,9 @@ function deptUpdBtnHtml(it, dept){
   const lastStr = du.t ? formatDateTime(du.t) : 'No updates yet';
   const byLine = du.by ? `<span class="upd-by">${escapeHtml(du.by)}</span>` : '';
   const state = deptUpdateStatusInfo(it, du);
+  if (state === 'done'){
+    return `<button class="upd-btn upd-ok" data-action="open-update" data-id="${it.id}" data-dept="${escapeHtml(dept)}" title="This department's part is done. Click to reopen or add a note."><span class="upd-label">✓ Done</span><span class="upd-sub">${formatDateTime(du.t)}</span>${byLine}</button>`;
+  }
   if (state === 'updated'){
     return `<button class="upd-btn upd-ok" data-action="open-update" data-id="${it.id}" data-dept="${escapeHtml(dept)}"><span class="upd-label">✓ Updated</span><span class="upd-sub">${formatTime(du.t)}</span>${byLine}</button>`;
   }
@@ -2777,6 +2783,14 @@ function deptUpdateBlocksHtml(it, actionName, valueClass){
   }).join('');
 }
 
+function allDeptsDone(it){
+  if (!(it.deptList && it.deptList.length) || !it.deptUpdates) return false;
+  return it.deptList.every(d => it.deptUpdates[d] && it.deptUpdates[d].done);
+}
+function doneDeptCount(it){
+  if (!(it.deptList && it.deptList.length) || !it.deptUpdates) return 0;
+  return it.deptList.filter(d => it.deptUpdates[d] && it.deptUpdates[d].done).length;
+}
 function mcardDeptListHtml(it){
   return `<div class="mcard-dept-list">${it.deptList.map(d=>`
     <div class="mcard-dept-row">${singleDeptPillHtml(d)}${deptUpdBtnHtml(it, d)}</div>
@@ -3052,7 +3066,7 @@ function openPreview(id){
   const dueTxt = (it.dueDate === 'TBD' || !it.dueDate) ? 'No date yet' : formatShortDate(it.dueDate);
   const ag = computeAging(it);
   const hero = cross
-    ? `<div class="pv-card"><div class="pv-label">Per-department updates</div>${deptUpdateBlocksHtml(it, 'preview-open-update', 'preview-value')}</div>`
+    ? `${allDeptsDone(it) && it.status !== 'Closed' ? '<div class="pv-card" style="border-color:var(--good); background:var(--good-soft); color:var(--good-strong); font-weight:700;">All departments are done. This item is ready to be closed.</div>' : ''}<div class="pv-card"><div class="pv-label">Per-department updates · ${doneDeptCount(it)} of ${it.deptList.length} done</div>${deptUpdateBlocksHtml(it, 'preview-open-update', 'preview-value')}</div>`
     : `<div class="pv-card"><div class="pv-head"><span class="pv-label">Latest update</span><span class="pv-by">${it.lastUpdatedBy ? escapeHtml(it.lastUpdatedBy) + ' · ' : ''}${lastUpdStr}</span></div>
         <div class="pv-text" ${it.remarks ? '' : 'data-lastnote=""'}>${escapeHtml(it.remarks) || '<span class="muted">No update logged yet.</span>'}</div>
         ${it.status !== 'Closed' ? `<div style="margin-top:10px;">${updateStatusBadgeHtml(it, lastUpdStr, true)}</div>` : ''}</div>`;
@@ -3733,6 +3747,21 @@ function openActionModal(id, mode, opts){
     syncStatusSeg();
   }
   {
+    const dept = state.updateDept;
+    const showDept = !!(mode === 'update' && dept && it && normalizeStatus(it.status) !== 'Closed');
+    const isDone = !!(showDept && it.deptUpdates && it.deptUpdates[dept] && it.deptUpdates[dept].done);
+    const dB = document.getElementById('doneBtn'), rB = document.getElementById('reopenBtn');
+    dB.hidden = !showDept || isDone;
+    rB.hidden = !showDept || !isDone;
+    dB.textContent = '✓ Mark ' + (dept || '') + ' as done';
+    rB.textContent = 'Reopen ' + (dept || '');
+    if (isDone){
+      const nt = document.getElementById('updateDeptNote');
+      nt.style.display = 'block';
+      nt.textContent = dept + ' is marked done. Saving an update will reopen it, or use Reopen.';
+    }
+  }
+  {
     const locked = !canChangeOwners();
     const ob = document.getElementById('ownerSelectBtn');
     ob.disabled = locked;
@@ -3849,7 +3878,7 @@ function resolveMultiDeptField(value){
   return resolved.join(', ');
 }
 
-function validateForm(mode){
+function validateForm(mode, deptAction){
   clearFieldErrors();
   const vals = {
     dateDiscussed: document.getElementById('f_dateDiscussed').value,
@@ -3872,7 +3901,7 @@ function validateForm(mode){
   if (!vals.meeting) missing.push('meeting');
   if (!vals.issues) missing.push('issues');
   if (!vals.details) missing.push('details');
-  if ((mode === 'update' || (mode === 'edit' && state.editNeedsRemarks)) && !vals.remarks) missing.push('remarks');
+  if ((mode === 'update' || (mode === 'edit' && state.editNeedsRemarks)) && !vals.remarks && !deptAction) missing.push('remarks');
   if (!ownerResolved) missing.push('owner');
   if (!deptResolved) missing.push('department');
   if (!vals.status) missing.push('status');
@@ -3915,15 +3944,17 @@ function computeChangedFieldLabels(payload, skipRemarks){
   return Object.keys(UPDATE_FIELD_LABELS).filter(key => (cmp[key]||'') !== (snap[key]||'')).map(key => UPDATE_FIELD_LABELS[key]);
 }
 
-async function saveAction(){
+async function saveAction(deptAction){
+  if (typeof deptAction !== 'string') deptAction = '';
   const mode = state.modalMode;
   if (mode === 'edit' && state.editHistoryPromise) await state.editHistoryPromise;
-  const vals = validateForm(mode);
+  const vals = validateForm(mode, deptAction);
   if (!vals) return;
+  if (deptAction === 'done' && !confirm('Mark ' + state.updateDept + ' as done? It will no longer be asked for updates on this item.')) return;
 
   const saveBtn = document.getElementById('saveBtn');
   saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
-  let pendingUp = null;
+  let pendingUp = null, doneResult = null;
   try{
     const payload = {
       dateDiscussed: vals.dateDiscussed, meeting: vals.meeting, issues: vals.issues, details: vals.details,
@@ -3943,11 +3974,13 @@ async function saveAction(){
     } else {
       payload.updatedBy = (AUTH ? AUTH.name : 'Guest (no PIN)');
       if (state.updateDept) payload.updateDept = state.updateDept;
+      if (deptAction && state.updateDept) payload.deptAction = deptAction;
       const labels = computeChangedFieldLabels(payload, !!state.updateDept);
-      if (state.updateDept) labels.push('Update (' + state.updateDept + ')');
+      if (state.updateDept) labels.push((deptAction === 'done' ? 'Marked done (' : deptAction === 'reopen' ? 'Reopened (' : 'Update (') + state.updateDept + ')');
       payload.changedFields = labels.join(', ');
       const updated = await runWith(state.saveRid + '-' + fingerprint(payload), 'submitUpdate', state.editingId, payload);
       lastQuestAward = (updated && updated.questAward) || null;
+      doneResult = updated;
       const idx = state.items.findIndex(i=>i.id===state.editingId);
       if (idx>-1) state.items[idx] = updated;
       const pIdx = state.presentQueue.findIndex(i=>i.id===state.editingId);
@@ -3955,10 +3988,11 @@ async function saveAction(){
     }
     closeActionModal();
     render();
-    toast((mode === 'update' ? 'Update saved' : mode === 'new' ? 'Action added' : 'Changes saved') + (lastQuestAward ? ' · +' + (lastQuestAward.points + (lastQuestAward.bonus || 0)) + ' quest points' : ''));
+    toast((mode === 'update' ? (deptAction === 'done' ? 'Marked as done' : deptAction === 'reopen' ? 'Reopened' : 'Update saved') : mode === 'new' ? 'Action added' : 'Changes saved') + (lastQuestAward ? ' · +' + (lastQuestAward.points + (lastQuestAward.bonus || 0)) + ' quest points' : ''));
     lastQuestAward = null;
     if (!document.getElementById('questOverlay').hidden) refreshQuest();
     _histCache.clear();
+    if (deptAction === 'done' && doneResult && allDeptsDone(doneResult) && normalizeStatus(doneResult.status) !== 'Closed') setTimeout(()=> promptCloseAll(doneResult.id), 250);
     if (pendingUp) uploadPending(pendingUp);
     if (!document.getElementById('presentOverlay').hidden) renderPresentCard();
   } catch(err){
@@ -3966,6 +4000,22 @@ async function saveAction(){
   } finally {
     saveBtn.disabled = false; saveBtn.textContent = mode === 'update' ? 'Save Update' : 'Save Action';
   }
+}
+
+// All departments finished their part: offer to close the whole item.
+async function promptCloseAll(id){
+  if (!confirm('All departments are done on item ' + id + '. Close this item now?')) return;
+  try {
+    const upd = await run('updateAction', id, { status: 'Closed' });
+    const idx = state.items.findIndex(i=>i.id === id);
+    if (idx > -1) state.items[idx] = upd;
+    const pIdx = state.presentQueue.findIndex(i=>i.id === id);
+    if (pIdx > -1) state.presentQueue[pIdx] = upd;
+    _histCache.clear();
+    render();
+    toast('Item closed');
+    if (!document.getElementById('presentOverlay').hidden) renderPresentCard();
+  } catch (err){ alert('Could not close the item. ' + (err && err.message ? err.message : '')); }
 }
 
 async function deleteCurrentAction(){
@@ -4001,7 +4051,7 @@ function historyEntryDetailHtml(h){
   return tags.map(label=>{
     // "Update (DEPT)" (or the older "Remarks/Update (DEPT)" tag text) — a per-department
     // update — always shows this entry's own remarks.
-    const isDeptRemark = /^(Update|Remarks\/Update) \(/.test(label);
+    const isDeptRemark = /^(Update|Remarks\/Update|Marked done|Reopened) \(/.test(label);
     const getter = isDeptRemark ? null : HISTORY_FIELD_VALUE_GETTERS[label];
     const value = isDeptRemark ? h.remarks : (getter ? getter(h) : '');
     return `<div class="history-field-change">
@@ -4263,14 +4313,14 @@ function renderPresentCard(){
 
   let main;
   if (cross){
-    const order = { needs:0, update:1, updated:2 };
+    const order = { needs:0, update:1, updated:2, done:3 };
     const cards = it.deptList.map((d, i) => {
       const du = (it.deptUpdates && it.deptUpdates[d]) || { t:'', by:'', remarks:'' };
       return { d, du, st: deptUpdateStatusInfo(it, du), i };
     }).sort((x, y) => ((order[x.st] ?? 3) - (order[y.st] ?? 3)) || (x.i - y.i));
-    main = '<div class="pm-dept-grid">' + cards.map(c => {
+    main = (allDeptsDone(it) && !closed ? '<div class="pm-card" style="border-color:var(--good); background:var(--good-soft); color:var(--good-strong); font-weight:700; margin-bottom:12px;">All departments are done. This item is ready to be closed.</div>' : '') + '<div class="pm-dept-grid">' + cards.map(c => {
       const stCls = c.st === 'needs' ? 'pm-s-needs' : (c.st === 'update' ? 'pm-s-upd' : 'pm-s-ok');
-      const stTxt = c.st === 'needs' ? 'Needs update' : (c.du.t ? (c.du.by ? escapeHtml(c.du.by) + ' · ' : '') + formatDateTime(c.du.t) : (closed ? 'Closed' : 'No update'));
+      const stTxt = c.st === 'needs' ? 'Needs update' : (c.du.t ? (c.st === 'done' ? 'Done · ' : '') + (c.du.by ? escapeHtml(c.du.by) + ' · ' : '') + formatDateTime(c.du.t) : (closed ? 'Closed' : 'No update'));
       const body = c.du.remarks ? escapeHtml(c.du.remarks) : '<span class="muted">No update logged yet.</span>';
       return '<div class="pm-dept ' + (c.st === 'needs' ? 'needs' : '') + '" ' + (closed ? '' : 'data-action="present-open-update" data-dept="' + escapeHtml(c.d) + '"') + '>' +
         '<div class="pm-dept-head">' + singleDeptPillHtml(c.d) + '<span class="pm-dept-status ' + stCls + '">' + stTxt + '</span></div>' +
@@ -4362,7 +4412,9 @@ function bindEvents(){
   document.getElementById('newActionBtn').addEventListener('click', ()=>{ closeMobileSidebar(); openActionModal(null, 'new'); });
   document.getElementById('closeModalBtn').addEventListener('click', closeActionModal);
   document.getElementById('cancelBtn').addEventListener('click', closeActionModal);
-  document.getElementById('saveBtn').addEventListener('click', saveAction);
+  document.getElementById('saveBtn').addEventListener('click', ()=> saveAction());
+  document.getElementById('doneBtn').addEventListener('click', ()=> saveAction('done'));
+  document.getElementById('reopenBtn').addEventListener('click', ()=> saveAction('reopen'));
   document.getElementById('statusSeg').addEventListener('click', (e)=>{
     const b = e.target.closest('.seg-btn'); if (!b) return;
     document.getElementById('f_status').value = b.dataset.v; syncStatusSeg();
@@ -5297,7 +5349,10 @@ function questOwned(){
     if (normalizeStatus(it.status) === 'Closed') return false;
     const raw = (it.owner || '').trim();
     if (!raw || raw.toLowerCase() === 'all') return false;
-    return raw.split(',').map(x=>x.trim()).indexOf(me) !== -1;
+    if (raw.split(',').map(x=>x.trim()).indexOf(me) === -1) return false;
+    const mine = questMyDept();
+    if (it.deptUpdates && it.deptList && it.deptList.indexOf(mine) !== -1 && it.deptUpdates[mine] && it.deptUpdates[mine].done) return false;   // your department's part is done
+    return true;
   });
 }
 // who earned today's update for this item (for a cross-department item: for the user's own department)
